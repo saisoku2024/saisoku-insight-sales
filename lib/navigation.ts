@@ -27,22 +27,22 @@ export const dashboardNavigation: DashboardNavGroup[] = [
     label: "Overview",
     items: [
       {
-        title: "Dashboard",
+        title: "INSIGHT Dashboard",
         href: "/dashboard",
         icon: LayoutDashboard,
-        description: "Ringkasan performa penjualan",
+        description: "Intregrated Sales Monitoring & Reporting",
       },
       {
         title: "Sales Report",
         href: "/dashboard/sales",
         icon: BarChart3,
-        description: "Laporan penjualan dan transaksi terbaru",
+        description: "Laporan Penjualan & Transaksi",
       },
       {
         title: "Transactions",
         href: "/dashboard/transactions",
         icon: ClipboardList,
-        description: "Filter, ekspor, dan audit transaksi",
+        description: "Filter, Ekspor, &  Audit Transaksi",
       },
     ],
   },
@@ -53,19 +53,19 @@ export const dashboardNavigation: DashboardNavGroup[] = [
         title: "Products",
         href: "/dashboard/products",
         icon: Package,
-        description: "Kelola harga, deskripsi, dan produk",
+        description: "Kelola Harga, Deskripsi, dan Produk",
       },
       {
         title: "Stocks",
         href: "/dashboard/stocks",
         icon: Boxes,
-        description: "Monitor stock account yang tersedia",
+        description: "Monitor Stock Account",
       },
       {
         title: "History",
         href: "/dashboard/history",
         icon: History,
-        description: "Riwayat account yang sudah terjual",
+        description: "Riwayat Sales",
       },
     ],
   },
@@ -101,7 +101,7 @@ export function getPageMeta(pathname: string) {
       title: "Dashboard",
       href: "/dashboard",
       icon: ShieldCheck,
-      description: "Sales admin workspace",
+      description: "Sales Admin Workspace",
     }
   )
 }

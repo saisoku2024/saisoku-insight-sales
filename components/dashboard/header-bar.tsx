@@ -1,10 +1,8 @@
 "use client"
 
 import {
-  Bell,
   Clock3,
   Menu,
-  Search,
   Sun,
   Moon,
 } from "lucide-react"
@@ -44,7 +42,7 @@ export function HeaderBar({
     <header
       className="
         sticky top-0 z-20 mb-6
-        rounded-[32px]
+        rounded-4xl
         border border-white/80 dark:border-white/10
         bg-white/80 dark:bg-slate-900/40
         px-5 py-5
@@ -54,6 +52,7 @@ export function HeaderBar({
       "
     >
       <div className="flex items-center justify-between gap-4">
+        {/* Sisi Kiri: Menu Mobile, Brand, Greetings */}
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -79,41 +78,17 @@ export function HeaderBar({
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
               {getGreeting()}
             </p>
-
             <h1 className="text-3xl font-bold text-slate-950 dark:text-white">
               {title}
             </h1>
-
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {description}
             </p>
           </div>
         </div>
 
+        {/* Sisi Kanan: Info Tanggal, Tema, Status User */}
         <div className="flex items-center gap-3">
-          <div
-            className="
-              hidden xl:flex
-              items-center gap-2
-              rounded-2xl
-              border border-slate-200 dark:border-slate-700
-              bg-white dark:bg-slate-800
-              px-4 py-2
-            "
-          >
-            <Search className="h-4 w-4 text-slate-400 dark:text-slate-500" />
-            <input
-              placeholder="Search..."
-              className="
-                w-52
-                bg-transparent
-                text-sm text-slate-900 dark:text-white
-                outline-none
-                placeholder:text-slate-400 dark:placeholder:text-slate-500
-              "
-            />
-          </div>
-
           <div
             className="
               hidden lg:flex
@@ -130,7 +105,7 @@ export function HeaderBar({
             </span>
           </div>
 
-          {/* Theme Toggle Button */}
+          {/* Tombol Ganti Tema */}
           <button
             type="button"
             onClick={onToggleTheme}
@@ -146,28 +121,8 @@ export function HeaderBar({
           >
             {isDark ? <Sun className="h-5 w-5 text-amber-500" /> : <Moon className="h-5 w-5" />}
           </button>
-
-          <button
-            className="
-              relative
-              h-11 w-11
-              rounded-2xl
-              border border-slate-200 dark:border-slate-700
-              bg-white dark:bg-slate-800
-            "
-            aria-label="Notifications"
-          >
-            <Bell className="mx-auto h-5 w-5 text-slate-700 dark:text-slate-200" />
-            <span
-              className="
-                absolute right-2 top-2
-                h-2 w-2
-                rounded-full
-                bg-red-500
-              "
-            />
-          </button>
-
+          
+          {/* Status Identitas Admin */}
           <div
             className="
               flex items-center gap-3
@@ -182,7 +137,7 @@ export function HeaderBar({
                 className="
                   h-10 w-10
                   rounded-full
-                  bg-gradient-to-br
+                  bg-linear-to-br
                   from-blue-500
                   to-indigo-600
                 "
