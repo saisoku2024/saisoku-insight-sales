@@ -99,24 +99,35 @@ return ( <div className="min-h-screen bg-slate-50 px-4 py-4 text-slate-900 trans
       </div>
     </section>
 
-    {/* RIGHT */}
-    <section className="flex flex-col justify-center bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-5 py-8 text-slate-900 transition-colors duration-300 dark:bg-transparent dark:text-white sm:px-8 lg:px-10 lg:py-12">
-      <div className="mx-auto flex h-full w-full max-w-md flex-col justify-center">
-        {children}
-      </div>
-    </section>
+   {/* RIGHT */}
+<section
+  className="
+    flex flex-col justify-center
+    border-l border-slate-400/40
+    bg-[linear-gradient(135deg,#eef6ff_0%,#dbeafe_35%,#60a5fa_100%)]
+    px-5 py-8
+    text-slate-900
+    transition-colors duration-300
+    dark:border-white/10
+    dark:bg-transparent
+    dark:text-white
+    sm:px-8
+    lg:px-10 lg:py-12
+  "
+>
+  <div className="mx-auto flex h-full w-full max-w-md flex-col justify-center">
+    {children}
   </div>
-
-  <footer className="mx-auto mt-4 flex max-w-7xl flex-col gap-2 px-1 text-center text-xs text-slate-500 transition-colors duration-300 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:text-left">
-    <p>© 2026 SAISOKU.ID Systems · INSIGHT Platform · Internal Use Only</p>
-
-    <p className="text-slate-400 dark:text-slate-500">
-      Integrated Sales Intelligence & Growth Hub
-    </p>
-  </footer>
+</section>
 </div>
 
+<footer className="mx-auto mt-4 flex max-w-7xl flex-col gap-2 px-1 text-center text-xs text-slate-500 transition-colors duration-300 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:text-left">
+  <p>© 2026 SAISOKU.ID Systems · INSIGHT Platform · Internal Use Only</p>
+
+  <p className="text-slate-400 dark:text-slate-500">
+    Integrated Sales Intelligence & Growth Hub
+  </p>
+</footer>
+</div>
 )
 }
-
-export default AuthShell
