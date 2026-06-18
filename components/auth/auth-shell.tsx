@@ -44,9 +44,11 @@ export function AuthShell({
   features = defaultHighlights,
 }: AuthShellProps) {
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#1e293b_0%,#0f172a_35%,#0b1120_70%,#020617_100%)] px-4 py-4 text-white transition dark:bg-[radial-gradient(circle_at_top_left,#020617_0%,#020617_40%,#000000_100%)] sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-      <div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-7xl overflow-hidden rounded-[32px] border border-white/10 bg-white/8 shadow-2xl shadow-black/30 backdrop-blur-xl lg:grid-cols-[1.08fr_0.92fr] dark:border-white/8 dark:bg-white/[0.04]">
-        <section className="relative flex flex-col justify-between overflow-hidden px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
+    <div className="min-h-screen bg-slate-50 px-4 py-4 text-slate-900 transition-colors duration-300 dark:bg-[radial-gradient(circle_at_top_left,#020617_0%,#020617_40%,#000000_100%)] dark:text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+      <div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-7xl overflow-hidden rounded-4xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/50 backdrop-blur-xl transition-colors duration-300 lg:grid-cols-[1.08fr_0.92fr] dark:border-white/8 dark:bg-white/2 dark:shadow-black/50">
+        
+        {/* Left Section - Tetap menggunakan gradasi gelap agar teks putih & logo inverted tetap terlihat */}
+        <section className="relative flex flex-col justify-between overflow-hidden bg-[radial-gradient(circle_at_top_left,#1e293b_0%,#0f172a_35%,#0b1120_70%,#020617_100%)] px-6 py-8 transition-colors duration-300 dark:bg-transparent sm:px-8 sm:py-10 lg:px-10 lg:py-12">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.26),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.18),transparent_28%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.10),transparent_28%)]" />
           <div className="relative z-10 flex items-start justify-between gap-4">
             <BrandMark inverted />
@@ -64,7 +66,7 @@ export function AuthShell({
             {features.map((item) => {
               const Icon = item.icon
               return (
-                <div key={item.title} className="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur dark:border-white/8 dark:bg-white/[0.06]">
+                <div key={item.title} className="rounded-3xl border border-white/10 bg-white/10 p-4 backdrop-blur dark:border-white/8 dark:bg-white/6">
                   <div className="mb-4 inline-flex rounded-2xl border border-white/10 bg-white/10 p-3">
                     <Icon className="h-4 w-4" />
                   </div>
@@ -75,13 +77,17 @@ export function AuthShell({
             })}
           </div>
         </section>
-        <section className="bg-white px-5 py-8 text-slate-900 transition dark:bg-slate-950 dark:text-white sm:px-8 lg:px-10 lg:py-12">
+
+        {/* Right Section - Mengikuti transisi tema kontainer (putih/transparan) */}
+        <section className="flex flex-col justify-center px-5 py-8 text-slate-900 transition-colors duration-300 dark:text-white sm:px-8 lg:px-10 lg:py-12">
           <div className="mx-auto flex h-full w-full max-w-md flex-col justify-center">{children}</div>
         </section>
       </div>
-      <footer className="mx-auto mt-4 flex max-w-7xl flex-col gap-2 px-1 text-center text-xs text-slate-300 sm:flex-row sm:items-center sm:justify-between sm:text-left">
+
+      {/* Footer */}
+      <footer className="mx-auto mt-4 flex max-w-7xl flex-col gap-2 px-1 text-center text-xs text-slate-500 transition-colors duration-300 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:text-left">
         <p>© 2026 SAISOKU.ID Systems · INSIGHT Platform · Internal Use Only</p>
-        <p className="text-slate-400">Integrated Sales Intelligence &amp; Growth Hub</p>
+        <p className="text-slate-400 dark:text-slate-500">Integrated Sales Intelligence &amp; Growth Hub</p>
       </footer>
     </div>
   )

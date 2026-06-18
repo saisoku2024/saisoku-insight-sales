@@ -140,7 +140,7 @@ ${u.role === "owner"
 
 `}>
 
-{u.role || "regular"}
+{u.role || "reguler"}
 
 </span>
 
@@ -238,7 +238,7 @@ Next
 
 <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
 
-<div className="bg-white w-[420px] rounded-lg p-6 shadow-lg">
+<div className="bg-white w-105 rounded-lg p-6 shadow-lg">
 
 <h2 className="text-lg font-semibold mb-4">
 User Details
@@ -262,7 +262,7 @@ User Details
 <div>{selectedUser.phone}</div>
 
 <div>Role</div>
-<div>{selectedUser.role || "regular"}</div>
+<div>{selectedUser.role || "reguler"}</div>
 
 <div>Balance</div>
 <div>Rp {selectedUser.balance}</div>
@@ -325,7 +325,7 @@ Close
 
 <div className="fixed inset-0 bg-black/30 flex items-center justify-center">
 
-<div className="bg-white w-[420px] rounded-lg p-6 shadow-lg space-y-3">
+<div className="bg-white w-105 rounded-lg p-6 shadow-lg space-y-3">
 
 <h2 className="text-lg font-semibold">
 Edit User
@@ -346,15 +346,14 @@ className="border w-full p-2 rounded"
 />
 
 <select
-value={editUser.role || "regular"}
+value={editUser.role || "reguler"}
 onChange={(e)=>setEditUser({...editUser,role:e.target.value})}
 className="border w-full p-2 rounded"
 >
 
-<option value="owner">Owner</option>
 <option value="admin">Admin</option>
 <option value="reseller">Reseller</option>
-<option value="regular">Regular</option>
+<option value="reguler">Reguler</option>
 
 </select>
 

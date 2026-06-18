@@ -7,7 +7,7 @@ export interface User {
   email?: string
   phone?: string
 
-  role: "owner" | "admin" | "reseller" | "regular"
+  role: "owner" | "admin" | "reseller" | "reguler"
 
   balance: number
 
