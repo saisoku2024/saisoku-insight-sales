@@ -119,7 +119,7 @@ export function HeaderBar({
                 className="
                   h-10 w-10
                   rounded-full
-                  bg-gradient-to-br
+                  bg-linear-to-br
                   from-blue-500
                   to-indigo-600
                 "
