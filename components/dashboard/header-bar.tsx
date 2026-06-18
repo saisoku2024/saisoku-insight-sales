@@ -58,10 +58,10 @@ export function HeaderBar({
 
           <div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-              Dashboard
+              INSIGHT Dashboard
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Sales Monitoring & Reporting
+              Integrated Sales Monitoring & Reporting
             </p>
           </div>
         </div>
