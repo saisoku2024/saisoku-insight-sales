@@ -93,7 +93,12 @@ export default function DashboardLayout({
   }
 
   if (!isReady) {
-    return <AuthLoadingScreen title="Memverifikasi sesi" description="Checking access ke dashboard admin..." />
+    return (
+      <AuthLoadingScreen 
+        title="Memverifikasi sesi" 
+        description="Checking access ke dashboard admin..." 
+      />
+    )
   }
 
   return (
@@ -144,7 +149,7 @@ export default function DashboardLayout({
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 
-          <main className="min-w-0 rounded-[32px] border border-white/70 bg-white/70 p-4 shadow-xl shadow-slate-200/40 backdrop-blur sm:p-5 lg:p-8">
+          <main className="min-w-0 rounded-4xl border border-white/70 bg-white/70 p-4 shadow-xl shadow-slate-200/40 backdrop-blur sm:p-5 lg:p-8">
             {children}
           </main>
         </div>
