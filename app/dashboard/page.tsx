@@ -48,7 +48,7 @@ function Panel({
   className?: string
 }) {
   return (
-    <div className={`rounded-[32px] border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/40 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl ${className}`}>
+    <div className={`rounded-4xl border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/40 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl ${className}`}>
       <div className="mb-4 flex items-start justify-between gap-4 p-6 pb-0">
         <div>
           <h2 className="text-sm font-medium text-gray-800 dark:text-gray-100">{title}</h2>
@@ -73,7 +73,7 @@ function StatCard({
   accentClass?: string
 }) {
   return (
-    <div className="group flex min-h-[120px] flex-col justify-center rounded-[28px] border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/40 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
+    <div className="group flex min-h-30 flex-col justify-center rounded-[28px] border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/40 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
       <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
       <div className={`mt-2 text-2xl font-semibold tracking-tight ${accentClass}`}>
         {value}
@@ -88,7 +88,7 @@ function Skeleton({ className = "" }: { className?: string }) {
 
 function StatCardSkeleton() {
   return (
-    <div className="flex min-h-[120px] flex-col justify-center rounded-[28px] border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/40 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+    <div className="flex min-h-30 flex-col justify-center rounded-[28px] border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/40 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
       <Skeleton className="h-3 w-28" />
       <Skeleton className="mt-3 h-7 w-36" />
     </div>
@@ -102,7 +102,7 @@ function ChartSkeleton() {
         <Skeleton className="h-3 w-44" />
         <Skeleton className="h-3 w-24" />
       </div>
-      <Skeleton className="h-[240px] w-full rounded-2xl" />
+      <Skeleton className="h-60 w-full rounded-2xl" />
     </div>
   )
 }
