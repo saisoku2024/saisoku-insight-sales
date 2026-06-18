@@ -7,8 +7,6 @@ import {
   Moon,
 } from "lucide-react"
 
-import { BrandMark } from "@/components/brand/brand-mark"
-
 type HeaderBarProps = {
   title: string
   description: string
@@ -19,19 +17,7 @@ type HeaderBarProps = {
   onToggleTheme: () => void
 }
 
-function getGreeting() {
-  const hour = new Date().getHours()
-
-  if (hour < 12) return "Good Morning"
-  if (hour < 17) return "Good Afternoon"
-  if (hour < 21) return "Good Evening"
-
-  return "Good Night"
-}
-
 export function HeaderBar({
-  title,
-  description,
   userEmail,
   currentDateLabel,
   onOpenSidebar,
@@ -52,7 +38,7 @@ export function HeaderBar({
       "
     >
       <div className="flex items-center justify-between gap-4">
-        {/* Sisi Kiri: Menu Mobile, Brand, Greetings */}
+        {/* Sisi Kiri: Menu Mobile & Premium Static Title */}
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -70,19 +56,12 @@ export function HeaderBar({
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="hidden lg:block">
-            <BrandMark />
-          </div>
-
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              {getGreeting()}
-            </p>
-            <h1 className="text-3xl font-bold text-slate-950 dark:text-white">
-              {title}
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+              Dashboard
             </h1>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              {description}
+              Sales Monitoring & Reporting
             </p>
           </div>
         </div>
