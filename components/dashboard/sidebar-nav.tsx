@@ -27,7 +27,7 @@ export function SidebarNav({
     <div
       className="
         flex h-full flex-col
-        rounded-[32px]
+        rounded-4xl
         border border-white/60
         bg-white/80
         dark:border-white/10
@@ -60,7 +60,7 @@ export function SidebarNav({
                     className={cn(
                       "group flex items-start gap-3 rounded-2xl px-3 py-3 transition-all",
                       active
-                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20"
+                        ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white"
                     )}
                   >
@@ -101,14 +101,14 @@ export function SidebarNav({
           className="
             rounded-3xl
             border border-slate-200
-            bg-gradient-to-br from-slate-50 to-slate-100
+            bg-linear-to-br from-slate-50 to-slate-100
             dark:border-white/10
             dark:from-slate-900
             dark:to-slate-800
             p-4
           "
         >
-          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-sm font-bold text-white">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 to-indigo-600 text-sm font-bold text-white">
             {userEmail?.charAt(0).toUpperCase() ?? "A"}
           </div>
           <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
