@@ -99,18 +99,24 @@ return ( <div className="min-h-screen bg-slate-50 px-4 py-4 text-slate-900 trans
       </div>
     </section>
 
-   {/* RIGHT */}
+{/* RIGHT */}
 <section
   className="
     flex flex-col justify-center
+
     border-l border-slate-400/40
-    bg-[linear-gradient(135deg,#eef6ff_0%,#dbeafe_35%,#60a5fa_100%)]
-    px-5 py-8
-    text-slate-900
-    transition-colors duration-300
     dark:border-white/10
-    dark:bg-transparent
+
+    bg-[linear-gradient(135deg,#eef6ff_0%,#dbeafe_35%,#60a5fa_100%)]
+    dark:bg-[radial-gradient(circle_at_top_left,#1e293b_0%,#0f172a_35%,#0b1120_70%,#020617_100%)]
+
+    px-5 py-8
+
+    text-slate-900
     dark:text-white
+
+    transition-colors duration-300
+
     sm:px-8
     lg:px-10 lg:py-12
   "
@@ -119,6 +125,7 @@ return ( <div className="min-h-screen bg-slate-50 px-4 py-4 text-slate-900 trans
     {children}
   </div>
 </section>
+
 </div>
 
 <footer className="mx-auto mt-4 flex max-w-7xl flex-col gap-2 px-1 text-center text-xs text-slate-500 transition-colors duration-300 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:text-left">
@@ -128,6 +135,8 @@ return ( <div className="min-h-screen bg-slate-50 px-4 py-4 text-slate-900 trans
     Integrated Sales Intelligence & Growth Hub
   </p>
 </footer>
-</div>
-)
+    </div>
+  )
 }
+
+export default AuthShell
