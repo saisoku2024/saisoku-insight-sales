@@ -27,10 +27,10 @@ export const dashboardNavigation: DashboardNavGroup[] = [
     label: "Overview",
     items: [
       {
-        title: "INSIGHT Dashboard",
+        title: "Dashboard",
         href: "/dashboard",
         icon: LayoutDashboard,
-        description: "Intregrated Sales Monitoring & Reporting",
+        description: "Sales Monitoring & Reporting",
       },
       {
         title: "Sales Report",

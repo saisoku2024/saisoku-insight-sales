@@ -66,16 +66,18 @@ export function HeaderBar({
           </div>
         </div>
 
-        {/* Sisi Kanan: Info Tanggal, Tema, Status User */}
-        <div className="flex items-center gap-3">
+        {/* Sisi Kanan: Info Tanggal, Tema, Status User (Gap diubah ke gap-2) */}
+        <div className="flex items-center gap-2">
+          {/* 1. Box tanggal (Tinggi h-14 & px-5) */}
           <div
             className="
               hidden lg:flex
+              h-14
               items-center gap-2
               rounded-2xl
               border border-slate-200 dark:border-slate-700
               bg-white dark:bg-slate-800
-              px-4 py-2
+              px-5
             "
           >
             <Clock3 className="h-4 w-4 text-blue-500 dark:text-blue-400" />
@@ -84,12 +86,12 @@ export function HeaderBar({
             </span>
           </div>
 
-          {/* Tombol Ganti Tema */}
+          {/* 2. Tombol Dark Mode (Ukuran h-14 w-14) */}
           <button
             type="button"
             onClick={onToggleTheme}
             className="
-              flex h-11 w-11 items-center justify-center
+              flex h-14 w-14 items-center justify-center
               rounded-2xl
               border border-slate-200 dark:border-slate-700
               bg-white dark:bg-slate-800
@@ -101,22 +103,23 @@ export function HeaderBar({
             {isDark ? <Sun className="h-5 w-5 text-amber-500" /> : <Moon className="h-5 w-5" />}
           </button>
           
-          {/* Status Identitas Admin */}
+          {/* 3. Box User (Tinggi h-14 & px-4) */}
           <div
             className="
-              flex items-center gap-3
+              flex h-14 items-center gap-3
               rounded-2xl
               border border-slate-200 dark:border-slate-700
               bg-white dark:bg-slate-800
-              px-4 py-2
+              px-4
             "
           >
             <div className="relative">
+              {/* 4. Avatar Gradient (bg-gradient-to-br) */}
               <div
                 className="
                   h-10 w-10
                   rounded-full
-                  bg-linear-to-br
+                  bg-gradient-to-br
                   from-blue-500
                   to-indigo-600
                 "
