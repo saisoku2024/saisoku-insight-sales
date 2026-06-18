@@ -31,9 +31,26 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [isDark, setIsDark] = useState(false)
 
   const pageMeta = useMemo(() => getPageMeta(pathname), [pathname])
   const currentDateLabel = useMemo(() => formatCurrentDate(), [])
+
+  useEffect(() => {
+    const storedTheme = window.localStorage.getItem("saisoku-theme")
+    const nextIsDark = storedTheme ? storedTheme === "dark" : true
+    setIsDark(nextIsDark)
+    document.documentElement.classList.toggle("dark", nextIsDark)
+  }, [])
+
+  function toggleTheme() {
+    setIsDark((currentValue) => {
+      const nextValue = !currentValue
+      document.documentElement.classList.toggle("dark", nextValue)
+      window.localStorage.setItem("saisoku-theme", nextValue ? "dark" : "light")
+      return nextValue
+    })
+  }
 
   useEffect(() => {
     let mounted = true
@@ -114,7 +131,7 @@ export default function DashboardLayout({
         lg:px-6 lg:py-6
       "
     >
-      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-450 gap-6">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-[1800px] gap-6">
         <aside className="hidden w-[320px] shrink-0 lg:block">
           <SidebarNav
             pathname={pathname}
@@ -158,6 +175,8 @@ export default function DashboardLayout({
             userEmail={userEmail}
             currentDateLabel={currentDateLabel}
             onOpenSidebar={() => setSidebarOpen(true)}
+            isDark={isDark}
+            onToggleTheme={toggleTheme}
           />
 
           <main
