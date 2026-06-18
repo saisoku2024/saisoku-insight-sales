@@ -24,7 +24,7 @@ export function SidebarNav({
   onLogout,
 }: SidebarNavProps) {
   return (
-    <div className="flex h-full flex-col rounded-[28px] border border-slate-200 bg-white p-4 shadow-xl shadow-slate-200/40">
+    <div className="flex h-full flex-col rounded-[32px] border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
       <BrandMark className="px-2 pb-6" compact />
 
       <div className="space-y-6 overflow-y-auto pr-1">
@@ -47,7 +47,7 @@ export function SidebarNav({
                     className={cn(
                       "group flex items-start gap-3 rounded-2xl px-3 py-3 transition-all",
                       active
-                        ? "bg-slate-950 text-white shadow-lg shadow-slate-950/20"
+                        ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
                     )}
                   >
@@ -82,12 +82,15 @@ export function SidebarNav({
       </div>
 
       <div className="mt-6 border-t border-slate-200 pt-4">
-        <div className="rounded-2xl bg-slate-50 p-3">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-            Signed in
-          </p>
-          <p className="mt-2 truncate text-sm font-semibold text-slate-900">
+        <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-sm font-bold text-white">
+            {userEmail?.charAt(0).toUpperCase() ?? "A"}
+          </div>
+          <p className="truncate text-sm font-semibold text-slate-900">
             {userEmail || "Admin"}
+          </p>
+          <p className="text-xs font-medium text-slate-500">
+            Administrator
           </p>
         </div>
 
@@ -95,7 +98,7 @@ export function SidebarNav({
           type="button"
           onClick={onLogout}
           disabled={isLoggingOut}
-          className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-70"
+          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
         >
           <LogOut className="h-4 w-4" />
           {isLoggingOut ? "Signing out..." : "Logout"}

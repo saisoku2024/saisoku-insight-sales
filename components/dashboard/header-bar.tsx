@@ -1,4 +1,11 @@
-import { Menu, Sparkles } from "lucide-react"
+"use client"
+
+import {
+  Bell,
+  Clock3,
+  Menu,
+  Search,
+} from "lucide-react"
 
 import { BrandMark } from "@/components/brand/brand-mark"
 
@@ -10,6 +17,16 @@ type HeaderBarProps = {
   onOpenSidebar: () => void
 }
 
+function getGreeting() {
+  const hour = new Date().getHours()
+
+  if (hour < 12) return "Good Morning"
+  if (hour < 17) return "Good Afternoon"
+  if (hour < 21) return "Good Evening"
+
+  return "Good Night"
+}
+
 export function HeaderBar({
   title,
   description,
@@ -18,13 +35,35 @@ export function HeaderBar({
   onOpenSidebar,
 }: HeaderBarProps) {
   return (
-    <header className="sticky top-0 z-20 mb-6 rounded-[28px] border border-white/70 bg-white/80 px-4 py-4 shadow-lg shadow-slate-200/40 backdrop-blur lg:px-6">
+    <header
+      className="
+      sticky top-0 z-20 mb-6
+
+      rounded-[32px]
+
+      border border-white/80
+
+      bg-white/80
+
+      px-5 py-5
+
+      shadow-[0_20px_50px_rgba(15,23,42,0.08)]
+
+      backdrop-blur-xl
+    "
+    >
       <div className="flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex items-center gap-4">
           <button
             type="button"
             onClick={onOpenSidebar}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
+            className="
+            inline-flex h-11 w-11 items-center justify-center
+            rounded-2xl
+            border border-slate-200
+            bg-white
+            lg:hidden
+          "
             aria-label="Open navigation"
           >
             <Menu className="h-5 w-5" />
@@ -34,34 +73,150 @@ export function HeaderBar({
             <BrandMark />
           </div>
 
-          <div className="lg:hidden">
-            <p className="text-base font-semibold tracking-tight text-slate-950">{title}</p>
-            <p className="text-xs text-slate-500">{description}</p>
+          <div>
+            <p className="text-xs font-medium text-slate-500">
+              {getGreeting()}
+            </p>
+
+            <h1 className="text-3xl font-bold text-slate-950">
+              {title}
+            </h1>
+
+            <p className="text-sm text-slate-500">
+              {description}
+            </p>
           </div>
         </div>
 
-        <div className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 lg:flex">
-          <span className="rounded-full bg-emerald-100 p-2 text-emerald-600">
-            <Sparkles className="h-4 w-4" />
-          </span>
-          <div className="text-right">
-            <p className="text-sm font-semibold text-slate-900">{userEmail || "Admin"}</p>
-            <p className="text-xs text-slate-500">{currentDateLabel}</p>
+        <div className="flex items-center gap-3">
+          <div
+            className="
+            hidden xl:flex
+            items-center gap-2
+
+            rounded-2xl
+
+            border border-slate-200
+
+            bg-white
+
+            px-4 py-2
+          "
+          >
+            <Search className="h-4 w-4 text-slate-400" />
+
+            <input
+              placeholder="Search..."
+              className="
+              w-52
+              bg-transparent
+              text-sm
+              outline-none
+            "
+            />
           </div>
-        </div>
-      </div>
 
-      <div className="mt-5 hidden items-end justify-between gap-4 lg:flex">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-slate-950">{title}</h1>
-          <p className="mt-1 text-sm text-slate-500">{description}</p>
-        </div>
+          <div
+            className="
+            hidden lg:flex
+            items-center gap-2
 
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-right">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Activity Window
-          </p>
-          <p className="mt-1 text-sm font-medium text-slate-800">{currentDateLabel}</p>
+            rounded-2xl
+
+            border border-slate-200
+
+            bg-white
+
+            px-4 py-2
+          "
+          >
+            <Clock3 className="h-4 w-4 text-blue-500" />
+
+            <span className="text-sm text-slate-700">
+              {currentDateLabel}
+            </span>
+          </div>
+
+          <button
+            className="
+            relative
+
+            h-11 w-11
+
+            rounded-2xl
+
+            border border-slate-200
+
+            bg-white
+          "
+            aria-label="Notifications"
+          >
+            <Bell className="mx-auto h-5 w-5 text-slate-700" />
+
+            <span
+              className="
+              absolute right-2 top-2
+
+              h-2 w-2
+
+              rounded-full
+
+              bg-red-500
+            "
+            />
+          </button>
+
+          <div
+            className="
+            flex items-center gap-3
+
+            rounded-2xl
+
+            border border-slate-200
+
+            bg-white
+
+            px-4 py-2
+          "
+          >
+            <div className="relative">
+              <div
+                className="
+                h-10 w-10
+
+                rounded-full
+
+                bg-gradient-to-br
+                from-blue-500
+                to-indigo-600
+              "
+              />
+
+              <span
+                className="
+                absolute bottom-0 right-0
+
+                h-3 w-3
+
+                rounded-full
+
+                border-2 border-white
+
+                bg-emerald-500
+              "
+              />
+            </div>
+
+            <div className="hidden md:block">
+              <p className="text-sm font-semibold text-slate-900">
+                {userEmail || "Admin"}
+              </p>
+
+              <p className="text-xs text-emerald-600">
+                Online
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </header>

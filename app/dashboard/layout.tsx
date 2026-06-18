@@ -102,8 +102,19 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#f8fafc,white_45%,#eef2ff)] px-4 py-4 text-slate-900 lg:px-6 lg:py-6">
-      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-[1600px] gap-6">
+    <div
+      className="
+        min-h-screen
+        bg-[radial-gradient(circle_at_top,#eff6ff_0%,#ffffff_45%,#dbeafe_100%)]
+        dark:bg-[radial-gradient(circle_at_top,#0f172a_0%,#020617_100%)]
+        px-4 py-4
+        text-slate-900
+        dark:text-white
+        transition-colors duration-300
+        lg:px-6 lg:py-6
+      "
+    >
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-450 gap-6">
         <aside className="hidden w-[320px] shrink-0 lg:block">
           <SidebarNav
             pathname={pathname}
@@ -149,7 +160,21 @@ export default function DashboardLayout({
             onOpenSidebar={() => setSidebarOpen(true)}
           />
 
-          <main className="min-w-0 rounded-4xl border border-white/70 bg-white/70 p-4 shadow-xl shadow-slate-200/40 backdrop-blur sm:p-5 lg:p-8">
+          <main
+            className="
+              min-w-0
+              rounded-[36px]
+              border border-white/70
+              bg-white/80
+              shadow-[0_20px_60px_rgba(15,23,42,0.08)]
+              backdrop-blur-xl
+              dark:border-white/10
+              dark:bg-slate-900/40
+              p-4
+              sm:p-5
+              lg:p-8
+            "
+          >
             {children}
           </main>
         </div>

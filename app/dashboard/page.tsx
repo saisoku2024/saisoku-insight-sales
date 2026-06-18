@@ -48,15 +48,17 @@ function Panel({
   className?: string
 }) {
   return (
-    <div className={`rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm transition-colors ${className}`}>
-      <div className="mb-4 flex items-start justify-between gap-4">
+    <div className={`rounded-[32px] border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/40 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl ${className}`}>
+      <div className="mb-4 flex items-start justify-between gap-4 p-6 pb-0">
         <div>
           <h2 className="text-sm font-medium text-gray-800 dark:text-gray-100">{title}</h2>
           {subtitle ? <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{subtitle}</p> : null}
         </div>
         {right}
       </div>
-      {children}
+      <div className="p-6 pt-2">
+        {children}
+      </div>
     </div>
   )
 }
@@ -71,7 +73,7 @@ function StatCard({
   accentClass?: string
 }) {
   return (
-    <div className="flex min-h-[100px] flex-col justify-center rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm transition hover:shadow-md dark:hover:shadow-gray-900/50">
+    <div className="group flex min-h-[120px] flex-col justify-center rounded-[28px] border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/40 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
       <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
       <div className={`mt-2 text-2xl font-semibold tracking-tight ${accentClass}`}>
         {value}
@@ -86,7 +88,7 @@ function Skeleton({ className = "" }: { className?: string }) {
 
 function StatCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm min-h-[100px]">
+    <div className="flex min-h-[120px] flex-col justify-center rounded-[28px] border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/40 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
       <Skeleton className="h-3 w-28" />
       <Skeleton className="mt-3 h-7 w-36" />
     </div>
@@ -110,7 +112,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
-  const [isDarkMode, setIsDarkMode] = useState(false)
 
   const [meta, setMeta] = useState({
     gmvToday: 0,
@@ -132,12 +133,12 @@ export default function DashboardPage() {
     []
   )
 
-  // Chart Options (Updated to handle dark mode text colors dynamically)
+  // Chart Options
   const chartOptionsCount = useMemo(
     () => ({
       responsive: true,
       maintainAspectRatio: false,
-      color: isDarkMode ? "#e5e7eb" : "#374151", // Text color adapts to dark mode
+      color: "#6b7280", 
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -155,40 +156,22 @@ export default function DashboardPage() {
           ticks: { 
             maxRotation: 0, 
             autoSkip: true,
-            color: isDarkMode ? "#9ca3af" : "#6b7280"
+            color: "#6b7280"
           },
         },
         y: {
           beginAtZero: true,
-          grid: { color: isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)" },
+          grid: { color: "rgba(0,0,0,0.06)" },
           ticks: {
             precision: 0,
-            color: isDarkMode ? "#9ca3af" : "#6b7280",
+            color: "#6b7280",
             callback: (v: any) => Number(v).toLocaleString("id-ID"),
           },
         },
       },
     }),
-    [isDarkMode]
+    []
   )
-
-  // Toggle Dark Mode Handler
-  const toggleDarkMode = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove("dark")
-      setIsDarkMode(false)
-    } else {
-      document.documentElement.classList.add("dark")
-      setIsDarkMode(true)
-    }
-  }
-
-  // Check initial theme on mount
-  useEffect(() => {
-    if (document.documentElement.classList.contains("dark")) {
-      setIsDarkMode(true)
-    }
-  }, [])
 
   // Fetching Data
   async function fetchTransactionsOnce(): Promise<TxRow[]> {
@@ -332,9 +315,9 @@ export default function DashboardPage() {
   }, [])
 
   return (
-    <div className="space-y-8 dark:bg-gray-900 min-h-screen transition-colors">
+    <div className="space-y-8 min-h-screen transition-colors">
       
-      {/* HEADER & DARK MODE TOGGLE */}
+      {/* HEADER */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
@@ -344,23 +327,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button
-            onClick={toggleDarkMode}
-            className="flex items-center justify-center rounded-full border border-gray-200 bg-white p-2 text-gray-600 shadow-sm transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-            aria-label="Toggle Dark Mode"
-          >
-            {isDarkMode ? (
-              // Sun Icon for Dark Mode
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-2.25l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-              </svg>
-            ) : (
-              // Moon Icon for Light Mode
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-              </svg>
-            )}
-          </button>
           <div className="text-xs text-gray-400 dark:text-gray-500">
             {updatedAt ? `Updated: ${updatedAt.toLocaleString("id-ID")}` : "—"}
           </div>
@@ -474,19 +440,6 @@ export default function DashboardPage() {
             />
           </>
         )}
-      </div>
-
-      {/* FOOTER: KETERANGAN */}
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 text-sm text-gray-600 dark:text-gray-300 shadow-sm transition-colors">
-        <div className="font-semibold text-gray-800 dark:text-gray-100 mb-2">Keterangan</div>
-        <div className="space-y-1">
-          <div><b className="dark:text-white">GMV Today</b> = jumlah Rp penjualan hari ini</div>
-          <div><b className="dark:text-white">GMV Monthly</b> = jumlah Rp penjualan bulan ini</div>
-          <div><b className="dark:text-white">Profit Today</b> = jumlah Rp profit hari ini</div>
-          <div><b className="dark:text-white">Profit Monthly</b> = jumlah Rp profit bulan ini</div>
-          <div><b className="dark:text-white">Profit Yearly</b> = jumlah Rp profit tahun ini</div>
-          <div><b className="dark:text-white">Transaction</b> = jumlah transaksi paid all time</div>
-        </div>
       </div>
     </div>
   )
