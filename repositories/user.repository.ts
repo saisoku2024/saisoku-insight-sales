@@ -47,7 +47,8 @@ export async function updateUserRepository(user: Partial<User>) {
     .from("users")
     .update({
       email: user.email,
-      phone: user.phone,
+      name: user.name,
+      whatsapp: user.whatsapp,
       role: user.role,
     })
     .eq("id", user.id)

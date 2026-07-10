@@ -1,23 +1,19 @@
 export interface User {
   id: string
 
-  telegram_id?: string
-  username?: string
-
-  email?: string
-  phone?: string
+  telegram_id?: number
+  username?: string | null
+  name?: string | null
+  whatsapp?: string | null
+  email?: string | null
 
   role: "owner" | "admin" | "reseller" | "reguler"
 
   balance: number
 
   is_active: boolean
+  is_banned: boolean
 
   created_at: string
-
-  updated_at?: string
-
-  deleted_at?: string | null
-
-  last_sign_in_at?: string | null
-}
+  last_checkin_at?: string | null
+}

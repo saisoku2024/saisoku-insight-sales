@@ -57,7 +57,8 @@ export default function UsersPage() {
       .from("users")
       .update({
         email: editUser.email,
-        phone: editUser.phone,
+        name: editUser.name,
+        whatsapp: editUser.whatsapp,
         role: editUser.role,
       })
       .eq("id", editUser.id);
@@ -124,7 +125,7 @@ export default function UsersPage() {
                     </span>
                   </td>
                   <td className="p-3">
-                    {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleString("id-ID") : "-"}
+                    {u.last_checkin_at ? new Date(u.last_checkin_at).toLocaleString("id-ID") : "-"}
                   </td>
                   <td className="p-3">
                     <span
@@ -203,8 +204,10 @@ export default function UsersPage() {
               <div>{selectedUser.username}</div>
               <div className="text-[var(--insight-muted)]">Email</div>
               <div>{selectedUser.email || "-"}</div>
-              <div className="text-[var(--insight-muted)]">Phone</div>
-              <div>{selectedUser.phone || "-"}</div>
+              <div className="text-[var(--insight-muted)]">Name</div>
+              <div>{selectedUser.name || "-"}</div>
+              <div className="text-[var(--insight-muted)]">WhatsApp</div>
+              <div>{selectedUser.whatsapp || "-"}</div>
               <div className="text-[var(--insight-muted)]">Role</div>
               <div>{selectedUser.role || "reguler"}</div>
               <div className="text-[var(--insight-muted)]">Balance</div>
@@ -258,9 +261,16 @@ export default function UsersPage() {
             />
 
             <input
-              value={editUser.phone || ""}
-              onChange={(e) => setEditUser({ ...editUser, phone: e.target.value })}
-              placeholder="Phone"
+              value={editUser.name || ""}
+              onChange={(e) => setEditUser({ ...editUser, name: e.target.value })}
+              placeholder="Name"
+              className="h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+            />
+
+            <input
+              value={editUser.whatsapp || ""}
+              onChange={(e) => setEditUser({ ...editUser, whatsapp: e.target.value })}
+              placeholder="WhatsApp"
               className="h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
             />
 

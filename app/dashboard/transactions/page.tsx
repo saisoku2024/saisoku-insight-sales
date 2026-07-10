@@ -59,7 +59,8 @@ export default function TransactionsPage() {
         expired_at,
         created_at,
         invoice,
-        products(name),
+        products(name, modal),
+        users(username),
         product_accounts(email,password,pin,sold_at)
       `)
       .order("created_at", { ascending: false });
@@ -154,6 +155,8 @@ export default function TransactionsPage() {
 
     const rows = (data as unknown as Transaction[])?.map((t: Transaction) => {
       const pa = getProductAccount(t);
+      const modal = Number(t.products?.modal || 0);
+      const profit = t.status === "paid" ? (t.price || 0) - modal : 0;
       return {
         Invoice: t.invoice || "-",
         TrxCode: t.trx_code || "-",
@@ -162,9 +165,11 @@ export default function TransactionsPage() {
         Password: pa?.password || "-",
         PIN: pa?.pin || "-",
         Price: t.price || 0,
-        UserID: t.user_id || "-",
+        Profit: profit,
+        Username: t.users?.username ? `@${t.users.username}` : "-",
         PaymentMethod: t.payment_method || "-",
-        Status: getStatus(t),
+        PaymentStatus: t.status || "-",
+        AccountStatus: getStatus(t),
         PurchasedAt: t.purchased_at ? new Date(t.purchased_at).toLocaleString("id-ID") : "-",
         CreatedAt: t.created_at ? new Date(t.created_at).toLocaleString("id-ID") : "-",
       };
@@ -278,9 +283,11 @@ export default function TransactionsPage() {
                 <th className="p-3">Pass</th>
                 <th className="p-3">PIN</th>
                 <th className="p-3">Harga</th>
-                <th className="p-3">User ID</th>
+                <th className="p-3">Profit</th>
+                <th className="p-3">User</th>
                 <th className="p-3">Payment</th>
-                <th className="p-3">Status</th>
+                <th className="p-3">Status Bayar</th>
+                <th className="p-3">Masa Aktif</th>
                 <th className="p-3">Tanggal</th>
               </tr>
             </thead>
@@ -288,13 +295,13 @@ export default function TransactionsPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                  <td colSpan={13} className="p-8 text-center text-xl text-[var(--insight-muted)]">
                     Loading...
                   </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                  <td colSpan={13} className="p-8 text-center text-xl text-[var(--insight-muted)]">
                     Tidak ada transaksi.
                   </td>
                 </tr>
@@ -302,6 +309,7 @@ export default function TransactionsPage() {
                 transactions.map((t, i) => {
                   const pa = getProductAccount(t);
                   const status = getStatus(t);
+                  const profit = t.status === "paid" ? (t.price || 0) - Number(t.products?.modal || 0) : 0;
 
                   return (
                     <tr
@@ -315,8 +323,24 @@ export default function TransactionsPage() {
                       <td className="p-3">{pa?.password || "-"}</td>
                       <td className="p-3">{pa?.pin || "-"}</td>
                       <td className="p-3">Rp {Number(t.price || 0).toLocaleString("id-ID")}</td>
-                      <td className="p-3">{t.user_id}</td>
+                      <td className="p-3 text-green-600 dark:text-green-400">
+                        {t.status === "paid" ? `Rp ${profit.toLocaleString("id-ID")}` : "-"}
+                      </td>
+                      <td className="p-3">{t.users?.username ? `@${t.users.username}` : "-"}</td>
                       <td className="p-3">{t.payment_method || "-"}</td>
+                      <td className="p-3">
+                        <span
+                          className={`inline-block border-[3px] border-[var(--insight-border)] px-2 py-1 text-lg leading-none ${
+                            t.status === "paid"
+                              ? "bg-green-100 text-green-700"
+                              : t.status === "pending"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {t.status || "-"}
+                        </span>
+                      </td>
                       <td className="p-3">
                         <span
                           className={`inline-block border-[3px] border-[var(--insight-border)] px-2 py-1 text-lg leading-none ${getStatusBadgeClass(status)}`}

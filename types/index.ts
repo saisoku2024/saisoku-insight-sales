@@ -58,7 +58,8 @@ export interface Transaction {
   approved_at?: string | null
   expired_at?: string | null
   created_at: string
-  products?: { name: string | null } | null
+  products?: { name: string | null; modal: number | null } | null
+  users?: { username: string | null } | null
   product_accounts?:
     | { email: string | null; password: string | null; pin: string | null; sold_at: string | null }
     | { email: string | null; password: string | null; pin: string | null; sold_at: string | null }[]
