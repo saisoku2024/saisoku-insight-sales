@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { AuthLoadingScreen } from "@/components/auth/auth-loading-screen"
 import { HeaderBar } from "@/components/dashboard/header-bar"
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
+import { getActiveAdminProfile } from "@/lib/admin-auth"
 import { dashboardNavigation, getPageMeta } from "@/lib/navigation"
 import { supabase } from "@/lib/supabaseClient"
 
@@ -67,7 +68,15 @@ export default function DashboardLayout({
         return
       }
 
-      setUserEmail(session.user.email ?? null)
+      const { profile } = await getActiveAdminProfile()
+
+      if (!profile) {
+        await supabase.auth.signOut()
+        router.replace("/login?error=unauthorized")
+        return
+      }
+
+      setUserEmail(profile.email ?? session.user.email ?? null)
       setIsReady(true)
     }
 
@@ -85,8 +94,21 @@ export default function DashboardLayout({
         return
       }
 
-      setUserEmail(session.user.email ?? null)
-      setIsReady(true)
+      void getActiveAdminProfile().then(async ({ profile }) => {
+        if (!mounted) return
+
+        if (!profile) {
+          await supabase.auth.signOut()
+          if (!mounted) return
+          setUserEmail(null)
+          setIsReady(false)
+          router.replace("/login?error=unauthorized")
+          return
+        }
+
+        setUserEmail(profile.email ?? session.user.email ?? null)
+        setIsReady(true)
+      })
     })
 
     return () => {

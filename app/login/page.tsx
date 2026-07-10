@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { AuthLoadingScreen } from "@/components/auth/auth-loading-screen"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { AuthThemeToggle } from "@/components/auth/auth-theme-toggle"
+import { getActiveAdminProfile, getAdminAccessErrorMessage } from "@/lib/admin-auth"
 import { supabase } from "@/lib/supabaseClient"
 
 const THEME_STORAGE_KEY = "saisoku-theme"
@@ -33,6 +34,11 @@ export default function LoginPage() {
     const nextIsDark = storedTheme ? storedTheme === "dark" : true
     setIsDark(nextIsDark)
     document.documentElement.classList.toggle("dark", nextIsDark)
+
+    const error = new URLSearchParams(window.location.search).get("error")
+    if (error === "unauthorized") {
+      setErrorMessage(getAdminAccessErrorMessage())
+    }
   }, [])
 
   useEffect(() => {
@@ -45,7 +51,18 @@ export default function LoginPage() {
       if (!mounted) return
       
       if (session) {
-        router.replace("/dashboard")
+        const { profile } = await getActiveAdminProfile()
+        if (!mounted) return
+
+        if (profile) {
+          router.replace("/dashboard")
+          return
+        }
+
+        await supabase.auth.signOut()
+        if (!mounted) return
+        setErrorMessage(getAdminAccessErrorMessage())
+        setIsBooting(false)
         return
       }
       setIsBooting(false)
@@ -88,6 +105,14 @@ export default function LoginPage() {
         setErrorMessage(error.message)
         return
       }
+
+      const { profile, error: profileError } = await getActiveAdminProfile()
+      if (profileError || !profile) {
+        await supabase.auth.signOut()
+        setErrorMessage(getAdminAccessErrorMessage())
+        return
+      }
+
       router.replace("/dashboard")
     } finally {
       setIsSubmitting(false)
