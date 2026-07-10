@@ -118,7 +118,7 @@ export function HeaderBar({
             </div>
 
             <div className="min-w-0">
-              <p className="max-w-[180px] truncate text-xl leading-none text-[var(--insight-text)]">
+              <p className="max-w-[240px] truncate text-lg leading-none text-[var(--insight-text)]">
                 {userEmail || "Admin"}
               </p>
               <p className="text-base leading-none text-emerald-600 dark:text-emerald-400">

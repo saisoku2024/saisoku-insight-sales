@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ChevronDown, LogOut } from "lucide-react"
 
@@ -62,6 +65,30 @@ export function SidebarNav({
   onNavigate,
   onLogout,
 }: SidebarNavProps) {
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({})
+
+  // Initialize group state on path changes
+  useEffect(() => {
+    const nextOpenGroups: Record<string, boolean> = { ...openGroups }
+    groups.forEach((entry) => {
+      if (entry.type === "group") {
+        const hasActiveChild = entry.items.some((item) => isActivePath(pathname, item.href))
+        if (hasActiveChild) {
+          nextOpenGroups[entry.label] = true
+        }
+      }
+    })
+    setOpenGroups(nextOpenGroups)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, groups])
+
+  const toggleGroup = (label: string) => {
+    setOpenGroups((prev) => ({
+      ...prev,
+      [label]: !prev[label],
+    }))
+  }
+
   return (
     <div
       className="
@@ -88,23 +115,31 @@ export function SidebarNav({
             )
           }
 
+          const isOpen = Boolean(openGroups[entry.label])
+
           return (
             <div key={entry.label} className="space-y-2">
-              <div className="insight-button flex items-center justify-between px-3 py-2 text-xl leading-none">
+              <button
+                type="button"
+                onClick={() => toggleGroup(entry.label)}
+                className="insight-button flex w-full items-center justify-between px-3 py-2 text-xl leading-none text-left"
+              >
                 <span>{entry.label}</span>
-                <ChevronDown className="h-4 w-4" />
-              </div>
+                <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", isOpen && "rotate-180")} />
+              </button>
 
-              <div className="space-y-2 pl-3">
-                {entry.items.map((item) => (
-                  <SidebarItem
-                    key={item.href}
-                    item={item}
-                    pathname={pathname}
-                    onNavigate={onNavigate}
-                  />
-                ))}
-              </div>
+              {isOpen && (
+                <div className="space-y-2 pl-3">
+                  {entry.items.map((item) => (
+                    <SidebarItem
+                      key={item.href}
+                      item={item}
+                      pathname={pathname}
+                      onNavigate={onNavigate}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )
         })}
