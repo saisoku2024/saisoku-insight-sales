@@ -13,7 +13,7 @@ export function AuthThemeToggle({
     <button
       type="button"
       onClick={onToggle}
-      className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white shadow-lg shadow-black/10 backdrop-blur transition hover:border-white/25 hover:bg-white/15 dark:border-white/10 dark:bg-slate-950/40"
+      className="insight-button inline-flex h-10 min-w-[55px] items-center justify-center px-3"
       aria-label={isDark ? "Aktifkan mode terang" : "Aktifkan mode gelap"}
       title={isDark ? "Mode terang" : "Mode gelap"}
     >

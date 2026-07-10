@@ -4,10 +4,32 @@
 
 :root {
   color-scheme: light;
+  --insight-bg: #e8ecf5;
+  --insight-grid: #d4dbea;
+  --insight-card: #f5f5f5;
+  --insight-panel: #ffffff;
+  --insight-text: #111827;
+  --insight-muted: #475569;
+  --insight-border: #111827;
+  --insight-shadow: #111827;
+  --insight-blue: #2563eb;
+  --insight-cyan: #06b6d4;
+  --insight-grad-1: rgba(124, 58, 237, 0.16);
+  --insight-grad-2: rgba(6, 182, 212, 0.14);
 }
 
 html.dark {
   color-scheme: dark;
+  --insight-bg: #0f172a;
+  --insight-grid: #1e293b;
+  --insight-card: #1e293b;
+  --insight-panel: #0f172a;
+  --insight-text: #f8fafc;
+  --insight-muted: #cbd5e1;
+  --insight-border: #94a3b8;
+  --insight-shadow: #000000;
+  --insight-grad-1: rgba(139, 92, 246, 0.30);
+  --insight-grad-2: rgba(34, 211, 238, 0.22);
 }
 
 * {
@@ -21,17 +43,23 @@ body {
 
 body {
   margin: 0;
-  background: #f8fafc;
-  color: #0f172a;
-  font-family: system-ui, sans-serif;
+  background:
+    linear-gradient(var(--insight-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--insight-grid) 1px, transparent 1px),
+    radial-gradient(circle at 15% 10%, var(--insight-grad-1), transparent 45%),
+    radial-gradient(circle at 85% 90%, var(--insight-grad-2), transparent 45%),
+    var(--insight-bg);
+  background-size: 24px 24px;
+  color: var(--insight-text);
+  font-family: "VT323", "Courier New", monospace;
+  font-size: 20px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 html.dark body {
-  background: #020617;
-  color: #e2e8f0;
+  color: var(--insight-text);
 }
 
 a {
@@ -52,4 +80,75 @@ textarea {
 
 html.dark ::selection {
   background: rgba(148, 163, 184, 0.24);
+}
+
+.insight-card {
+  border: 4px solid var(--insight-border);
+  background: var(--insight-card);
+  color: var(--insight-text);
+  box-shadow: 8px 8px 0 var(--insight-shadow);
+}
+
+.insight-button {
+  border: 3px solid var(--insight-border);
+  background: var(--insight-panel);
+  color: var(--insight-text);
+  box-shadow: 4px 4px 0 var(--insight-shadow);
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.insight-button:hover {
+  transform: translateY(-2px);
+  background: #dbeafe;
+}
+
+html.dark .insight-button:hover {
+  background: #334155;
+}
+
+.insight-dashboard button,
+.insight-dashboard input,
+.insight-dashboard select,
+.insight-dashboard textarea {
+  border-radius: 0 !important;
+}
+
+.insight-dashboard button:not([aria-label="Close navigation"]):not([aria-label="Open navigation"]) {
+  border: 3px solid var(--insight-border);
+  background-color: var(--insight-panel);
+  color: var(--insight-text);
+  box-shadow: 4px 4px 0 var(--insight-shadow);
+}
+
+.insight-dashboard input,
+.insight-dashboard select,
+.insight-dashboard textarea {
+  border: 3px solid var(--insight-border) !important;
+  background-color: var(--insight-panel) !important;
+  color: var(--insight-text) !important;
+  box-shadow: 4px 4px 0 var(--insight-shadow);
+}
+
+.insight-dashboard table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 20px;
+}
+
+.insight-dashboard th {
+  border-bottom: 3px solid var(--insight-border);
+  color: var(--insight-text);
+  font-weight: 400;
+}
+
+.insight-dashboard td {
+  border-bottom: 2px solid color-mix(in srgb, var(--insight-border) 42%, transparent);
+}
+
+.insight-dashboard ::placeholder {
+  color: var(--insight-muted);
+  opacity: 0.8;
 }

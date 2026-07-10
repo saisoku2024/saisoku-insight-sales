@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import * as XLSX from "xlsx";
+import type { Transaction } from "@/types";
+
+type ProductAccount = {
+  email: string | null;
+  password: string | null;
+  pin: string | null;
+  sold_at: string | null;
+};
 
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
 
   const [filterBy, setFilterBy] = useState("invoice");
   const [searchText, setSearchText] = useState("");
@@ -83,7 +91,7 @@ export default function TransactionsPage() {
     return query;
   }
 
-  async function loadTransactions() {
+  const loadTransactions = useCallback(async () => {
     setLoading(true);
 
     const { data, error } = await buildTransactionQuery(true);
@@ -95,15 +103,21 @@ export default function TransactionsPage() {
       return;
     }
 
-    setTransactions(data || []);
+    setTransactions((data as unknown as Transaction[]) || []);
     setLoading(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, filterBy, searchText, productFilter, dateFrom, dateTo]);
+
+  function getProductAccount(t: Transaction): ProductAccount | null {
+    if (!t.product_accounts) return null;
+    return Array.isArray(t.product_accounts)
+      ? (t.product_accounts[0] ?? null)
+      : t.product_accounts;
   }
 
-  function getStatus(t: any) {
-    const soldAt = Array.isArray(t.product_accounts)
-      ? t.product_accounts?.[0]?.sold_at
-      : t.product_accounts?.sold_at;
-
+  function getStatus(t: Transaction) {
+    const pa = getProductAccount(t);
+    const soldAt = pa?.sold_at;
     const baseDate = soldAt || t.purchased_at || t.created_at;
 
     if (!baseDate) return "unknown";
@@ -111,21 +125,11 @@ export default function TransactionsPage() {
     const start = new Date(baseDate);
     const now = new Date();
 
-    const startDateOnly = new Date(
-      start.getFullYear(),
-      start.getMonth(),
-      start.getDate()
-    );
-
-    const nowDateOnly = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    );
+    const startDateOnly = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     const diffDays = Math.floor(
-      (nowDateOnly.getTime() - startDateOnly.getTime()) /
-        (1000 * 60 * 60 * 24)
+      (nowDateOnly.getTime() - startDateOnly.getTime()) / (1000 * 60 * 60 * 24)
     );
 
     if (diffDays <= 27) return "active";
@@ -134,18 +138,9 @@ export default function TransactionsPage() {
   }
 
   function getStatusBadgeClass(status: string) {
-    if (status === "active") {
-      return "bg-green-100 text-green-700";
-    }
-
-    if (status === "expiring") {
-      return "bg-yellow-100 text-yellow-700";
-    }
-
-    if (status === "expired") {
-      return "bg-red-100 text-red-700";
-    }
-
+    if (status === "active") return "bg-green-100 text-green-700";
+    if (status === "expiring") return "bg-yellow-100 text-yellow-700";
+    if (status === "expired") return "bg-red-100 text-red-700";
     return "bg-gray-100 text-gray-700";
   }
 
@@ -157,57 +152,58 @@ export default function TransactionsPage() {
       return;
     }
 
-    const rows =
-      data?.map((t: any) => {
-        const pa = Array.isArray(t.product_accounts)
-          ? t.product_accounts?.[0]
-          : t.product_accounts;
-
-        return {
-          Invoice: t.invoice || "-",
-          TrxCode: t.trx_code || "-",
-          Product: t.products?.name || "-",
-          Email: pa?.email || "-",
-          Password: pa?.password || "-",
-          PIN: pa?.pin || "-",
-          Price: t.price || 0,
-          UserID: t.user_id || "-",
-          PaymentMethod: t.payment_method || "-",
-          Status: getStatus(t),
-          PurchasedAt: t.purchased_at
-            ? new Date(t.purchased_at).toLocaleString()
-            : "-",
-          CreatedAt: t.created_at
-            ? new Date(t.created_at).toLocaleString()
-            : "-",
-        };
-      }) || [];
+    const rows = (data as unknown as Transaction[])?.map((t: Transaction) => {
+      const pa = getProductAccount(t);
+      return {
+        Invoice: t.invoice || "-",
+        TrxCode: t.trx_code || "-",
+        Product: t.products?.name || "-",
+        Email: pa?.email || "-",
+        Password: pa?.password || "-",
+        PIN: pa?.pin || "-",
+        Price: t.price || 0,
+        UserID: t.user_id || "-",
+        PaymentMethod: t.payment_method || "-",
+        Status: getStatus(t),
+        PurchasedAt: t.purchased_at ? new Date(t.purchased_at).toLocaleString("id-ID") : "-",
+        CreatedAt: t.created_at ? new Date(t.created_at).toLocaleString("id-ID") : "-",
+      };
+    }) || [];
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
-
     XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
     XLSX.writeFile(workbook, "transactions.xlsx");
   }
 
   useEffect(() => {
-    loadProducts();
+    void loadProducts();
   }, []);
 
   useEffect(() => {
-    loadTransactions();
-  }, [page]);
+    void loadTransactions();
+  }, [loadTransactions]);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-xl font-semibold">Transactions</h1>
+    <div className="space-y-6 text-[var(--insight-text)]">
+      {/* HEADER */}
+      <div className="insight-card p-4">
+        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-cyan-100 px-3 py-1 text-lg leading-none text-cyan-800">
+          TRANSACTIONS
+        </span>
+        <h1 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">Transactions</h1>
+        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+          Filter, ekspor, dan audit seluruh transaksi
+        </p>
+      </div>
 
-      <div className="bg-white border rounded-lg p-4 space-y-3">
-        <div className="grid grid-cols-3 gap-3">
+      {/* FILTER PANEL */}
+      <div className="insight-card p-4">
+        <div className="flex flex-wrap gap-3">
           <select
             value={filterBy}
             onChange={(e) => setFilterBy(e.target.value)}
-            className="border rounded p-2"
+            className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
           >
             <option value="invoice">Invoice</option>
             <option value="buyer">User ID</option>
@@ -218,7 +214,7 @@ export default function TransactionsPage() {
             <select
               value={productFilter}
               onChange={(e) => setProductFilter(e.target.value)}
-              className="border rounded p-2"
+              className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
             >
               <option value="">Select Product</option>
               {products.map((p) => (
@@ -229,142 +225,130 @@ export default function TransactionsPage() {
             </select>
           ) : (
             <input
-              placeholder={
-                filterBy === "invoice"
-                  ? "Search invoice..."
-                  : "Search user_id..."
-              }
+              placeholder={filterBy === "invoice" ? "Search invoice..." : "Search user_id..."}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className="border rounded p-2"
+              className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
             />
           )}
 
-          <button
-            onClick={() => {
-              setPage(1);
-              loadTransactions();
-            }}
-            className="bg-black text-white px-4 py-2 rounded"
-          >
-            Search
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white border rounded-lg p-4">
-        <div className="grid grid-cols-3 gap-3">
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="border rounded p-2"
+            className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
           />
 
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="border rounded p-2"
+            className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
           />
 
           <button
-            onClick={exportExcel}
-            className="bg-black text-white px-4 py-2 rounded"
+            onClick={() => {
+              setPage(1);
+              void loadTransactions();
+            }}
+            className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+          >
+            Search
+          </button>
+
+          <button
+            onClick={() => void exportExcel()}
+            className="border-[3px] border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
           >
             Export Excel
           </button>
         </div>
       </div>
 
-      <div className="bg-white border rounded-lg overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b bg-gray-50">
-            <tr>
-              <th className="p-3">No</th>
-              <th className="p-3">Invoice</th>
-              <th className="p-3">Produk</th>
-              <th className="p-3">Email</th>
-              <th className="p-3">Pass</th>
-              <th className="p-3">PIN</th>
-              <th className="p-3">Harga</th>
-              <th className="p-3">User ID</th>
-              <th className="p-3">Payment</th>
-              <th className="p-3">Status</th>
-              <th className="p-3">Tanggal</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading ? (
+      {/* TABLE */}
+      <div className="insight-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
               <tr>
-                <td colSpan={11} className="p-4 text-center">
-                  Loading...
-                </td>
+                <th className="p-3">No</th>
+                <th className="p-3">Invoice</th>
+                <th className="p-3">Produk</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Pass</th>
+                <th className="p-3">PIN</th>
+                <th className="p-3">Harga</th>
+                <th className="p-3">User ID</th>
+                <th className="p-3">Payment</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Tanggal</th>
               </tr>
-            ) : transactions.length === 0 ? (
-              <tr>
-                <td colSpan={11} className="p-4 text-center">
-                  Tidak ada transaksi.
-                </td>
-              </tr>
-            ) : (
-              transactions.map((t, i) => {
-                const pa = Array.isArray(t.product_accounts)
-                  ? t.product_accounts?.[0]
-                  : t.product_accounts;
+            </thead>
 
-                const status = getStatus(t);
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={11} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                    Loading...
+                  </td>
+                </tr>
+              ) : transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                    Tidak ada transaksi.
+                  </td>
+                </tr>
+              ) : (
+                transactions.map((t, i) => {
+                  const pa = getProductAccount(t);
+                  const status = getStatus(t);
 
-                return (
-                  <tr key={t.id} className="border-b">
-                    <td className="p-3">{(page - 1) * limit + i + 1}</td>
-                    <td className="p-3">{t.invoice || "-"}</td>
-                    <td className="p-3">{t.products?.name || "-"}</td>
-                    <td className="p-3">{pa?.email || "-"}</td>
-                    <td className="p-3">{pa?.password || "-"}</td>
-                    <td className="p-3">{pa?.pin || "-"}</td>
-                    <td className="p-3">
-                      Rp {Number(t.price || 0).toLocaleString("id-ID")}
-                    </td>
-                    <td className="p-3">{t.user_id}</td>
-                    <td className="p-3">{t.payment_method || "-"}</td>
-                    <td className="p-3">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getStatusBadgeClass(
-                          status
-                        )}`}
-                      >
-                        {status}
-                      </span>
-                    </td>
-                    <td className="p-3">
-                      {t.created_at
-                        ? new Date(t.created_at).toLocaleString()
-                        : "-"}
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+                  return (
+                    <tr
+                      key={t.id}
+                      className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60"
+                    >
+                      <td className="p-3">{(page - 1) * limit + i + 1}</td>
+                      <td className="p-3">{t.invoice || "-"}</td>
+                      <td className="p-3">{t.products?.name || "-"}</td>
+                      <td className="p-3">{pa?.email || "-"}</td>
+                      <td className="p-3">{pa?.password || "-"}</td>
+                      <td className="p-3">{pa?.pin || "-"}</td>
+                      <td className="p-3">Rp {Number(t.price || 0).toLocaleString("id-ID")}</td>
+                      <td className="p-3">{t.user_id}</td>
+                      <td className="p-3">{t.payment_method || "-"}</td>
+                      <td className="p-3">
+                        <span
+                          className={`inline-block border-[3px] border-[var(--insight-border)] px-2 py-1 text-lg leading-none ${getStatusBadgeClass(status)}`}
+                        >
+                          {status}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        {t.created_at ? new Date(t.created_at).toLocaleString("id-ID") : "-"}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="flex gap-2 items-center">
+      {/* PAGINATION */}
+      <div className="flex items-center gap-3">
         <button
           onClick={() => setPage(page - 1)}
           disabled={page === 1}
-          className="border px-3 py-1 rounded disabled:opacity-50"
+          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
         >
           Prev
         </button>
-
-        <span>Page {page}</span>
-
+        <span className="text-lg">Page {page}</span>
         <button
           onClick={() => setPage(page + 1)}
-          className="border px-3 py-1 rounded"
+          className="insight-button px-4 py-2 text-lg leading-none"
         >
           Next
         </button>

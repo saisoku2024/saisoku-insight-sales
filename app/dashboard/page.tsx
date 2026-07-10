@@ -11,6 +11,8 @@ import {
   Tooltip,
   Legend,
   Title,
+  type TooltipItem,
+  type ChartData,
 } from "chart.js"
 import { Bar } from "react-chartjs-2"
 
@@ -48,15 +50,15 @@ function Panel({
   className?: string
 }) {
   return (
-    <div className={`rounded-4xl border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/40 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-xl ${className}`}>
-      <div className="mb-4 flex items-start justify-between gap-4 p-6 pb-0">
+    <div className={`insight-card ${className}`}>
+      <div className="mb-4 flex items-start justify-between gap-4 p-4 pb-0">
         <div>
-          <h2 className="text-sm font-medium text-gray-800 dark:text-gray-100">{title}</h2>
-          {subtitle ? <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{subtitle}</p> : null}
+          <h2 className="text-[26px] leading-none text-[var(--insight-text)]">{title}</h2>
+          {subtitle ? <p className="mt-1 text-lg leading-none text-[var(--insight-muted)]">{subtitle}</p> : null}
         </div>
         {right}
       </div>
-      <div className="p-6 pt-2">
+      <div className="p-4 pt-2">
         {children}
       </div>
     </div>
@@ -73,9 +75,9 @@ function StatCard({
   accentClass?: string
 }) {
   return (
-    <div className="group flex min-h-30 flex-col justify-center rounded-[28px] border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/40 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(15,23,42,0.10)]">
-      <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
-      <div className={`mt-2 text-2xl font-semibold tracking-tight ${accentClass}`}>
+    <div className="insight-card group flex min-h-30 flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
+      <div className="text-xl leading-none text-[var(--insight-muted)]">{label}</div>
+      <div className={`mt-2 text-[34px] leading-none ${accentClass}`}>
         {value}
       </div>
     </div>
@@ -83,12 +85,12 @@ function StatCard({
 }
 
 function Skeleton({ className = "" }: { className?: string }) {
-  return <div className={`animate-pulse rounded-xl bg-gray-100 dark:bg-gray-700 ${className}`} />
+  return <div className={`animate-pulse bg-slate-200 dark:bg-slate-700 ${className}`} />
 }
 
 function StatCardSkeleton() {
   return (
-    <div className="flex min-h-30 flex-col justify-center rounded-[28px] border border-slate-200 dark:border-white/10 bg-white/90 dark:bg-slate-900/40 p-6 shadow-[0_10px_30px_rgba(15,23,42,0.05)]">
+    <div className="insight-card flex min-h-30 flex-col justify-center p-4">
       <Skeleton className="h-3 w-28" />
       <Skeleton className="mt-3 h-7 w-36" />
     </div>
@@ -102,7 +104,7 @@ function ChartSkeleton() {
         <Skeleton className="h-3 w-44" />
         <Skeleton className="h-3 w-24" />
       </div>
-      <Skeleton className="h-60 w-full rounded-2xl" />
+      <Skeleton className="h-60 w-full" />
     </div>
   )
 }
@@ -125,8 +127,8 @@ export default function DashboardPage() {
     bannedUsers: 0,
   })
 
-  const [todayChart, setTodayChart] = useState<any>(null)
-  const [monthlySalesChart, setMonthlySalesChart] = useState<any>(null)
+  const [todayChart, setTodayChart] = useState<ChartData<"bar"> | null>(null)
+  const [monthlySalesChart, setMonthlySalesChart] = useState<ChartData<"bar"> | null>(null)
 
   const months = useMemo(
     () => ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
@@ -143,7 +145,7 @@ export default function DashboardPage() {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: (ctx: any) => {
+            label: (ctx: TooltipItem<"bar">) => {
               const v = ctx.raw
               return typeof v === "number" ? `${v.toLocaleString("id-ID")} transaksi` : String(v)
             },
@@ -165,7 +167,7 @@ export default function DashboardPage() {
           ticks: {
             precision: 0,
             color: "#6b7280",
-            callback: (v: any) => Number(v).toLocaleString("id-ID"),
+            callback: (v: number | string) => Number(v).toLocaleString("id-ID"),
           },
         },
       },
@@ -303,38 +305,39 @@ export default function DashboardPage() {
 
         computeAll(txs, userCounts)
         setUpdatedAt(new Date())
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (cancelled) return
-        setErrorMsg(e?.message ?? "Failed to load dashboard")
+        setErrorMsg(e instanceof Error ? e.message : "Failed to load dashboard")
       } finally {
         if (!cancelled) setLoading(false)
       }
     })()
 
     return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
-    <div className="space-y-8 min-h-screen transition-colors">
+    <div className="min-h-screen space-y-6 transition-colors">
       
       {/* HEADER */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
+          <h1 className="text-[34px] leading-none text-[var(--insight-text)]">
             Overview
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Dashboard analytics summary</p>
+          <p className="text-xl leading-none text-[var(--insight-muted)]">Dashboard analytics summary</p>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="text-xs text-gray-400 dark:text-gray-500">
+          <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-1 text-lg leading-none text-[var(--insight-muted)] shadow-[4px_4px_0_var(--insight-shadow)]">
             {updatedAt ? `Updated: ${updatedAt.toLocaleString("id-ID")}` : "—"}
           </div>
         </div>
       </div>
 
       {errorMsg ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-900/20 p-4 text-sm text-red-700 dark:text-red-400">
+        <div className="border-[3px] border-red-700 bg-red-50 p-4 text-xl leading-none text-red-700 shadow-[4px_4px_0_#7f1d1d] dark:bg-red-950/30 dark:text-red-300">
           {errorMsg}
         </div>
       ) : null}
@@ -385,22 +388,22 @@ export default function DashboardPage() {
         <Panel
           title="Today Sales"
           subtitle="Jumlah transaksi paid hari ini per produk"
-          right={<span className="text-xs text-gray-400 dark:text-gray-500">Today</span>}
+          right={<span className="border-[3px] border-[var(--insight-border)] bg-violet-100 px-2 py-1 text-base leading-none text-violet-800">Today</span>}
           className="h-[320px]"
         >
           {loading ? (
             <ChartSkeleton />
-          ) : todayChart && todayChart.labels.length > 0 ? (
+          ) : todayChart && (todayChart.labels?.length ?? 0) > 0 ? (
             <Bar data={todayChart} options={chartOptionsCount} />
           ) : (
-            <div className="text-sm text-gray-400 dark:text-gray-500">No sales today.</div>
+            <div className="text-xl text-[var(--insight-muted)]">No sales today.</div>
           )}
         </Panel>
 
         <Panel
           title="Monthly Sales"
           subtitle="Jumlah transaksi paid per bulan (Jan–Des tahun berjalan)"
-          right={<span className="text-xs text-gray-400 dark:text-gray-500">Year</span>}
+          right={<span className="border-[3px] border-[var(--insight-border)] bg-cyan-100 px-2 py-1 text-base leading-none text-cyan-800">Year</span>}
           className="h-[320px]"
         >
           {loading ? (
@@ -408,7 +411,7 @@ export default function DashboardPage() {
           ) : monthlySalesChart ? (
             <Bar data={monthlySalesChart} options={chartOptionsCount} />
           ) : (
-            <div className="text-sm text-gray-400 dark:text-gray-500">No data.</div>
+            <div className="text-xl text-[var(--insight-muted)]">No data.</div>
           )}
         </Panel>
       </div>

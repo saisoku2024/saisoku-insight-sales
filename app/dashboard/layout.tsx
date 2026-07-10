@@ -122,17 +122,22 @@ export default function DashboardLayout({
     <div
       className="
         min-h-screen
-        bg-[radial-gradient(circle_at_top,#eff6ff_0%,#ffffff_45%,#dbeafe_100%)]
-        dark:bg-[radial-gradient(circle_at_top,#0f172a_0%,#020617_100%)]
-        px-4 py-4
-        text-slate-900
-        dark:text-white
+        text-[var(--insight-text)]
         transition-colors duration-300
-        lg:px-6 lg:py-6
       "
     >
-      <div className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-[1800px] gap-6">
-        <aside className="hidden w-[320px] shrink-0 lg:block">
+      <HeaderBar
+        title={pageMeta.title}
+        description={pageMeta.description}
+        userEmail={userEmail}
+        currentDateLabel={currentDateLabel}
+        onOpenSidebar={() => setSidebarOpen(true)}
+        isDark={isDark}
+        onToggleTheme={toggleTheme}
+      />
+
+      <div className="flex min-h-[calc(100vh-60px)]">
+        <aside className="hidden w-[240px] shrink-0 lg:block">
           <SidebarNav
             pathname={pathname}
             groups={dashboardNavigation}
@@ -144,12 +149,12 @@ export default function DashboardLayout({
 
         {sidebarOpen ? (
           <div className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm lg:hidden">
-            <div className="absolute left-4 top-4 bottom-4 w-[min(92vw,340px)]">
+            <div className="absolute bottom-0 left-0 top-0 w-[min(92vw,280px)]">
               <div className="relative h-full">
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(false)}
-                  className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm"
+                  className="insight-button absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center text-2xl"
                   aria-label="Close navigation"
                 >
                   <X className="h-4 w-4" />
@@ -168,30 +173,15 @@ export default function DashboardLayout({
           </div>
         ) : null}
 
-        <div className="min-w-0 flex-1">
-          <HeaderBar
-            title={pageMeta.title}
-            description={pageMeta.description}
-            userEmail={userEmail}
-            currentDateLabel={currentDateLabel}
-            onOpenSidebar={() => setSidebarOpen(true)}
-            isDark={isDark}
-            onToggleTheme={toggleTheme}
-          />
-
+        <div className="min-w-0 flex-1 p-4 sm:p-5 lg:p-[30px]">
           <main
             className="
+              insight-dashboard
               min-w-0
-              rounded-[36px]
-              border border-white/70
-              bg-white/80
-              shadow-[0_20px_60px_rgba(15,23,42,0.08)]
-              backdrop-blur-xl
-              dark:border-white/10
-              dark:bg-slate-900/40
-              p-4
-              sm:p-5
-              lg:p-8
+              border-4 border-[var(--insight-border)]
+              bg-[var(--insight-card)]
+              p-4 sm:p-5 lg:p-6
+              shadow-[8px_8px_0_var(--insight-shadow)]
             "
           >
             {children}

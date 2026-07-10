@@ -2,24 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import type { SalesStats, RecentTransaction } from "@/types";
 
 export default function SalesPage() {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<SalesStats>({
     today: 0,
     month: 0,
     year: 0,
     revenue: 0,
   });
 
-  const [recent, setRecent] = useState<any[]>([]);
-  const [dark, setDark] = useState(false);
+  const [recent, setRecent] = useState<RecentTransaction[]>([]);
 
-  useEffect(() => {
-    fetchStats();
-    fetchRecent();
-  }, []);
-
-  const fetchStats = async () => {
+  async function fetchStats() {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
@@ -61,7 +56,7 @@ export default function SalesPage() {
     if (revError) console.error("revenue error:", revError);
 
     let revenue = 0;
-    revData?.forEach((r: any) => {
+    revData?.forEach((r: { price: number | null }) => {
       revenue += Number(r.price || 0);
     });
 
@@ -71,9 +66,9 @@ export default function SalesPage() {
       year: year || 0,
       revenue,
     });
-  };
+  }
 
-  const fetchRecent = async () => {
+  async function fetchRecent() {
     const { data, error } = await supabase
       .from("transactions")
       .select(`
@@ -95,110 +90,113 @@ export default function SalesPage() {
       return;
     }
 
-    setRecent(data || []);
-  };
+    setRecent((data as unknown as RecentTransaction[]) || []);
+  }
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/";
-  };
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchStats();
+    void fetchRecent();
+  }, []);
 
   return (
-    <div
-      className={`${
-        dark ? "bg-gray-900 text-white" : "bg-gray-100 text-black"
-      } min-h-screen p-8`}
-    >
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Sales Dashboard</h1>
-
-        <div className="flex gap-3">
-          <button
-            onClick={() => setDark(!dark)}
-            className="px-4 py-2 rounded bg-gray-800 text-white"
-          >
-            {dark ? "Light Mode" : "Dark Mode"}
-          </button>
-
-          <button
-            onClick={logout}
-            className="px-4 py-2 rounded bg-red-500 text-white"
-          >
-            Logout
-          </button>
-        </div>
+    <div className="space-y-6 text-[var(--insight-text)]">
+      {/* HEADER */}
+      <div className="insight-card p-4">
+        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-blue-100 px-3 py-1 text-lg leading-none text-blue-800">
+          SALES REPORT
+        </span>
+        <h1 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">
+          Sales Dashboard
+        </h1>
+        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+          Ringkasan penjualan dan transaksi terkonfirmasi
+        </p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className={`${dark ? "bg-gray-800" : "bg-white"} p-6 rounded-xl shadow`}>
-          <div className="text-gray-400">Sales Today</div>
-          <div className="text-2xl font-bold">{stats.today}</div>
+      {/* STAT CARDS */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
+          <div className="text-xl leading-none text-[var(--insight-muted)]">Sales Today</div>
+          <div className="mt-2 text-[34px] leading-none text-blue-600 dark:text-blue-300">
+            {stats.today}
+          </div>
         </div>
 
-        <div className={`${dark ? "bg-gray-800" : "bg-white"} p-6 rounded-xl shadow`}>
-          <div className="text-gray-400">Sales Month</div>
-          <div className="text-2xl font-bold">{stats.month}</div>
+        <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
+          <div className="text-xl leading-none text-[var(--insight-muted)]">Sales Month</div>
+          <div className="mt-2 text-[34px] leading-none text-emerald-600 dark:text-emerald-300">
+            {stats.month}
+          </div>
         </div>
 
-        <div className={`${dark ? "bg-gray-800" : "bg-white"} p-6 rounded-xl shadow`}>
-          <div className="text-gray-400">Sales Year</div>
-          <div className="text-2xl font-bold">{stats.year}</div>
+        <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
+          <div className="text-xl leading-none text-[var(--insight-muted)]">Sales Year</div>
+          <div className="mt-2 text-[34px] leading-none text-violet-600 dark:text-violet-300">
+            {stats.year}
+          </div>
         </div>
 
-        <div className={`${dark ? "bg-gray-800" : "bg-white"} p-6 rounded-xl shadow`}>
-          <div className="text-gray-400">Revenue</div>
-          <div className="text-2xl font-bold">
+        <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
+          <div className="text-xl leading-none text-[var(--insight-muted)]">Revenue</div>
+          <div className="mt-2 text-[28px] leading-none text-amber-600 dark:text-amber-300">
             Rp {stats.revenue.toLocaleString("id-ID")}
           </div>
         </div>
       </div>
 
-      <div className={`${dark ? "bg-gray-800" : "bg-white"} rounded-xl shadow p-6`}>
-        <h2 className="text-xl font-semibold mb-4">Recent Transactions</h2>
+      {/* RECENT TRANSACTIONS */}
+      <div className="insight-card overflow-hidden">
+        <div className="border-b-[3px] border-[var(--insight-border)] p-4">
+          <span className="inline-block border-[3px] border-[var(--insight-border)] bg-green-100 px-3 py-1 text-lg leading-none text-green-800">
+            LATEST
+          </span>
+          <h2 className="mt-3 text-[30px] leading-none text-[var(--insight-text)]">
+            Recent Transactions
+          </h2>
+        </div>
 
-        <table className="w-full">
-          <thead>
-            <tr className="border-b">
-              <th className="p-2 text-left">No</th>
-              <th className="p-2 text-left">Invoice</th>
-              <th className="p-2 text-left">Tanggal</th>
-              <th className="p-2 text-left">Produk</th>
-              <th className="p-2 text-left">Harga</th>
-              <th className="p-2 text-left">Payment</th>
-              <th className="p-2 text-left">Status</th>
-              <th className="p-2 text-left">User ID</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {recent.length === 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
               <tr>
-                <td colSpan={8} className="p-4 text-center">
-                  Tidak ada transaksi.
-                </td>
+                <th className="p-3">No</th>
+                <th className="p-3">Invoice</th>
+                <th className="p-3">Tanggal</th>
+                <th className="p-3">Produk</th>
+                <th className="p-3">Harga</th>
+                <th className="p-3">Payment</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">User ID</th>
               </tr>
-            ) : (
-              recent.map((t, index) => (
-                <tr key={t.id} className="border-b">
-                  <td className="p-2">{index + 1}</td>
-                  <td className="p-2">{t.invoice || "-"}</td>
-                  <td className="p-2">
-                    {t.created_at
-                      ? new Date(t.created_at).toLocaleString()
-                      : "-"}
+            </thead>
+
+            <tbody>
+              {recent.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                    Tidak ada transaksi.
                   </td>
-                  <td className="p-2">{t.products?.name || "-"}</td>
-                  <td className="p-2">
-                    Rp {Number(t.price || 0).toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-2">{t.payment_method || "-"}</td>
-                  <td className="p-2">{t.status || "-"}</td>
-                  <td className="p-2">{t.user_id}</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                recent.map((t, index) => (
+                  <tr key={t.id} className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60">
+                    <td className="p-3">{index + 1}</td>
+                    <td className="p-3">{t.invoice || "-"}</td>
+                    <td className="p-3">
+                      {t.created_at ? new Date(t.created_at).toLocaleString("id-ID") : "-"}
+                    </td>
+                    <td className="p-3">{t.products?.name || "-"}</td>
+                    <td className="p-3">Rp {Number(t.price || 0).toLocaleString("id-ID")}</td>
+                    <td className="p-3">{t.payment_method || "-"}</td>
+                    <td className="p-3">{t.status || "-"}</td>
+                    <td className="p-3">{t.user_id}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

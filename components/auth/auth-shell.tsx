@@ -1,140 +1,111 @@
 import type { ReactNode } from "react"
-import { BarChart3, Boxes, ShieldCheck, Sparkles } from "lucide-react"
+import { BarChart3, Boxes, ShieldCheck } from "lucide-react"
 import { BrandMark } from "@/components/brand/brand-mark"
 
 type AuthFeature = {
-title: string
-description: string
-icon: React.ComponentType<{ className?: string }>
+  title: string
+  description: string
+  icon: React.ComponentType<{ className?: string }>
 }
 
 export type AuthShellProps = {
-badge?: string
-title?: string
-description?: string
-children: ReactNode
-rightTop?: ReactNode
-features?: AuthFeature[]
+  badge?: string
+  title?: string
+  description?: string
+  children: ReactNode
+  rightTop?: ReactNode
+  features?: AuthFeature[]
 }
 
 const defaultHighlights: AuthFeature[] = [
-{
-title: "Sales Reporting",
-description:
-"Track revenue, transactions, and performance in a centralized dashboard.",
-icon: BarChart3,
-},
-{
-title: "Account Monitoring",
-description:
-"Monitor user activity and manage secure access across the system.",
-icon: ShieldCheck,
-},
-{
-title: "Stock Management",
-description:
-"Manage inventory, track stock levels, and ensure product availability.",
-icon: Boxes,
-},
+  {
+    title: "Sales Reporting",
+    description: "Revenue, transaksi, dan performa dalam satu panel.",
+    icon: BarChart3,
+  },
+  {
+    title: "Account Monitoring",
+    description: "Kelola user, role, dan akses admin dengan cepat.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Stock Management",
+    description: "Pantau stok akun dan riwayat inventory bot.",
+    icon: Boxes,
+  },
 ]
 
 export function AuthShell({
-badge = "SALES MANAGEMENT SYSTEM",
-title = "Welcome to INSIGHT Workspace",
-description = "Optimize your business operations with integrated sales reporting, account monitoring, and inventory management in one secure workspace.",
-children,
-rightTop,
-features = defaultHighlights,
+  badge = "SALES MANAGEMENT SYSTEM",
+  title = "Welcome to INSIGHT Workspace",
+  description = "Optimize your business operations with integrated sales reporting, account monitoring, and inventory management in one secure workspace.",
+  children,
+  rightTop,
+  features = defaultHighlights,
 }: AuthShellProps) {
-return ( <div className="min-h-screen bg-slate-50 px-4 py-4 text-slate-900 transition-colors duration-300 dark:bg-[radial-gradient(circle_at_top_left,#020617_0%,#020617_40%,#000000_100%)] dark:text-white sm:px-6 sm:py-6 lg:px-8 lg:py-8"> <div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-7xl overflow-hidden rounded-4xl border border-slate-300 bg-white shadow-2xl shadow-slate-300/40 backdrop-blur-xl transition-colors duration-300 lg:grid-cols-[1.08fr_0.92fr] dark:border-white/10 dark:bg-white/5 dark:shadow-black/50">
-
-
-    <section className="relative flex flex-col justify-between overflow-hidden bg-[linear-gradient(135deg,#eef6ff_0%,#dbeafe_35%,#93c5fd_100%)] px-6 py-8 transition-colors duration-300 dark:bg-[radial-gradient(circle_at_top_left,#1e293b_0%,#0f172a_35%,#0b1120_70%,#020617_100%)] sm:px-8 sm:py-10 lg:px-10 lg:py-12">
-
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(37,99,235,0.25),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.12),transparent_28%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.10),transparent_28%)]" />
-
-      <div className="relative z-10 flex items-start justify-between gap-4">
+  return (
+    <div className="min-h-screen px-4 py-4 text-[var(--insight-text)] transition-colors duration-300 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+      <header className="mx-auto mb-6 flex h-[60px] max-w-6xl items-center justify-between border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-5 shadow-[6px_6px_0_var(--insight-shadow)]">
         <BrandMark />
-        {rightTop ? <div className="shrink-0">{rightTop}</div> : null}
-      </div>
-
-      <div className="relative z-10 mt-10 max-w-xl lg:mt-16">
-        <div className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white/90 px-4 py-2 text-xs font-medium uppercase tracking-[0.18em] text-slate-700 shadow-sm dark:border-white/15 dark:bg-white/10 dark:text-slate-200">
-          <Sparkles className="h-4 w-4" />
-          {badge}
+        <div className="flex items-center gap-2">
+          <div className="insight-button flex h-10 min-w-[55px] items-center justify-center px-3 text-xl">
+            ID
+          </div>
+          {rightTop ? <div className="shrink-0">{rightTop}</div> : null}
         </div>
+      </header>
 
-        <h1 className="mt-6 text-4xl font-semibold tracking-tight text-slate-900 dark:text-white sm:text-5xl">
-          {title}
-        </h1>
+      <main className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+        <section className="insight-card flex min-h-[520px] flex-col justify-between p-5 sm:p-6">
+          <div>
+            <span className="inline-block border-[3px] border-[var(--insight-border)] bg-violet-100 px-3 py-1 text-lg leading-none text-violet-800">
+              {badge}
+            </span>
 
-        <p className="mt-5 max-w-lg text-sm leading-7 text-slate-700 dark:text-slate-300 sm:text-base">
-          {description}
-        </p>
-      </div>
+            <h1 className="mt-6 text-[54px] leading-none text-[var(--insight-text)] sm:text-[68px]">
+              INSIGHT
+            </h1>
 
-      <div className="relative z-10 mt-10 grid gap-4 md:grid-cols-3 lg:mt-16">
-        {features.map((item) => {
-          const Icon = item.icon
+            <h2 className="mt-4 max-w-lg text-[34px] leading-none text-[var(--insight-text)]">
+              {title}
+            </h2>
 
-          return (
-            <div
-              key={item.title}
-              className="rounded-3xl border border-slate-300 bg-white/90 p-4 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/10"
-            >
-              <div className="mb-4 inline-flex rounded-2xl border border-slate-300 bg-white p-3 dark:border-white/10 dark:bg-white/10">
-                <Icon className="h-4 w-4 text-slate-700 dark:text-white" />
-              </div>
+            <p className="mt-4 max-w-xl text-xl leading-6 text-[var(--insight-muted)]">
+              {description}
+            </p>
+          </div>
 
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                {item.title}
-              </p>
+          <div className="mt-10 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+            {features.map((item) => {
+              const Icon = item.icon
 
-              <p className="mt-2 text-sm leading-6 text-slate-700 dark:text-slate-300">
-                {item.description}
-              </p>
-            </div>
-          )
-        })}
-      </div>
-    </section>
+              return (
+                <div
+                  key={item.title}
+                  className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 shadow-[4px_4px_0_var(--insight-shadow)]"
+                >
+                  <div className="mb-3 flex h-9 w-9 items-center justify-center border-[3px] border-[var(--insight-border)] bg-[var(--insight-cyan)]">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <p className="text-xl leading-none text-[var(--insight-text)]">{item.title}</p>
+                  <p className="mt-2 text-lg leading-5 text-[var(--insight-muted)]">
+                    {item.description}
+                  </p>
+                </div>
+              )
+            })}
+          </div>
+        </section>
 
-{/* RIGHT */}
-<section
-  className="
-    flex flex-col justify-center
+        <section className="insight-card flex min-h-[520px] items-center justify-center p-5 sm:p-6">
+          <div className="w-full max-w-md">{children}</div>
+        </section>
+      </main>
 
-    border-l border-slate-400/40
-    dark:border-white/10
-
-    bg-[linear-gradient(135deg,#eef6ff_0%,#dbeafe_35%,#60a5fa_100%)]
-    dark:bg-[radial-gradient(circle_at_top_left,#1e293b_0%,#0f172a_35%,#0b1120_70%,#020617_100%)]
-
-    px-5 py-8
-
-    text-slate-900
-    dark:text-white
-
-    transition-colors duration-300
-
-    sm:px-8
-    lg:px-10 lg:py-12
-  "
->
-  <div className="mx-auto flex h-full w-full max-w-md flex-col justify-center">
-    {children}
-  </div>
-</section>
-
-</div>
-
-<footer className="mx-auto mt-4 flex max-w-7xl flex-col gap-2 px-1 text-center text-xs text-slate-500 transition-colors duration-300 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:text-left">
-  <p>© 2026 SAISOKU.ID Systems · INSIGHT Platform · Internal Use Only</p>
-
-  <p className="text-slate-400 dark:text-slate-500">
-    Integrated Sales Intelligence & Growth Hub
-  </p>
-</footer>
+      <footer className="mx-auto mt-5 flex max-w-6xl flex-col gap-2 px-1 text-center text-lg leading-none text-[var(--insight-muted)] sm:flex-row sm:items-center sm:justify-between sm:text-left">
+        <p>© 2026 SAISOKU.ID Systems · INSIGHT Platform</p>
+        <p>Internal Use Only</p>
+      </footer>
     </div>
   )
 }

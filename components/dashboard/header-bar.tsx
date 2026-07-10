@@ -18,6 +18,8 @@ type HeaderBarProps = {
 }
 
 export function HeaderBar({
+  title,
+  description,
   userEmail,
   currentDateLabel,
   onOpenSidebar,
@@ -27,101 +29,81 @@ export function HeaderBar({
   return (
     <header
       className="
-        sticky top-0 z-20 mb-6
-        rounded-4xl
-        border border-white/80 dark:border-white/10
-        bg-white/80 dark:bg-slate-900/40
-        px-5 py-5
-        shadow-[0_20px_50px_rgba(15,23,42,0.08)]
-        backdrop-blur-xl
+        sticky top-0 z-30
+        flex h-[60px] items-center justify-between gap-4
+        border-b-[3px] border-[var(--insight-border)]
+        bg-[var(--insight-card)]
+        px-4 sm:px-5
         transition-colors duration-300
       "
     >
-      <div className="flex items-center justify-between gap-4">
-        {/* Sisi Kiri: Menu Mobile & Premium Static Title */}
-        <div className="flex items-center gap-4">
+      <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
             onClick={onOpenSidebar}
-            className="
-              inline-flex h-11 w-11 items-center justify-center
-              rounded-2xl
-              border border-slate-200 dark:border-slate-700
-              bg-white dark:bg-slate-800
-              text-slate-700 dark:text-slate-200
-              lg:hidden
-            "
+            className="insight-button inline-flex h-10 w-10 items-center justify-center lg:hidden"
             aria-label="Open navigation"
           >
             <Menu className="h-5 w-5" />
           </button>
 
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center border-[3px] border-[var(--insight-border)] bg-[var(--insight-cyan)] text-base shadow-[3px_3px_0_var(--insight-shadow)]">
+            ID
+          </div>
+
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-              INSIGHT Dashboard
+            <h1 className="truncate text-[28px] leading-none text-[var(--insight-text)]">
+              {title}
             </h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Integrated Sales Monitoring & Reporting
+            <p className="-mt-0.5 hidden truncate text-base leading-none text-[var(--insight-muted)] sm:block">
+              {description}
             </p>
           </div>
         </div>
 
-        {/* Sisi Kanan: Info Tanggal, Tema, Status User (Gap diubah ke gap-2) */}
-        <div className="flex items-center gap-2">
-          {/* 1. Box tanggal (Tinggi h-14 & px-5) */}
+        <div className="flex shrink-0 items-center gap-2">
           <div
             className="
               hidden lg:flex
-              h-14
+              h-10
               items-center gap-2
-              rounded-2xl
-              border border-slate-200 dark:border-slate-700
-              bg-white dark:bg-slate-800
-              px-5
+              border-[3px] border-[var(--insight-border)]
+              bg-[var(--insight-panel)]
+              px-3
+              shadow-[4px_4px_0_var(--insight-shadow)]
             "
           >
-            <Clock3 className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-            <span className="text-sm text-slate-700 dark:text-slate-200">
+            <Clock3 className="h-4 w-4 text-[var(--insight-blue)]" />
+            <span className="text-xl leading-none text-[var(--insight-text)]">
               {currentDateLabel}
             </span>
           </div>
 
-          {/* 2. Tombol Dark Mode (Ukuran h-14 w-14) */}
           <button
             type="button"
             onClick={onToggleTheme}
-            className="
-              flex h-14 w-14 items-center justify-center
-              rounded-2xl
-              border border-slate-200 dark:border-slate-700
-              bg-white dark:bg-slate-800
-              text-slate-700 dark:text-slate-200
-              transition hover:bg-slate-50 dark:hover:bg-slate-700
-            "
+            className="insight-button flex h-10 min-w-[55px] items-center justify-center px-3"
             aria-label="Toggle Theme"
           >
             {isDark ? <Sun className="h-5 w-5 text-amber-500" /> : <Moon className="h-5 w-5" />}
           </button>
           
-          {/* 3. Box User (Tinggi h-14 & px-4) */}
           <div
             className="
-              flex h-14 items-center gap-3
-              rounded-2xl
-              border border-slate-200 dark:border-slate-700
-              bg-white dark:bg-slate-800
-              px-4
+              hidden h-10 items-center gap-2
+              border-[3px] border-[var(--insight-border)]
+              bg-[var(--insight-panel)]
+              px-3
+              shadow-[4px_4px_0_var(--insight-shadow)]
+              md:flex
             "
           >
             <div className="relative">
-              {/* 4. Avatar Gradient (bg-gradient-to-br) */}
               <div
                 className="
-                  h-10 w-10
-                  rounded-full
-                  bg-linear-to-br
-                  from-blue-500
-                  to-indigo-600
+                  h-6 w-6
+                  border-2 border-[var(--insight-border)]
+                  bg-[var(--insight-blue)]
                 "
               />
               <span
@@ -135,17 +117,16 @@ export function HeaderBar({
               />
             </div>
 
-            <div className="hidden md:block">
-              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+            <div className="min-w-0">
+              <p className="max-w-[180px] truncate text-xl leading-none text-[var(--insight-text)]">
                 {userEmail || "Admin"}
               </p>
-              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+              <p className="text-base leading-none text-emerald-600 dark:text-emerald-400">
                 Online
               </p>
             </div>
           </div>
         </div>
-      </div>
     </header>
   )
 }

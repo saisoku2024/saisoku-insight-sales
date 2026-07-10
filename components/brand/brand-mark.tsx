@@ -15,7 +15,7 @@ export function BrandMark({
 }: BrandMarkProps) {
   return (
     <div className={cn("flex items-center gap-3", className)}>
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-lg shadow-slate-950/20 ring-1 ring-white/10">
+      <div className="flex h-9 w-9 items-center justify-center border-[3px] border-[var(--insight-border)] bg-[var(--insight-cyan)] text-[var(--insight-text)] shadow-[3px_3px_0_var(--insight-shadow)]">
         <Activity className="h-5 w-5" />
       </div>
 
@@ -23,8 +23,8 @@ export function BrandMark({
         <div>
           <div
             className={cn(
-              "text-lg font-bold tracking-tight",
-              inverted ? "text-white" : "text-slate-900 dark:text-white"
+              "text-[28px] leading-none tracking-normal",
+              inverted ? "text-white" : "text-[var(--insight-text)]"
             )}
           >
             INSIGHT

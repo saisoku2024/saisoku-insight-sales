@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import type { Product } from "@/types";
 
 function currencyIDR(v: number) {
   return `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
 }
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [stocks, setStocks] = useState<any>({});
-  const [selected, setSelected] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [stocks, setStocks] = useState<Record<string, number>>({});
+  const [selected, setSelected] = useState<string[]>([]);
 
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
@@ -32,12 +33,7 @@ export default function ProductsPage() {
   const [showModal, setShowModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const [editingProduct, setEditingProduct] = useState<any>(null);
-
-  useEffect(() => {
-    fetchProducts();
-    fetchStockCount();
-  }, [page, sortField, sortAsc]);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const resetForm = () => {
     setCode("");
@@ -51,8 +47,7 @@ export default function ProductsPage() {
     setEditingProduct(null);
   };
 
-  /* FETCH PRODUCTS */
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     const from = (page - 1) * pageSize;
     const to = page * pageSize;
 
@@ -69,10 +64,9 @@ export default function ProductsPage() {
 
     setProducts(data?.slice(0, pageSize) || []);
     setHasMore((data?.length || 0) > pageSize);
-  };
+  }, [page, sortField, sortAsc]);
 
-  /* FETCH STOCK */
-  const fetchStockCount = async () => {
+  async function fetchStockCount() {
     const { data, error } = await supabase
       .from("product_accounts")
       .select("product_id,status");
@@ -82,19 +76,18 @@ export default function ProductsPage() {
       return;
     }
 
-    const map: any = {};
+    const map: Record<string, number> = {};
 
-    data?.forEach((row: any) => {
+    data?.forEach((row: { product_id: string; status: string }) => {
       if (row.status === "available") {
         map[row.product_id] = (map[row.product_id] || 0) + 1;
       }
     });
 
     setStocks(map);
-  };
+  }
 
-  /* SORT */
-  const sortBy = (field: any) => {
+  function sortBy(field: string) {
     if (sortField === field) {
       setSortAsc(!sortAsc);
     } else {
@@ -102,10 +95,9 @@ export default function ProductsPage() {
       setSortAsc(true);
     }
     setPage(1);
-  };
+  }
 
-  /* ADD PRODUCT */
-  const addProduct = async () => {
+  async function addProduct() {
     if (!code || !name || !price || !duration) {
       alert("Field tidak boleh kosong");
       return false;
@@ -133,12 +125,10 @@ export default function ProductsPage() {
     resetForm();
     await fetchProducts();
     return true;
-  };
+  }
 
-  /* START EDIT */
-  const startEdit = (p: any) => {
+  function startEdit(p: Product) {
     setEditingProduct(p);
-
     setCode(p.product_code || "");
     setName(p.name || "");
     setPrice(String(p.price_normal ?? ""));
@@ -147,12 +137,10 @@ export default function ProductsPage() {
     setDuration(String(p.duration_days ?? ""));
     setDescription(p.description || "");
     setTos(p.tos_description || "");
-
     setShowModal(true);
-  };
+  }
 
-  /* UPDATE PRODUCT */
-  const updateProduct = async () => {
+  async function updateProduct() {
     if (!editingProduct) return;
 
     const { error } = await supabase
@@ -177,11 +165,10 @@ export default function ProductsPage() {
 
     setShowModal(false);
     resetForm();
-    await fetchProducts();
-  };
+    void fetchProducts();
+  }
 
-  /* DELETE SINGLE */
-  const deleteProduct = async (id: any) => {
+  async function deleteProduct(id: string) {
     const confirmDelete = confirm("Delete product?");
     if (!confirmDelete) return;
 
@@ -193,11 +180,10 @@ export default function ProductsPage() {
       return;
     }
 
-    await fetchProducts();
-  };
+    void fetchProducts();
+  }
 
-  /* BULK DELETE */
-  const deleteSelected = async () => {
+  async function deleteSelected() {
     if (selected.length === 0) {
       alert("No product selected");
       return;
@@ -206,10 +192,7 @@ export default function ProductsPage() {
     const confirmDelete = confirm("Delete selected products?");
     if (!confirmDelete) return;
 
-    const { error } = await supabase
-      .from("products")
-      .delete()
-      .in("id", selected);
+    const { error } = await supabase.from("products").delete().in("id", selected);
 
     if (error) {
       console.error("deleteSelected error:", error);
@@ -218,16 +201,13 @@ export default function ProductsPage() {
     }
 
     setSelected([]);
-    await fetchProducts();
-  };
+    void fetchProducts();
+  }
 
-  /* TOGGLE ACTIVE */
-  const toggleProduct = async (id: any, current: any) => {
+  async function toggleProduct(id: string, current: boolean) {
     const { error } = await supabase
       .from("products")
-      .update({
-        is_active: !current,
-      })
+      .update({ is_active: !current })
       .eq("id", id);
 
     if (error) {
@@ -236,173 +216,178 @@ export default function ProductsPage() {
       return;
     }
 
-    await fetchProducts();
-  };
+    void fetchProducts();
+  }
 
-  /* PAGINATION */
   const nextPage = () => setPage(page + 1);
-
   const prevPage = () => {
     if (page > 1) setPage(page - 1);
   };
 
-  return (
-    <div className="max-w-6xl mx-auto text-sm">
-      <h1 className="text-2xl font-bold mb-6">Product Management</h1>
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchProducts();
+    void fetchStockCount();
+  }, [fetchProducts]);
 
-      <div className="flex gap-3 mb-4">
+  const thClass = "p-3 cursor-pointer select-none text-left";
+  const btnPrimary =
+    "border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
+  const btnDanger =
+    "border-[3px] border-[var(--insight-border)] bg-red-600 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
+  const inputClass =
+    "h-10 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none";
+
+  return (
+    <div className="space-y-6 text-[var(--insight-text)]">
+      {/* HEADER */}
+      <div className="insight-card p-4">
+        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-violet-100 px-3 py-1 text-lg leading-none text-violet-800">
+          PRODUCT MANAGEMENT
+        </span>
+        <h1 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">
+          Product List
+        </h1>
+        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+          Manage all products available in the system.
+        </p>
+      </div>
+
+      {/* TOOLBAR */}
+      <div className="flex flex-wrap gap-3">
         <button
           onClick={() => {
             resetForm();
             setShowAddModal(true);
           }}
-          className="h-10 px-5 bg-black text-white rounded-lg hover:bg-gray-800 transition"
+          className={btnPrimary}
         >
           + Add Product
         </button>
 
-        <button
-          onClick={deleteSelected}
-          className="h-10 px-5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-        >
+        <button onClick={() => void deleteSelected()} className={btnDanger}>
           Delete Selected
         </button>
       </div>
 
-      <table className="w-full bg-white rounded-xl shadow-sm text-sm overflow-hidden">
-        <thead className="bg-gray-50 text-gray-700">
-          <tr className="border-b">
-            <th className="p-3">
-              <input
-                type="checkbox"
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelected(products.map((p) => p.id));
-                  } else {
-                    setSelected([]);
-                  }
-                }}
-              />
-            </th>
-
-            <th className="p-3 cursor-pointer" onClick={() => sortBy("product_code")}>
-              Code
-            </th>
-            <th className="p-3 cursor-pointer" onClick={() => sortBy("name")}>
-              Name
-            </th>
-            <th className="p-3 cursor-pointer" onClick={() => sortBy("price_normal")}>
-              Price
-            </th>
-            <th className="p-3 cursor-pointer" onClick={() => sortBy("modal")}>
-              Modal
-            </th>
-            <th className="p-3">Profit</th>
-            <th className="p-3 cursor-pointer" onClick={() => sortBy("reseller_discount")}>
-              Reseller Discount
-            </th>
-            <th className="p-3 cursor-pointer" onClick={() => sortBy("duration_days")}>
-              Duration
-            </th>
-            <th className="p-3">Stock</th>
-            <th className="p-3">Status</th>
-            <th className="p-3">Action</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {products.map((p) => {
-            const stock = stocks[p.id] || 0;
-            const profit = Number(p.price_normal || 0) - Number(p.modal || 0);
-
-            return (
-              <tr key={p.id} className="border-b hover:bg-gray-50 transition cursor-pointer">
-                <td className="p-3">
+      {/* TABLE */}
+      <div className="insight-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
+              <tr>
+                <th className="p-3">
                   <input
                     type="checkbox"
-                    checked={selected.includes(p.id)}
-                    onChange={() => {
-                      if (selected.includes(p.id)) {
-                        setSelected(selected.filter((id) => id !== p.id));
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelected(products.map((p) => p.id));
                       } else {
-                        setSelected([...selected, p.id]);
+                        setSelected([]);
                       }
                     }}
                   />
-                </td>
-
-                <td className="p-3">{p.product_code}</td>
-                <td className="p-3">{p.name}</td>
-                <td className="p-3">{currencyIDR(Number(p.price_normal || 0))}</td>
-                <td className="p-3">{currencyIDR(Number(p.modal || 0))}</td>
-                <td className="p-3">{currencyIDR(profit)}</td>
-                <td className="p-3">
-                  {currencyIDR(Number(p.reseller_discount || 0))}
-                </td>
-                <td className="p-3">{p.duration_days} days</td>
-                <td className="p-3">{stock}</td>
-
-                <td className="p-3">
-                  <button
-                    onClick={() => toggleProduct(p.id, p.is_active)}
-                    className={`px-3 py-1 text-xs font-medium rounded-full text-white ${
-                      p.is_active ? "bg-green-500" : "bg-gray-500"
-                    }`}
-                  >
-                    {p.is_active ? "Active" : "Inactive"}
-                  </button>
-                </td>
-
-                <td className="p-3 flex gap-2">
-                  <button
-                    onClick={() => startEdit(p)}
-                    className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() => deleteProduct(p.id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition"
-                  >
-                    Delete
-                  </button>
-                </td>
+                </th>
+                <th className={thClass} onClick={() => sortBy("product_code")}>Code</th>
+                <th className={thClass} onClick={() => sortBy("name")}>Name</th>
+                <th className={thClass} onClick={() => sortBy("price_normal")}>Price</th>
+                <th className={thClass} onClick={() => sortBy("modal")}>Modal</th>
+                <th className="p-3 text-left">Profit</th>
+                <th className={thClass} onClick={() => sortBy("reseller_discount")}>Reseller Disc</th>
+                <th className={thClass} onClick={() => sortBy("duration_days")}>Duration</th>
+                <th className="p-3 text-left">Stock</th>
+                <th className="p-3 text-left">Status</th>
+                <th className="p-3 text-left">Action</th>
               </tr>
-            );
-          })}
+            </thead>
 
-          {products.length === 0 && (
-            <tr>
-              <td colSpan={11} className="p-6 text-center text-gray-500">
-                No products found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            <tbody>
+              {products.map((p) => {
+                const stock = stocks[p.id] || 0;
+                const profit = Number(p.price_normal || 0) - Number(p.modal || 0);
 
-      <div className="flex gap-4 mt-6">
+                return (
+                  <tr
+                    key={p.id}
+                    className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60"
+                  >
+                    <td className="p-3">
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(p.id)}
+                        onChange={() => {
+                          if (selected.includes(p.id)) {
+                            setSelected(selected.filter((id) => id !== p.id));
+                          } else {
+                            setSelected([...selected, p.id]);
+                          }
+                        }}
+                      />
+                    </td>
+                    <td className="p-3">{p.product_code}</td>
+                    <td className="p-3">{p.name}</td>
+                    <td className="p-3">{currencyIDR(Number(p.price_normal || 0))}</td>
+                    <td className="p-3">{currencyIDR(Number(p.modal || 0))}</td>
+                    <td className="p-3">{currencyIDR(profit)}</td>
+                    <td className="p-3">{currencyIDR(Number(p.reseller_discount || 0))}</td>
+                    <td className="p-3">{p.duration_days} days</td>
+                    <td className="p-3">{stock}</td>
+                    <td className="p-3">
+                      <button
+                        onClick={() => void toggleProduct(p.id, p.is_active)}
+                        className={`border-[3px] border-[var(--insight-border)] px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] ${
+                          p.is_active ? "bg-green-600" : "bg-gray-500"
+                        }`}
+                      >
+                        {p.is_active ? "Active" : "Inactive"}
+                      </button>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => startEdit(p)}
+                          className="border-[3px] border-[var(--insight-border)] bg-amber-400 px-3 py-1 text-lg leading-none text-black shadow-[4px_4px_0_var(--insight-shadow)]"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => void deleteProduct(p.id)}
+                          className="border-[3px] border-[var(--insight-border)] bg-red-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+                        >
+                          Del
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {products.length === 0 && (
+                <tr>
+                  <td colSpan={11} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                    No products found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* PAGINATION */}
+      <div className="flex items-center gap-3">
         <button
           onClick={prevPage}
           disabled={page === 1}
-          className={`px-4 py-2 rounded ${
-            page === 1 ? "bg-gray-300 text-gray-500" : "bg-gray-300"
-          }`}
+          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
         >
           Prev
         </button>
-
-        <div className="px-4 py-2">Page {page}</div>
-
+        <div className="px-4 py-2 text-lg">Page {page}</div>
         <button
           onClick={nextPage}
           disabled={!hasMore}
-          className={`px-4 py-2 rounded ${
-            hasMore
-              ? "bg-black text-white"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
+          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
         >
           Next
         </button>
@@ -410,89 +395,45 @@ export default function ProductsPage() {
 
       {/* ADD PRODUCT MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-[520px] shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Add Product</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="insight-card w-[540px] max-w-[95vw] max-h-[90vh] overflow-y-auto p-6">
+            <h2 className="mb-4 text-[28px] leading-none text-[var(--insight-text)]">
+              Add Product
+            </h2>
 
             <div className="grid grid-cols-2 gap-3">
-              <input
-                className="border p-2 rounded"
-                placeholder="Product Code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-              />
-
-              <input
-                className="border p-2 rounded"
-                placeholder="Product name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-
-              <input
-                type="number"
-                className="border p-2 rounded"
-                placeholder="Price normal"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-              />
-
-              <input
-                type="number"
-                className="border p-2 rounded"
-                placeholder="Reseller discount"
-                value={discount}
-                onChange={(e) => setDiscount(e.target.value)}
-              />
-
-              <input
-                type="number"
-                className="border p-2 rounded"
-                placeholder="Modal / harga beli"
-                value={modal}
-                onChange={(e) => setModal(e.target.value)}
-              />
-
-              <input
-                type="number"
-                className="border p-2 rounded"
-                placeholder="Duration days"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-              />
+              <input className={inputClass} placeholder="Product Code" value={code} onChange={(e) => setCode(e.target.value)} />
+              <input className={inputClass} placeholder="Product name" value={name} onChange={(e) => setName(e.target.value)} />
+              <input type="number" className={inputClass} placeholder="Price normal" value={price} onChange={(e) => setPrice(e.target.value)} />
+              <input type="number" className={inputClass} placeholder="Reseller discount" value={discount} onChange={(e) => setDiscount(e.target.value)} />
+              <input type="number" className={inputClass} placeholder="Modal / harga beli" value={modal} onChange={(e) => setModal(e.target.value)} />
+              <input type="number" className={inputClass} placeholder="Duration days" value={duration} onChange={(e) => setDuration(e.target.value)} />
             </div>
 
             <textarea
-              className="border p-2 rounded w-full mt-3"
+              className="mt-3 h-24 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-xl text-[var(--insight-text)] outline-none resize-none"
               placeholder="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
 
             <textarea
-              className="border p-2 rounded w-full mt-3"
+              className="mt-3 h-24 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-xl text-[var(--insight-text)] outline-none resize-none"
               placeholder="Terms of Service"
               value={tos}
               onChange={(e) => setTos(e.target.value)}
             />
 
-            <div className="flex justify-end gap-3 mt-5">
+            <div className="mt-5 flex justify-end gap-3">
               <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  resetForm();
-                }}
-                className="px-4 py-2 border rounded"
+                onClick={() => { setShowAddModal(false); resetForm(); }}
+                className="insight-button px-4 py-2 text-lg leading-none"
               >
                 Cancel
               </button>
-
               <button
-                onClick={async () => {
-                  const ok = await addProduct();
-                  if (ok) setShowAddModal(false);
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded"
+                onClick={async () => { const ok = await addProduct(); if (ok) setShowAddModal(false); }}
+                className="border-[3px] border-[var(--insight-border)] bg-green-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
               >
                 Create Product
               </button>
@@ -503,86 +444,45 @@ export default function ProductsPage() {
 
       {/* EDIT MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl w-[520px] shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Edit Product</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="insight-card w-[540px] max-w-[95vw] max-h-[90vh] overflow-y-auto p-6">
+            <h2 className="mb-4 text-[28px] leading-none text-[var(--insight-text)]">
+              Edit Product
+            </h2>
 
             <div className="grid grid-cols-2 gap-3">
-              <input
-                className="border p-2 rounded"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="Product Code"
-              />
-
-              <input
-                className="border p-2 rounded"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Name"
-              />
-
-              <input
-                type="number"
-                className="border p-2 rounded"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="Price"
-              />
-
-              <input
-                type="number"
-                className="border p-2 rounded"
-                value={discount}
-                onChange={(e) => setDiscount(e.target.value)}
-                placeholder="Discount"
-              />
-
-              <input
-                type="number"
-                className="border p-2 rounded"
-                value={modal}
-                onChange={(e) => setModal(e.target.value)}
-                placeholder="Modal / harga beli"
-              />
-
-              <input
-                type="number"
-                className="border p-2 rounded"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                placeholder="Duration"
-              />
+              <input className={inputClass} value={code} onChange={(e) => setCode(e.target.value)} placeholder="Product Code" />
+              <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+              <input type="number" className={inputClass} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Price" />
+              <input type="number" className={inputClass} value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="Discount" />
+              <input type="number" className={inputClass} value={modal} onChange={(e) => setModal(e.target.value)} placeholder="Modal / harga beli" />
+              <input type="number" className={inputClass} value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="Duration" />
             </div>
 
             <textarea
-              className="border p-2 rounded w-full mt-3"
+              className="mt-3 h-24 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-xl text-[var(--insight-text)] outline-none resize-none"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Description"
             />
 
             <textarea
-              className="border p-2 rounded w-full mt-3"
+              className="mt-3 h-24 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-xl text-[var(--insight-text)] outline-none resize-none"
               value={tos}
               onChange={(e) => setTos(e.target.value)}
               placeholder="Terms of Service"
             />
 
-            <div className="flex justify-end gap-3 mt-5">
+            <div className="mt-5 flex justify-end gap-3">
               <button
-                onClick={() => {
-                  setShowModal(false);
-                  resetForm();
-                }}
-                className="px-4 py-2 border rounded"
+                onClick={() => { setShowModal(false); resetForm(); }}
+                className="insight-button px-4 py-2 text-lg leading-none"
               >
                 Cancel
               </button>
-
               <button
-                onClick={updateProduct}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => void updateProduct()}
+                className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
               >
                 Update Product
               </button>
