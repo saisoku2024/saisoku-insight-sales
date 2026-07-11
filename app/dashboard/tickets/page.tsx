@@ -289,22 +289,33 @@ export default function TicketsPage() {
                           <span className="text-xs text-[var(--insight-muted)] uppercase">
                             {isAdmin ? "Admin" : "Pengguna"}
                           </span>
-                          {r.message.match(/\[Screenshot Kendala:\s*Telegram File ID\s*=\s*([^\]\n\r]+)\]/) ? (() => {
-                            const match = r.message.match(/\[Screenshot Kendala:\s*Telegram File ID\s*=\s*([^\]\n\r]+)\]/);
+                          {r.message.match(/\[Screenshot Kendala:\s*Telegram File ID\s*=\s*([\s\S]+?)\]/) ? (() => {
+                            const match = r.message.match(/\[Screenshot Kendala:\s*Telegram File ID\s*=\s*([\s\S]+?)\]/);
                             const fileId = match ? match[1].trim() : "";
-                            const cleanMsg = r.message.replace(/\[Screenshot Kendala:\s*Telegram File ID\s*=\s*[^\]\n\r]+\]/, "").trim();
+                            const cleanMsg = r.message.replace(/\[Screenshot Kendala:\s*Telegram File ID\s*=\s*[\s\S]+?\]/, "").trim();
                             const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+                            const fileUrl = `${supabaseUrl}/functions/v1/telegram-bot?action=get_file&file_id=${fileId}`;
                             return (
                               <div className="flex flex-col gap-2">
                                 {cleanMsg && <p className="text-lg whitespace-pre-wrap leading-relaxed">{cleanMsg}</p>}
                                 {fileId && (
-                                  <div className="mt-2 border-[3px] border-[var(--insight-border)] bg-black p-1 shadow-[3px_3px_0_var(--insight-shadow)] max-w-sm">
-                                    <img
-                                      src={`${supabaseUrl}/functions/v1/telegram-bot?action=get_file&file_id=${fileId}`}
-                                      alt="Screenshot Kendala"
-                                      className="w-full h-auto object-contain max-h-[300px] block"
-                                      loading="lazy"
-                                    />
+                                  <div className="flex flex-col gap-2 mt-2">
+                                    <div className="border-[3px] border-[var(--insight-border)] bg-black p-1 shadow-[3px_3px_0_var(--insight-shadow)] max-w-sm">
+                                      <img
+                                        src={fileUrl}
+                                        alt="Screenshot Kendala"
+                                        className="w-full h-auto object-contain max-h-[300px] block"
+                                        loading="lazy"
+                                      />
+                                    </div>
+                                    <a
+                                      href={fileUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center justify-center text-center gap-1.5 px-3 py-1.5 border-[3px] border-[var(--insight-border)] bg-blue-600 text-white font-bold text-sm shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-blue-500 max-w-sm"
+                                    >
+                                      🖼️ Lihat / Download Screenshot
+                                    </a>
                                   </div>
                                 )}
                               </div>
