@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 
+import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { supabase } from "@/lib/supabaseClient"
 
 type PricingProduct = {
@@ -24,27 +25,44 @@ function rupiah(value: number | null | undefined) {
 }
 
 export default function PricingPage() {
+  const pageSize = 10
   const [products, setProducts] = useState<PricingProduct[]>([])
+  const [page, setPage] = useState(1)
+  const [totalRows, setTotalRows] = useState(0)
+  const [activeTotal, setActiveTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const activeProducts = useMemo(
-    () => products.filter((product) => product.is_active).length,
-    [products]
-  )
-
   async function loadProducts() {
-    const { data, error } = await supabase
-      .from("products")
-      .select("id, name, product_code, modal, price_normal, price_reseller, reseller_discount, is_active")
-      .order("name", { ascending: true })
-      .limit(10)
+    setLoading(true)
+    setError(null)
 
-    if (error) {
-      setError(error.message)
+    const from = (page - 1) * pageSize
+    const [productsResult, activeResult] = await Promise.all([
+      supabase
+        .from("products")
+        .select("id, name, product_code, modal, price_normal, price_reseller, reseller_discount, is_active", { count: "exact" })
+        .order("name", { ascending: true })
+        .range(from, from + pageSize - 1),
+      supabase
+        .from("products")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true),
+    ])
+
+    if (productsResult.error) {
+      setError(productsResult.error.message)
       setProducts([])
     } else {
-      setProducts((data as PricingProduct[]) || [])
+      setProducts((productsResult.data as PricingProduct[]) || [])
+      setTotalRows(productsResult.count || 0)
+    }
+
+    if (activeResult.error) {
+      setError((current) => current ?? activeResult.error.message)
+      setActiveTotal(0)
+    } else {
+      setActiveTotal(activeResult.count || 0)
     }
 
     setLoading(false)
@@ -52,7 +70,7 @@ export default function PricingPage() {
 
   useEffect(() => {
     void Promise.resolve().then(loadProducts)
-  }, [])
+  }, [page])
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
@@ -75,11 +93,11 @@ export default function PricingPage() {
       <div className="grid gap-5 md:grid-cols-3">
         <div className="insight-card p-4">
           <div className="text-xl text-[var(--insight-muted)]">Products</div>
-          <div className="mt-2 text-[34px] leading-none">{products.length}</div>
+          <div className="mt-2 text-[34px] leading-none">{totalRows}</div>
         </div>
         <div className="insight-card p-4">
           <div className="text-xl text-[var(--insight-muted)]">Active</div>
-          <div className="mt-2 text-[34px] leading-none">{activeProducts}</div>
+          <div className="mt-2 text-[34px] leading-none">{activeTotal}</div>
         </div>
         <div className="insight-card p-4">
           <div className="text-xl text-[var(--insight-muted)]">Mode</div>
@@ -130,6 +148,12 @@ export default function PricingPage() {
             </tbody>
           </table>
         </div>
+        <PaginationControls
+          page={page}
+          pageSize={pageSize}
+          totalRows={totalRows}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   )

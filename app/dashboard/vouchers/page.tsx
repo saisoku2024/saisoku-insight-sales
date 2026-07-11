@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 
+import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { supabase } from "@/lib/supabaseClient"
 
 type Voucher = {
@@ -29,18 +30,30 @@ function formatDate(value?: string | null) {
 }
 
 export default function VouchersPage() {
+  const pageSize = 10
   const [vouchers, setVouchers] = useState<Voucher[]>([])
+  const [page, setPage] = useState(1)
+  const [totalRows, setTotalRows] = useState(0)
+  const [activeTotal, setActiveTotal] = useState(0)
   const [claimCount, setClaimCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   async function loadVouchers() {
-    const [voucherResult, claimResult] = await Promise.all([
+    setLoading(true)
+    setError(null)
+
+    const from = (page - 1) * pageSize
+    const [voucherResult, activeResult, claimResult] = await Promise.all([
       supabase
         .from("vouchers")
-        .select("id, code, reward_type, reward_amount, quota, used_count, is_active, expired_at")
+        .select("id, code, reward_type, reward_amount, quota, used_count, is_active, expired_at", { count: "exact" })
         .order("created_at", { ascending: false })
-        .limit(10),
+        .range(from, from + pageSize - 1),
+      supabase
+        .from("vouchers")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true),
       supabase
         .from("voucher_claims")
         .select("id", { count: "exact", head: true }),
@@ -51,6 +64,14 @@ export default function VouchersPage() {
       setVouchers([])
     } else {
       setVouchers((voucherResult.data as Voucher[]) || [])
+      setTotalRows(voucherResult.count || 0)
+    }
+
+    if (activeResult.error) {
+      setError((current) => current ?? activeResult.error.message)
+      setActiveTotal(0)
+    } else {
+      setActiveTotal(activeResult.count || 0)
     }
 
     if (claimResult.error) {
@@ -65,7 +86,7 @@ export default function VouchersPage() {
 
   useEffect(() => {
     void Promise.resolve().then(loadVouchers)
-  }, [])
+  }, [page])
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
@@ -88,12 +109,12 @@ export default function VouchersPage() {
       <div className="grid gap-5 md:grid-cols-3">
         <div className="insight-card p-4">
           <div className="text-xl text-[var(--insight-muted)]">Vouchers</div>
-          <div className="mt-2 text-[34px] leading-none">{vouchers.length}</div>
+          <div className="mt-2 text-[34px] leading-none">{totalRows}</div>
         </div>
         <div className="insight-card p-4">
           <div className="text-xl text-[var(--insight-muted)]">Active</div>
           <div className="mt-2 text-[34px] leading-none">
-            {vouchers.filter((voucher) => voucher.is_active).length}
+            {activeTotal}
           </div>
         </div>
         <div className="insight-card p-4">
@@ -140,6 +161,12 @@ export default function VouchersPage() {
             </tbody>
           </table>
         </div>
+        <PaginationControls
+          page={page}
+          pageSize={pageSize}
+          totalRows={totalRows}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   )

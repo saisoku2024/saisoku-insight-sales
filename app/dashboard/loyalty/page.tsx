@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 
+import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { supabase } from "@/lib/supabaseClient"
 
 type LoyaltyTier = {
@@ -23,22 +24,44 @@ function rupiah(value: number) {
 }
 
 export default function LoyaltyPage() {
+  const pageSize = 10
   const [tiers, setTiers] = useState<LoyaltyTier[]>([])
+  const [page, setPage] = useState(1)
+  const [totalRows, setTotalRows] = useState(0)
+  const [activeTotal, setActiveTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   async function loadTiers() {
-    const { data, error } = await supabase
-      .from("loyalty_settings")
-      .select("id, tier_name, min_order, max_order, discount_amount, is_active, description")
-      .order("min_order", { ascending: true })
-      .limit(10)
+    setLoading(true)
+    setError(null)
 
-    if (error) {
-      setError(error.message)
+    const from = (page - 1) * pageSize
+    const [tiersResult, activeResult] = await Promise.all([
+      supabase
+        .from("loyalty_settings")
+        .select("id, tier_name, min_order, max_order, discount_amount, is_active, description", { count: "exact" })
+        .order("min_order", { ascending: true })
+        .range(from, from + pageSize - 1),
+      supabase
+        .from("loyalty_settings")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true),
+    ])
+
+    if (tiersResult.error) {
+      setError(tiersResult.error.message)
       setTiers([])
     } else {
-      setTiers((data as LoyaltyTier[]) || [])
+      setTiers((tiersResult.data as LoyaltyTier[]) || [])
+      setTotalRows(tiersResult.count || 0)
+    }
+
+    if (activeResult.error) {
+      setError((current) => current ?? activeResult.error.message)
+      setActiveTotal(0)
+    } else {
+      setActiveTotal(activeResult.count || 0)
     }
 
     setLoading(false)
@@ -46,7 +69,7 @@ export default function LoyaltyPage() {
 
   useEffect(() => {
     void Promise.resolve().then(loadTiers)
-  }, [])
+  }, [page])
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
@@ -69,12 +92,12 @@ export default function LoyaltyPage() {
       <div className="grid gap-5 md:grid-cols-3">
         <div className="insight-card p-4">
           <div className="text-xl text-[var(--insight-muted)]">Tiers</div>
-          <div className="mt-2 text-[34px] leading-none">{tiers.length}</div>
+          <div className="mt-2 text-[34px] leading-none">{totalRows}</div>
         </div>
         <div className="insight-card p-4">
           <div className="text-xl text-[var(--insight-muted)]">Active Tiers</div>
           <div className="mt-2 text-[34px] leading-none">
-            {tiers.filter((tier) => tier.is_active).length}
+            {activeTotal}
           </div>
         </div>
         <div className="insight-card p-4">
@@ -117,6 +140,12 @@ export default function LoyaltyPage() {
             </tbody>
           </table>
         </div>
+        <PaginationControls
+          page={page}
+          pageSize={pageSize}
+          totalRows={totalRows}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   )

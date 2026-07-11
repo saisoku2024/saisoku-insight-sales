@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 
+import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { supabase } from "@/lib/supabaseClient"
 
 type BalanceLog = {
@@ -40,23 +41,39 @@ function formatDate(value?: string | null) {
 }
 
 export default function LogBalancePage() {
+  const pageSize = 10
   const [logs, setLogs] = useState<BalanceLog[]>([])
   const [deposits, setDeposits] = useState<DepositRequest[]>([])
+  const [logsPage, setLogsPage] = useState(1)
+  const [depositsPage, setDepositsPage] = useState(1)
+  const [logsTotal, setLogsTotal] = useState(0)
+  const [depositsTotal, setDepositsTotal] = useState(0)
+  const [pendingDeposits, setPendingDeposits] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   async function loadData() {
-    const [logsResult, depositsResult] = await Promise.all([
+    setLoading(true)
+    setError(null)
+
+    const logsFrom = (logsPage - 1) * pageSize
+    const depositsFrom = (depositsPage - 1) * pageSize
+
+    const [logsResult, depositsResult, pendingResult] = await Promise.all([
       supabase
         .from("balance_logs")
-        .select("id, amount, type, note, reference_id, created_at, users(username, telegram_id, balance)")
+        .select("id, amount, type, note, reference_id, created_at, users(username, telegram_id, balance)", { count: "exact" })
         .order("created_at", { ascending: false })
-        .limit(10),
+        .range(logsFrom, logsFrom + pageSize - 1),
       supabase
         .from("deposit_requests")
-        .select("id, amount, final_amount, status, payment_method, telegram_id, created_at, confirmed_at, approved_at")
+        .select("id, amount, final_amount, status, payment_method, telegram_id, created_at, confirmed_at, approved_at", { count: "exact" })
         .order("created_at", { ascending: false })
-        .limit(10),
+        .range(depositsFrom, depositsFrom + pageSize - 1),
+      supabase
+        .from("deposit_requests")
+        .select("id", { count: "exact", head: true })
+        .neq("status", "approved"),
     ])
 
     if (logsResult.error) {
@@ -64,6 +81,7 @@ export default function LogBalancePage() {
       setLogs([])
     } else {
       setLogs((logsResult.data as unknown as BalanceLog[]) || [])
+      setLogsTotal(logsResult.count || 0)
     }
 
     if (depositsResult.error) {
@@ -71,6 +89,14 @@ export default function LogBalancePage() {
       setDeposits([])
     } else {
       setDeposits((depositsResult.data as DepositRequest[]) || [])
+      setDepositsTotal(depositsResult.count || 0)
+    }
+
+    if (pendingResult.error) {
+      setError((current) => current ?? pendingResult.error.message)
+      setPendingDeposits(0)
+    } else {
+      setPendingDeposits(pendingResult.count || 0)
     }
 
     setLoading(false)
@@ -78,7 +104,7 @@ export default function LogBalancePage() {
 
   useEffect(() => {
     void Promise.resolve().then(loadData)
-  }, [])
+  }, [logsPage, depositsPage])
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
@@ -101,16 +127,16 @@ export default function LogBalancePage() {
       <div className="grid gap-5 md:grid-cols-3">
         <div className="insight-card p-4">
           <div className="text-xl text-[var(--insight-muted)]">Balance Logs</div>
-          <div className="mt-2 text-[34px] leading-none">{logs.length}</div>
+          <div className="mt-2 text-[34px] leading-none">{logsTotal}</div>
         </div>
         <div className="insight-card p-4">
           <div className="text-xl text-[var(--insight-muted)]">Deposit Requests</div>
-          <div className="mt-2 text-[34px] leading-none">{deposits.length}</div>
+          <div className="mt-2 text-[34px] leading-none">{depositsTotal}</div>
         </div>
         <div className="insight-card p-4">
           <div className="text-xl text-[var(--insight-muted)]">Pending Deposit</div>
           <div className="mt-2 text-[34px] leading-none">
-            {deposits.filter((deposit) => deposit.status !== "approved").length}
+            {pendingDeposits}
           </div>
         </div>
       </div>
@@ -152,6 +178,12 @@ export default function LogBalancePage() {
             </tbody>
           </table>
         </div>
+        <PaginationControls
+          page={logsPage}
+          pageSize={pageSize}
+          totalRows={logsTotal}
+          onPageChange={setLogsPage}
+        />
       </div>
 
       <div className="insight-card overflow-hidden">
@@ -193,6 +225,12 @@ export default function LogBalancePage() {
             </tbody>
           </table>
         </div>
+        <PaginationControls
+          page={depositsPage}
+          pageSize={pageSize}
+          totalRows={depositsTotal}
+          onPageChange={setDepositsPage}
+        />
       </div>
     </div>
   )

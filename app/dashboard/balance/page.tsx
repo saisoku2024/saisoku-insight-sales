@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 
+import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { supabase } from "@/lib/supabaseClient"
 
 type UserBalance = {
@@ -36,28 +37,36 @@ function formatDate(value?: string | null) {
 }
 
 export default function BalancePage() {
+  const pageSize = 10
   const [users, setUsers] = useState<UserBalance[]>([])
   const [logs, setLogs] = useState<BalanceLog[]>([])
+  const [usersPage, setUsersPage] = useState(1)
+  const [logsPage, setLogsPage] = useState(1)
+  const [usersTotal, setUsersTotal] = useState(0)
+  const [logsTotal, setLogsTotal] = useState(0)
+  const [totalBalance, setTotalBalance] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const totalBalance = useMemo(
-    () => users.reduce((total, user) => total + Number(user.balance || 0), 0),
-    [users]
-  )
-
   async function loadBalanceData() {
-    const [usersResult, logsResult] = await Promise.all([
+    setLoading(true)
+    setError(null)
+
+    const usersFrom = (usersPage - 1) * pageSize
+    const logsFrom = (logsPage - 1) * pageSize
+
+    const [usersResult, logsResult, balanceResult] = await Promise.all([
       supabase
         .from("users")
-        .select("id, username, telegram_id, role, balance, is_active")
+        .select("id, username, telegram_id, role, balance, is_active", { count: "exact" })
         .order("balance", { ascending: false })
-        .limit(10),
+        .range(usersFrom, usersFrom + pageSize - 1),
       supabase
         .from("balance_logs")
-        .select("id, amount, type, note, created_at, users(username, telegram_id)")
+        .select("id, amount, type, note, created_at, users(username, telegram_id)", { count: "exact" })
         .order("created_at", { ascending: false })
-        .limit(10),
+        .range(logsFrom, logsFrom + pageSize - 1),
+      supabase.from("users").select("balance"),
     ])
 
     if (usersResult.error) {
@@ -65,6 +74,7 @@ export default function BalancePage() {
       setUsers([])
     } else {
       setUsers((usersResult.data as UserBalance[]) || [])
+      setUsersTotal(usersResult.count || 0)
     }
 
     if (logsResult.error) {
@@ -72,6 +82,15 @@ export default function BalancePage() {
       setLogs([])
     } else {
       setLogs((logsResult.data as unknown as BalanceLog[]) || [])
+      setLogsTotal(logsResult.count || 0)
+    }
+
+    if (balanceResult.error) {
+      setError((current) => current ?? balanceResult.error.message)
+      setTotalBalance(0)
+    } else {
+      const balances = (balanceResult.data as Pick<UserBalance, "balance">[]) || []
+      setTotalBalance(balances.reduce((total, user) => total + Number(user.balance || 0), 0))
     }
 
     setLoading(false)
@@ -79,7 +98,7 @@ export default function BalancePage() {
 
   useEffect(() => {
     void Promise.resolve().then(loadBalanceData)
-  }, [])
+  }, [usersPage, logsPage])
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
@@ -106,11 +125,11 @@ export default function BalancePage() {
         </div>
         <div className="insight-card p-4">
           <div className="text-xl text-[var(--insight-muted)]">Users</div>
-          <div className="mt-2 text-[34px] leading-none">{users.length}</div>
+          <div className="mt-2 text-[34px] leading-none">{usersTotal}</div>
         </div>
         <div className="insight-card p-4">
           <div className="text-xl text-[var(--insight-muted)]">Balance Logs</div>
-          <div className="mt-2 text-[34px] leading-none">{logs.length}</div>
+          <div className="mt-2 text-[34px] leading-none">{logsTotal}</div>
         </div>
       </div>
 
@@ -149,6 +168,12 @@ export default function BalancePage() {
             </tbody>
           </table>
         </div>
+        <PaginationControls
+          page={usersPage}
+          pageSize={pageSize}
+          totalRows={usersTotal}
+          onPageChange={setUsersPage}
+        />
       </div>
 
       <div className="insight-card overflow-hidden">
@@ -186,6 +211,12 @@ export default function BalancePage() {
             </tbody>
           </table>
         </div>
+        <PaginationControls
+          page={logsPage}
+          pageSize={pageSize}
+          totalRows={logsTotal}
+          onPageChange={setLogsPage}
+        />
       </div>
     </div>
   )

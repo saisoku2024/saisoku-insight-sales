@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { supabase } from "@/lib/supabaseClient";
 import type { SalesStats, RecentTransaction } from "@/types";
 
 export default function SalesPage() {
+  const pageSize = 10;
   const [stats, setStats] = useState<SalesStats>({
     today: 0,
     month: 0,
@@ -13,6 +15,8 @@ export default function SalesPage() {
   });
 
   const [recent, setRecent] = useState<RecentTransaction[]>([]);
+  const [recentPage, setRecentPage] = useState(1);
+  const [recentTotal, setRecentTotal] = useState(0);
 
   async function fetchStats() {
     const todayStart = new Date();
@@ -69,7 +73,8 @@ export default function SalesPage() {
   }
 
   async function fetchRecent() {
-    const { data, error } = await supabase
+    const from = (recentPage - 1) * pageSize;
+    const { data, error, count } = await supabase
       .from("transactions")
       .select(`
         id,
@@ -80,10 +85,10 @@ export default function SalesPage() {
         status,
         created_at,
         products(name)
-      `)
+      `, { count: "exact" })
       .eq("status", "paid")
       .order("created_at", { ascending: false })
-      .limit(10);
+      .range(from, from + pageSize - 1);
 
     if (error) {
       console.error("fetchRecent error:", error);
@@ -91,13 +96,17 @@ export default function SalesPage() {
     }
 
     setRecent((data as unknown as RecentTransaction[]) || []);
+    setRecentTotal(count || 0);
   }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchStats();
-    void fetchRecent();
   }, []);
+
+  useEffect(() => {
+    void fetchRecent();
+  }, [recentPage]);
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
@@ -181,7 +190,7 @@ export default function SalesPage() {
               ) : (
                 recent.map((t, index) => (
                   <tr key={t.id} className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60">
-                    <td className="p-3">{index + 1}</td>
+                    <td className="p-3">{(recentPage - 1) * pageSize + index + 1}</td>
                     <td className="p-3">{t.invoice || "-"}</td>
                     <td className="p-3">
                       {t.created_at ? new Date(t.created_at).toLocaleString("id-ID") : "-"}
@@ -197,6 +206,12 @@ export default function SalesPage() {
             </tbody>
           </table>
         </div>
+        <PaginationControls
+          page={recentPage}
+          pageSize={pageSize}
+          totalRows={recentTotal}
+          onPageChange={setRecentPage}
+        />
       </div>
     </div>
   );
