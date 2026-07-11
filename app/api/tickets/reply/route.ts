@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import {
   adminSupabase,
-  buildReplyText,
+  buildTicketReplyTelegramText,
   getTicketWithUser,
   requireAdminSession,
   sendTelegramMessage,
@@ -54,13 +54,27 @@ export async function POST(req: NextRequest) {
     }
 
     const { ticket, telegramId } = await getTicketWithUser(ticketId)
-    const text = buildReplyText(ticket, feedback)
+    const text = buildTicketReplyTelegramText(ticket, feedback)
+
+    const { data: reply, error: replyError } = await adminSupabase!
+      .from("ticket_replies")
+      .insert({
+        ticket_id: Number(ticketId),
+        sender_type: "admin",
+        message: feedback,
+      })
+      .select("id, ticket_id, sender_type, message, created_at")
+      .single()
+
+    if (replyError) {
+      return NextResponse.json({ error: replyError.message }, { status: 500 })
+    }
 
     await updateReplyTicket(ticketId, feedback, auth.adminEmail)
 
     await sendTelegramMessage(telegramId, text)
 
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, data: reply })
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Gagal membalas ticket" },

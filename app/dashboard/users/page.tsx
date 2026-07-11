@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { adminWrite } from "@/lib/admin-api-client";
 import type { User } from "@/types";
 
 export default function UsersPage() {
@@ -30,10 +31,15 @@ export default function UsersPage() {
   async function deleteUser(id: string) {
     if (!confirm("Delete user?")) return;
 
-    await supabase
-      .from("users")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id);
+    try {
+      await adminWrite<User>("/api/admin/users", {
+        method: "PATCH",
+        body: { id, action: "soft_delete" },
+      });
+    } catch (error) {
+      alert("Gagal delete user: " + (error instanceof Error ? error.message : "Unknown error"));
+      return;
+    }
 
     void loadUsers();
   }
@@ -41,10 +47,15 @@ export default function UsersPage() {
   async function toggleUserStatus(user: User) {
     const newStatus = !user.is_active;
 
-    await supabase
-      .from("users")
-      .update({ is_active: newStatus })
-      .eq("id", user.id);
+    try {
+      await adminWrite<User>("/api/admin/users", {
+        method: "PATCH",
+        body: { id: user.id, action: "toggle_status", is_active: newStatus },
+      });
+    } catch (error) {
+      alert("Gagal ubah status user: " + (error instanceof Error ? error.message : "Unknown error"));
+      return;
+    }
 
     setSelectedUser({ ...user, is_active: newStatus });
     void loadUsers();
@@ -53,15 +64,21 @@ export default function UsersPage() {
   async function updateUser() {
     if (!editUser) return;
 
-    await supabase
-      .from("users")
-      .update({
+    try {
+      await adminWrite<User>("/api/admin/users", {
+        method: "PATCH",
+        body: {
+          id: editUser.id,
         email: editUser.email,
         name: editUser.name,
         whatsapp: editUser.whatsapp,
         role: editUser.role,
-      })
-      .eq("id", editUser.id);
+        },
+      });
+    } catch (error) {
+      alert("Gagal update user: " + (error instanceof Error ? error.message : "Unknown error"));
+      return;
+    }
 
     setEditUser(null);
     void loadUsers();

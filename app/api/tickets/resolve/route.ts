@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import {
   adminSupabase,
-  buildResolvedText,
+  buildTicketResolvedTelegramText,
   getTicketWithUser,
   requireAdminSession,
   sendTelegramMessage,
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { ticket, telegramId } = await getTicketWithUser(ticketId)
-    const text = buildResolvedText(ticket)
+    const text = buildTicketResolvedTelegramText(ticket)
 
     await updateResolvedTicket(ticketId, auth.adminEmail)
 

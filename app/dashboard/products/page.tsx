@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { adminWrite } from "@/lib/admin-api-client";
 import type { Product } from "@/types";
 
 function currencyIDR(v: number) {
@@ -103,22 +104,23 @@ export default function ProductsPage() {
       return false;
     }
 
-    const { error } = await supabase.from("products").insert({
-      product_code: code,
-      name: name,
-      price_normal: Number(price),
-      reseller_discount: Number(discount || 0),
-      modal: Number(modal || 0),
-      duration_days: Number(duration),
-      description: description,
-      tos_description: tos,
-      template_message: "Email: {email}\nPassword: {password}",
-      is_active: true,
-    });
-
-    if (error) {
+    try {
+      await adminWrite<Product>("/api/admin/products", {
+        body: {
+          product_code: code,
+          name,
+          price_normal: Number(price),
+          reseller_discount: Number(discount || 0),
+          modal: Number(modal || 0),
+          duration_days: Number(duration),
+          description,
+          tos_description: tos,
+          template_message: "Email: {email}\nPassword: {password}",
+        },
+      });
+    } catch (error) {
       console.error("addProduct error:", error);
-      alert(`Gagal menambah produk: ${error.message}`);
+      alert(`Gagal menambah produk: ${error instanceof Error ? error.message : "Unknown error"}`);
       return false;
     }
 
@@ -143,23 +145,24 @@ export default function ProductsPage() {
   async function updateProduct() {
     if (!editingProduct) return;
 
-    const { error } = await supabase
-      .from("products")
-      .update({
+    try {
+      await adminWrite<Product>("/api/admin/products", {
+        method: "PATCH",
+        body: {
+          id: editingProduct.id,
         product_code: code,
-        name: name,
+          name,
         price_normal: Number(price),
         reseller_discount: Number(discount || 0),
         modal: Number(modal || 0),
         duration_days: Number(duration),
-        description: description,
+          description,
         tos_description: tos,
-      })
-      .eq("id", editingProduct.id);
-
-    if (error) {
+        },
+      });
+    } catch (error) {
       console.error("updateProduct error:", error);
-      alert(`Gagal update produk: ${error.message}`);
+      alert(`Gagal update produk: ${error instanceof Error ? error.message : "Unknown error"}`);
       return;
     }
 
@@ -172,11 +175,14 @@ export default function ProductsPage() {
     const confirmDelete = confirm("Delete product?");
     if (!confirmDelete) return;
 
-    const { error } = await supabase.from("products").delete().eq("id", id);
-
-    if (error) {
+    try {
+      await adminWrite("/api/admin/products", {
+        method: "DELETE",
+        body: { ids: [id] },
+      });
+    } catch (error) {
       console.error("deleteProduct error:", error);
-      alert(`Gagal delete produk: ${error.message}`);
+      alert(`Gagal delete produk: ${error instanceof Error ? error.message : "Unknown error"}`);
       return;
     }
 
@@ -192,11 +198,14 @@ export default function ProductsPage() {
     const confirmDelete = confirm("Delete selected products?");
     if (!confirmDelete) return;
 
-    const { error } = await supabase.from("products").delete().in("id", selected);
-
-    if (error) {
+    try {
+      await adminWrite("/api/admin/products", {
+        method: "DELETE",
+        body: { ids: selected },
+      });
+    } catch (error) {
       console.error("deleteSelected error:", error);
-      alert(`Gagal delete product terpilih: ${error.message}`);
+      alert(`Gagal delete product terpilih: ${error instanceof Error ? error.message : "Unknown error"}`);
       return;
     }
 
@@ -205,14 +214,14 @@ export default function ProductsPage() {
   }
 
   async function toggleProduct(id: string, current: boolean) {
-    const { error } = await supabase
-      .from("products")
-      .update({ is_active: !current })
-      .eq("id", id);
-
-    if (error) {
+    try {
+      await adminWrite<Product>("/api/admin/products", {
+        method: "PATCH",
+        body: { id, is_active: !current },
+      });
+    } catch (error) {
       console.error("toggleProduct error:", error);
-      alert(`Gagal ubah status produk: ${error.message}`);
+      alert(`Gagal ubah status produk: ${error instanceof Error ? error.message : "Unknown error"}`);
       return;
     }
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { adminWrite } from "@/lib/admin-api-client";
 import type { Product, Stock } from "@/types";
 
 // CSV format (semicolon):
@@ -109,16 +110,20 @@ export default function StocksPage() {
     if (!productId) return alert("Pilih produk dulu.");
     if (!email.trim()) return alert("Email wajib diisi.");
 
-    const { error } = await supabase.from("product_accounts").insert({
-      product_id: productId,
-      email: email.trim(),
-      password: password?.trim() || null,
-      profile: profile?.trim() || null,
-      pin: pin?.trim() || null,
-      status: "available",
-    });
-
-    if (error) return alert("Gagal add stock: " + error.message);
+    try {
+      await adminWrite<Stock[]>("/api/admin/stocks", {
+        body: {
+          product_id: productId,
+          email: email.trim(),
+          password: password?.trim() || null,
+          profile: profile?.trim() || null,
+          pin: pin?.trim() || null,
+          status: "available",
+        },
+      });
+    } catch (error) {
+      return alert("Gagal add stock: " + (error instanceof Error ? error.message : "Unknown error"));
+    }
 
     setEmail("");
     setPassword("");
@@ -132,15 +137,22 @@ export default function StocksPage() {
 
   async function updateStock() {
     if (!editStockData) return;
-    await supabase
-      .from("product_accounts")
-      .update({
+
+    try {
+      await adminWrite<Stock>("/api/admin/stocks", {
+        method: "PATCH",
+        body: {
+          id: editStockData.id,
         email: editStockData.email,
         password: editStockData.password,
         profile: editStockData.profile,
         pin: editStockData.pin,
-      })
-      .eq("id", editStockData.id);
+        },
+      });
+    } catch (error) {
+      alert("Gagal update stock: " + (error instanceof Error ? error.message : "Unknown error"));
+      return;
+    }
 
     setEditStockData(null);
     void fetchStocks();
@@ -148,7 +160,15 @@ export default function StocksPage() {
 
   async function deleteStock(id: string) {
     if (!confirm("Delete stock?")) return;
-    await supabase.from("product_accounts").delete().eq("id", id);
+    try {
+      await adminWrite("/api/admin/stocks", {
+        method: "DELETE",
+        body: { id },
+      });
+    } catch (error) {
+      alert("Gagal delete stock: " + (error instanceof Error ? error.message : "Unknown error"));
+      return;
+    }
     void fetchStocks();
   }
 
@@ -183,8 +203,9 @@ export default function StocksPage() {
       const batchSize = 200;
       for (let i = 0; i < payload.length; i += batchSize) {
         const batch = payload.slice(i, i + batchSize);
-        const { error } = await supabase.from("product_accounts").insert(batch);
-        if (error) throw error;
+        await adminWrite<Stock[]>("/api/admin/stocks", {
+          body: { items: batch },
+        });
         setUploadProgress(Math.round(((i + batch.length) / payload.length) * 100));
       }
 

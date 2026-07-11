@@ -229,3 +229,32 @@ export async function sendTelegramMessage(chatId: number, text: string) {
     throw new Error(result.description || "Gagal mengirim pesan Telegram")
   }
 }
+
+export function buildTicketReplyTelegramText(ticket: TicketRow, feedback: string) {
+  const code = ticketDisplayCode(ticket)
+  const orderId = orderDisplayId(ticket)
+
+  return `✅ TIKET  [${escapeHtml(code)}]
+
+└ Tiket ID : #${escapeHtml(ticketNumericId(ticket))} - [${escapeHtml(code)}]
+└ ORDER ID : #${escapeHtml(orderId)}
+└ Status : Assigned
+└ Pesan : ${escapeHtml(ticketUserMessage(ticket))}
+
+└ feedback : ${escapeHtml(feedback)}
+
+====================`
+}
+
+export function buildTicketResolvedTelegramText(ticket: TicketRow) {
+  const code = ticketDisplayCode(ticket)
+  const orderId = orderDisplayId(ticket)
+
+  return `✅ TIKET  [${escapeHtml(code)}]
+
+└ Tiket ID : #${escapeHtml(ticketNumericId(ticket))} - [${escapeHtml(code)}]
+└ ORDER ID : #${escapeHtml(orderId)}
+└ Status : Resolved
+
+Terima Kasih Telah menggunakan Layanan SAISOKU.ID`
+}

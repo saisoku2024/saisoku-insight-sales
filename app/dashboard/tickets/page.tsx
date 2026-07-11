@@ -70,7 +70,7 @@ export default function TicketsPage() {
     setLoadingReplies(false);
   }
 
-  async function callTicketAction(path: string, payload: Record<string, unknown>) {
+  async function callTicketAction<T = unknown>(path: string, payload: Record<string, unknown>) {
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -88,11 +88,13 @@ export default function TicketsPage() {
       body: JSON.stringify(payload),
     });
 
-    const result = (await res.json()) as { error?: string };
+    const result = (await res.json()) as { data?: T; error?: string };
 
     if (!res.ok) {
       throw new Error(result.error || "Request gagal");
     }
+
+    return result.data as T;
   }
 
   async function sendReply() {
@@ -101,48 +103,21 @@ export default function TicketsPage() {
     setSending(true);
     const replyText = newReply.trim();
 
-    const { data: replyData, error: replyError } = await supabase
-      .from("ticket_replies")
-      .insert({
-        ticket_id: selectedTicket.id,
-        sender_type: "admin",
-        message: replyText,
-      })
-      .select()
-      .single();
-
-    if (replyError) {
-      console.error("sendReply error:", replyError);
-      alert("Gagal mengirim balasan.");
-      setSending(false);
-      return;
-    }
-
-    const { error: ticketUpdateError } = await supabase
-      .from("tickets")
-      .update({ status: "replied", updated_at: new Date().toISOString() })
-      .eq("id", selectedTicket.id);
-
-    if (ticketUpdateError) {
-      console.error("update ticket status error:", ticketUpdateError);
-    }
-
-    setTickets((prev) =>
-      prev.map((t) => (t.id === selectedTicket.id ? { ...t, status: "replied" } : t))
-    );
-    setSelectedTicket((prev) => (prev ? { ...prev, status: "replied" } : null));
-
-    setReplies((prev) => [...prev, replyData]);
-    setNewReply("");
-
     try {
-      await callTicketAction("/api/tickets/reply", {
+      const replyData = await callTicketAction<Reply>("/api/tickets/reply", {
         ticketId: String(selectedTicket.id),
         feedback: replyText,
       });
+
+      setTickets((prev) =>
+        prev.map((t) => (t.id === selectedTicket.id ? { ...t, status: "replied" } : t))
+      );
+      setSelectedTicket((prev) => (prev ? { ...prev, status: "replied" } : null));
+      setReplies((prev) => [...prev, replyData]);
+      setNewReply("");
     } catch (e) {
-      console.error("send telegram reply error:", e);
-      alert(e instanceof Error ? e.message : "Balasan tersimpan, tapi gagal mengirim Telegram.");
+      console.error("sendReply error:", e);
+      alert(e instanceof Error ? e.message : "Gagal mengirim balasan.");
     }
 
     setSending(false);

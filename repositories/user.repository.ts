@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient"
+import { adminWrite } from "@/lib/admin-api-client"
 import { User } from "@/types/user"
 
 export async function getUsersRepository(
@@ -18,40 +19,31 @@ export async function getUsersRepository(
 }
 
 export async function deleteUserRepository(id: string) {
-  const { error } = await supabase
-    .from("users")
-    .update({
-      deleted_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-
-  if (error) throw error
+  return await adminWrite<User>("/api/admin/users", {
+    method: "PATCH",
+    body: { id, action: "soft_delete" },
+  })
 }
 
 export async function toggleUserStatusRepository(
   id: string,
   isActive: boolean
 ) {
-  const { error } = await supabase
-    .from("users")
-    .update({
-      is_active: !isActive,
-    })
-    .eq("id", id)
-
-  if (error) throw error
+  return await adminWrite<User>("/api/admin/users", {
+    method: "PATCH",
+    body: { id, action: "toggle_status", is_active: !isActive },
+  })
 }
 
 export async function updateUserRepository(user: Partial<User>) {
-  const { error } = await supabase
-    .from("users")
-    .update({
+  return await adminWrite<User>("/api/admin/users", {
+    method: "PATCH",
+    body: {
+      id: user.id,
       email: user.email,
       name: user.name,
       whatsapp: user.whatsapp,
       role: user.role,
-    })
-    .eq("id", user.id)
-
-  if (error) throw error
+    },
+  })
 }
