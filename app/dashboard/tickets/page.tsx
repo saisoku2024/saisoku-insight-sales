@@ -32,13 +32,16 @@ export default function TicketsPage() {
   const [loadingTickets, setLoadingTickets] = useState(false);
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [sending, setSending] = useState(false);
+  const [ticketError, setTicketError] = useState<string | null>(null);
+  const [replyError, setReplyError] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   async function loadTickets() {
     setLoadingTickets(true);
+    setTicketError(null);
     let query = supabase
       .from("tickets")
-      .select("id, user_id, telegram_id, status, created_at, users(username, name)")
+      .select("id, user_id, telegram_id, status, created_at")
       .order("created_at", { ascending: false });
 
     if (statusFilter !== "all") {
@@ -48,6 +51,8 @@ export default function TicketsPage() {
     const { data, error } = await query;
     if (error) {
       console.error("loadTickets error:", error);
+      setTicketError(error.message || "Gagal memuat data tiket.");
+      setTickets([]);
     } else {
       setTickets((data as unknown as Ticket[]) || []);
     }
@@ -56,6 +61,7 @@ export default function TicketsPage() {
 
   async function loadReplies(ticketId: number) {
     setLoadingReplies(true);
+    setReplyError(null);
     const { data, error } = await supabase
       .from("ticket_replies")
       .select("id, ticket_id, sender_type, message, created_at")
@@ -64,6 +70,8 @@ export default function TicketsPage() {
 
     if (error) {
       console.error("loadReplies error:", error);
+      setReplyError(error.message || "Gagal memuat chat tiket.");
+      setReplies([]);
     } else {
       setReplies(data || []);
     }
@@ -221,6 +229,10 @@ export default function TicketsPage() {
           <div className="flex-1 overflow-y-auto divide-y-[3px] divide-[var(--insight-border)]">
             {loadingTickets ? (
               <div className="p-8 text-center text-xl text-[var(--insight-muted)]">Loading...</div>
+            ) : ticketError ? (
+              <div className="m-4 border-[3px] border-red-600 bg-red-50 p-4 text-lg text-red-700 shadow-[3px_3px_0_var(--insight-shadow)]">
+                Gagal memuat tiket: {ticketError}
+              </div>
             ) : tickets.length === 0 ? (
               <div className="p-8 text-center text-xl text-[var(--insight-muted)]">Tidak ada tiket.</div>
             ) : (
@@ -288,6 +300,10 @@ export default function TicketsPage() {
               <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-900/20">
                 {loadingReplies ? (
                   <div className="text-center text-xl text-[var(--insight-muted)] py-8">Loading chat...</div>
+                ) : replyError ? (
+                  <div className="border-[3px] border-red-600 bg-red-50 p-4 text-lg text-red-700 shadow-[3px_3px_0_var(--insight-shadow)]">
+                    Gagal memuat chat: {replyError}
+                  </div>
                 ) : replies.length === 0 ? (
                   <div className="text-center text-xl text-[var(--insight-muted)] py-8">Belum ada chat.</div>
                 ) : (
