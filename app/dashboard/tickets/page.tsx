@@ -172,14 +172,43 @@ export default function TicketsPage() {
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
       {/* HEADER */}
-      <div className="insight-card p-4">
-        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-indigo-100 px-3 py-1 text-lg leading-none text-indigo-800">
-          TICKET MANAGEMENT
-        </span>
-        <h1 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">Support Tickets</h1>
-        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
-          Kelola laporan kendala dan pertanyaan pelanggan dari Telegram
-        </p>
+      <div className="insight-card p-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div>
+          <span className="inline-block border-[3px] border-[var(--insight-border)] bg-indigo-100 px-3 py-1 text-lg leading-none text-indigo-800">
+            TICKET MANAGEMENT
+          </span>
+          <h1 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">Support Tickets</h1>
+          <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+            Kelola laporan kendala dan pertanyaan pelanggan dari Telegram
+          </p>
+        </div>
+        <div>
+          <button
+            onClick={() => {
+              void loadTickets();
+              if (selectedTicket) {
+                void loadReplies(selectedTicket.id);
+              }
+            }}
+            className="border-[3px] border-[var(--insight-border)] bg-indigo-600 px-4 py-2 text-lg font-bold leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-indigo-500 transition-all flex items-center gap-2"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M21 8v-5h-.58"
+              />
+            </svg>
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
