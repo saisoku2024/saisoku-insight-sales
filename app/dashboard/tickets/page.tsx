@@ -289,7 +289,29 @@ export default function TicketsPage() {
                           <span className="text-xs text-[var(--insight-muted)] uppercase">
                             {isAdmin ? "Admin" : "Pengguna"}
                           </span>
-                          <p className="text-lg whitespace-pre-wrap leading-relaxed">{r.message}</p>
+                          {r.message.match(/\[Screenshot Kendala:\s*Telegram File ID\s*=\s*([^\]\n\r]+)\]/) ? (() => {
+                            const match = r.message.match(/\[Screenshot Kendala:\s*Telegram File ID\s*=\s*([^\]\n\r]+)\]/);
+                            const fileId = match ? match[1].trim() : "";
+                            const cleanMsg = r.message.replace(/\[Screenshot Kendala:\s*Telegram File ID\s*=\s*[^\]\n\r]+\]/, "").trim();
+                            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+                            return (
+                              <div className="flex flex-col gap-2">
+                                {cleanMsg && <p className="text-lg whitespace-pre-wrap leading-relaxed">{cleanMsg}</p>}
+                                {fileId && (
+                                  <div className="mt-2 border-[3px] border-[var(--insight-border)] bg-black p-1 shadow-[3px_3px_0_var(--insight-shadow)] max-w-sm">
+                                    <img
+                                      src={`${supabaseUrl}/functions/v1/telegram-bot?action=get_file&file_id=${fileId}`}
+                                      alt="Screenshot Kendala"
+                                      className="w-full h-auto object-contain max-h-[300px] block"
+                                      loading="lazy"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })() : (
+                            <p className="text-lg whitespace-pre-wrap leading-relaxed">{r.message}</p>
+                          )}
                           <span className="text-xs text-[var(--insight-muted)] text-right mt-1">
                             {new Date(r.created_at).toLocaleTimeString("id-ID", {
                               hour: "2-digit",
