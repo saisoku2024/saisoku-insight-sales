@@ -70,6 +70,31 @@ export default function TicketsPage() {
     setLoadingReplies(false);
   }
 
+  async function callTicketAction(path: string, payload: Record<string, unknown>) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error("Session admin tidak ditemukan. Silakan login ulang.");
+    }
+
+    const res = await fetch(path, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const result = (await res.json()) as { error?: string };
+
+    if (!res.ok) {
+      throw new Error(result.error || "Request gagal");
+    }
+  }
+
   async function sendReply() {
     if (!selectedTicket || !newReply.trim() || sending) return;
 
@@ -111,18 +136,13 @@ export default function TicketsPage() {
     setNewReply("");
 
     try {
-      const { error: funcError } = await supabase.functions.invoke("telegram-bot", {
-        body: {
-          action: "notify_ticket_reply",
-          ticket_id: selectedTicket.id,
-          reply_message: replyText,
-        },
+      await callTicketAction("/api/tickets/reply", {
+        ticketId: String(selectedTicket.id),
+        feedback: replyText,
       });
-      if (funcError) {
-        console.error("Invoke function error:", funcError);
-      }
     } catch (e) {
-      console.error("Invoke error:", e);
+      console.error("send telegram reply error:", e);
+      alert(e instanceof Error ? e.message : "Balasan tersimpan, tapi gagal mengirim Telegram.");
     }
 
     setSending(false);
@@ -131,18 +151,13 @@ export default function TicketsPage() {
   async function resolveTicket() {
     if (!selectedTicket) return;
 
-    const { error } = await supabase
-      .from("tickets")
-      .update({
-        status: "resolved",
-        resolved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", selectedTicket.id);
-
-    if (error) {
-      console.error("resolveTicket error:", error);
-      alert("Gagal menyelesaikan tiket.");
+    try {
+      await callTicketAction("/api/tickets/resolve", {
+        ticketId: String(selectedTicket.id),
+      });
+    } catch (e) {
+      console.error("resolveTicket error:", e);
+      alert(e instanceof Error ? e.message : "Gagal menyelesaikan tiket.");
       return;
     }
 
