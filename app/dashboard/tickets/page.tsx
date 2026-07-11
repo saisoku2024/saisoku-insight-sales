@@ -35,6 +35,7 @@ export default function TicketsPage() {
   const [ticketError, setTicketError] = useState<string | null>(null);
   const [replyError, setReplyError] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   async function loadTickets() {
     setLoadingTickets(true);
@@ -164,7 +165,10 @@ export default function TicketsPage() {
   }, [selectedTicket]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const chatBox = chatScrollRef.current;
+    if (chatBox) {
+      chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: "smooth" });
+    }
   }, [replies]);
 
   return (
@@ -297,7 +301,7 @@ export default function TicketsPage() {
               </div>
 
               {/* Chat Messages Area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-900/20">
+              <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-900/20">
                 {loadingReplies ? (
                   <div className="text-center text-xl text-[var(--insight-muted)] py-8">Loading chat...</div>
                 ) : replyError ? (
@@ -328,8 +332,7 @@ export default function TicketsPage() {
                             const match = r.message.match(/\[Screenshot Kendala:\s*Telegram File ID\s*=\s*([\s\S]+?)\]/);
                             const fileId = match ? match[1].trim() : "";
                             const cleanMsg = r.message.replace(/\[Screenshot Kendala:\s*Telegram File ID\s*=\s*[\s\S]+?\]/, "").trim();
-                            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-                            const fileUrl = `${supabaseUrl}/functions/v1/telegram-bot?action=get_file&file_id=${fileId}`;
+                            const fileUrl = `/api/tickets/file?fileId=${encodeURIComponent(fileId)}`;
                             return (
                               <div className="flex flex-col gap-2">
                                 {cleanMsg && <p className="text-lg whitespace-pre-wrap leading-relaxed">{cleanMsg}</p>}
