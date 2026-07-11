@@ -50,11 +50,13 @@ export default function LogBalancePage() {
       supabase
         .from("balance_logs")
         .select("id, amount, type, note, reference_id, created_at, users(username, telegram_id, balance)")
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(10),
       supabase
         .from("deposit_requests")
         .select("id, amount, final_amount, status, payment_method, telegram_id, created_at, confirmed_at, approved_at")
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(10),
     ])
 
     if (logsResult.error) {

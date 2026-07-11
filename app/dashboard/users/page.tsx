@@ -8,24 +8,26 @@ import type { User } from "@/types";
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editUser, setEditUser] = useState<User | null>(null);
 
-  const limit = 50;
+  const limit = 10;
 
   const loadUsers = useCallback(async () => {
     const { data, error } = await supabase
       .from("users")
       .select("*")
       .order("created_at", { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
+      .range((page - 1) * limit, page * limit);
 
     if (error) {
       console.error(error);
       return;
     }
 
-    setUsers(data || []);
+    setUsers((data || []).slice(0, limit));
+    setHasMore((data?.length || 0) > limit);
   }, [page]);
 
   async function deleteUser(id: string) {
@@ -198,7 +200,8 @@ export default function UsersPage() {
         <span className="px-4 py-2 text-lg">Page {page}</span>
         <button
           onClick={() => setPage(page + 1)}
-          className="insight-button px-4 py-2 text-lg leading-none"
+          disabled={!hasMore}
+          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
         >
           Next
         </button>

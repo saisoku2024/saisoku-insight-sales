@@ -38,6 +38,7 @@ export default function PricingPage() {
       .from("products")
       .select("id, name, product_code, modal, price_normal, price_reseller, reseller_discount, is_active")
       .order("name", { ascending: true })
+      .limit(10)
 
     if (error) {
       setError(error.message)

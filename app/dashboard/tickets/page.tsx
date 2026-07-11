@@ -29,6 +29,8 @@ export default function TicketsPage() {
   const [replies, setReplies] = useState<Reply[]>([]);
   const [newReply, setNewReply] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [loadingTickets, setLoadingTickets] = useState(false);
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [sending, setSending] = useState(false);
@@ -36,6 +38,7 @@ export default function TicketsPage() {
   const [replyError, setReplyError] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
+  const pageSize = 10;
 
   async function loadTickets() {
     setLoadingTickets(true);
@@ -43,7 +46,8 @@ export default function TicketsPage() {
     let query = supabase
       .from("tickets")
       .select("id, user_id, telegram_id, status, created_at")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range((page - 1) * pageSize, page * pageSize);
 
     if (statusFilter !== "all") {
       query = query.eq("status", statusFilter);
@@ -54,8 +58,11 @@ export default function TicketsPage() {
       console.error("loadTickets error:", error);
       setTicketError(error.message || "Gagal memuat data tiket.");
       setTickets([]);
+      setHasMore(false);
     } else {
-      setTickets((data as unknown as Ticket[]) || []);
+      const rows = ((data as unknown as Ticket[]) || []);
+      setTickets(rows.slice(0, pageSize));
+      setHasMore(rows.length > pageSize);
     }
     setLoadingTickets(false);
   }
@@ -154,7 +161,7 @@ export default function TicketsPage() {
   useEffect(() => {
     void loadTickets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter]);
+  }, [statusFilter, page]);
 
   useEffect(() => {
     if (selectedTicket) {
@@ -220,7 +227,10 @@ export default function TicketsPage() {
             <span className="text-xl font-bold">List Tiket</span>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
               className="h-9 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 text-lg text-[var(--insight-text)] outline-none"
             >
               <option value="all">Semua Status</option>
@@ -274,6 +284,23 @@ export default function TicketsPage() {
                 );
               })
             )}
+          </div>
+          <div className="border-t-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 flex items-center justify-between">
+            <button
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page === 1}
+              className="insight-button px-3 py-1.5 text-lg leading-none disabled:opacity-40"
+            >
+              Prev
+            </button>
+            <span className="text-lg">Page {page}</span>
+            <button
+              onClick={() => setPage((current) => current + 1)}
+              disabled={!hasMore}
+              className="insight-button px-3 py-1.5 text-lg leading-none disabled:opacity-40"
+            >
+              Next
+            </button>
           </div>
         </div>
 

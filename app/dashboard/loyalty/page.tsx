@@ -32,6 +32,7 @@ export default function LoyaltyPage() {
       .from("loyalty_settings")
       .select("id, tier_name, min_order, max_order, discount_amount, is_active, description")
       .order("min_order", { ascending: true })
+      .limit(10)
 
     if (error) {
       setError(error.message)

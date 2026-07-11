@@ -39,7 +39,8 @@ export default function VouchersPage() {
       supabase
         .from("vouchers")
         .select("id, code, reward_type, reward_amount, quota, used_count, is_active, expired_at")
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(10),
       supabase
         .from("voucher_claims")
         .select("id", { count: "exact", head: true }),

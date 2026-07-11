@@ -13,21 +13,29 @@ function formatDate(value?: string | null) {
 
 export default function HistoryPage() {
   const [history, setHistory] = useState<Stock[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalRows, setTotalRows] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const pageSize = 10;
 
   async function fetchHistory() {
-    const { data } = await supabase
+    const { data, count } = await supabase
       .from("product_accounts")
-      .select("*")
+      .select("*", { count: "exact" })
       .eq("status", "sold")
-      .order("sold_at", { ascending: false });
+      .order("sold_at", { ascending: false })
+      .range((page - 1) * pageSize, page * pageSize);
 
-    setHistory(data || []);
+    const rows = data || [];
+    setHistory(rows.slice(0, pageSize));
+    setTotalRows(count || 0);
+    setHasMore(rows.length > pageSize);
   }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchHistory();
-  }, []);
+  }, [page]);
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
@@ -47,7 +55,7 @@ export default function HistoryPage() {
         <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
           <div className="text-xl leading-none text-[var(--insight-muted)]">Sold Records</div>
           <div className="mt-2 text-[34px] leading-none text-[var(--insight-text)]">
-            {history.length.toLocaleString("id-ID")}
+            {totalRows.toLocaleString("id-ID")}
           </div>
         </div>
 
@@ -111,6 +119,23 @@ export default function HistoryPage() {
             </tbody>
           </table>
         </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setPage((current) => Math.max(1, current - 1))}
+          disabled={page === 1}
+          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
+        >
+          Prev
+        </button>
+        <span className="text-lg">Page {page}</span>
+        <button
+          onClick={() => setPage((current) => current + 1)}
+          disabled={!hasMore}
+          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
+        >
+          Next
+        </button>
       </div>
     </div>
   );

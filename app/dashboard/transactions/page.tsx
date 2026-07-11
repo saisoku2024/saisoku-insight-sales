@@ -24,9 +24,10 @@ export default function TransactionsPage() {
   const [dateTo, setDateTo] = useState("");
 
   const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const limit = 50;
+  const limit = 10;
 
   async function loadProducts() {
     const { data, error } = await supabase
@@ -66,7 +67,7 @@ export default function TransactionsPage() {
       .order("created_at", { ascending: false });
 
     if (withPagination) {
-      query = query.range((page - 1) * limit, page * limit - 1);
+      query = query.range((page - 1) * limit, page * limit);
     }
 
     if (filterBy === "product" && productFilter) {
@@ -104,7 +105,9 @@ export default function TransactionsPage() {
       return;
     }
 
-    setTransactions((data as unknown as Transaction[]) || []);
+    const rows = ((data as unknown as Transaction[]) || []);
+    setTransactions(rows.slice(0, limit));
+    setHasMore(rows.length > limit);
     setLoading(false);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, filterBy, searchText, productFilter, dateFrom, dateTo]);
@@ -372,7 +375,8 @@ export default function TransactionsPage() {
         <span className="text-lg">Page {page}</span>
         <button
           onClick={() => setPage(page + 1)}
-          className="insight-button px-4 py-2 text-lg leading-none"
+          disabled={!hasMore}
+          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
         >
           Next
         </button>

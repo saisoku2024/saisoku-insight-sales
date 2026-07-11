@@ -51,7 +51,8 @@ export default function BalancePage() {
       supabase
         .from("users")
         .select("id, username, telegram_id, role, balance, is_active")
-        .order("balance", { ascending: false }),
+        .order("balance", { ascending: false })
+        .limit(10),
       supabase
         .from("balance_logs")
         .select("id, amount, type, note, created_at, users(username, telegram_id)")
