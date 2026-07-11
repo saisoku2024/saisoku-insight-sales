@@ -74,7 +74,7 @@ export default function StocksPage() {
   const [uploadError, setUploadError] = useState("");
 
   const [page, setPage] = useState(1);
-  const pageSize = 50;
+  const pageSize = 10;
 
   const [stats, setStats] = useState({ available: 0, sold: 0 });
 
