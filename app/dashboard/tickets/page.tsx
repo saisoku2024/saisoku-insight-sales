@@ -366,6 +366,7 @@ export default function TicketsPage() {
                                 {fileId && (
                                   <div className="flex flex-col gap-2 mt-2">
                                     <div className="border-[3px] border-[var(--insight-border)] bg-black p-1 shadow-[3px_3px_0_var(--insight-shadow)] max-w-sm">
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
                                       <img
                                         src={fileUrl}
                                         alt="Screenshot Kendala"

@@ -1,4 +1,10 @@
 import "./globals.css"
+import { VT323 } from "next/font/google"
+
+const vt323 = VT323({
+  subsets: ["latin"],
+  weight: "400",
+})
 
 export default function RootLayout({
   children,
@@ -7,15 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>{children}</body>
+      <body className={vt323.className}>{children}</body>
     </html>
   )
 }

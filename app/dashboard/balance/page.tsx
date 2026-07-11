@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { supabase } from "@/lib/supabaseClient"
@@ -48,7 +48,7 @@ export default function BalancePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  async function loadBalanceData() {
+  const loadBalanceData = useCallback(async () => {
     setLoading(true)
     setError(null)
 
@@ -94,11 +94,11 @@ export default function BalancePage() {
     }
 
     setLoading(false)
-  }
+  }, [logsPage, pageSize, usersPage])
 
   useEffect(() => {
     void Promise.resolve().then(loadBalanceData)
-  }, [usersPage, logsPage])
+  }, [loadBalanceData])
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">

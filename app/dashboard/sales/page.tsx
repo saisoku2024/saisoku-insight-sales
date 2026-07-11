@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
 import { supabase } from "@/lib/supabaseClient";
 import type { SalesStats, RecentTransaction } from "@/types";
@@ -18,7 +18,7 @@ export default function SalesPage() {
   const [recentPage, setRecentPage] = useState(1);
   const [recentTotal, setRecentTotal] = useState(0);
 
-  async function fetchStats() {
+  const fetchStats = useCallback(async () => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
@@ -70,9 +70,9 @@ export default function SalesPage() {
       year: year || 0,
       revenue,
     });
-  }
+  }, []);
 
-  async function fetchRecent() {
+  const fetchRecent = useCallback(async () => {
     const from = (recentPage - 1) * pageSize;
     const { data, error, count } = await supabase
       .from("transactions")
@@ -97,17 +97,17 @@ export default function SalesPage() {
 
     setRecent((data as unknown as RecentTransaction[]) || []);
     setRecentTotal(count || 0);
-  }
+  }, [pageSize, recentPage]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchStats();
-  }, []);
+  }, [fetchStats]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchRecent();
-  }, [recentPage]);
+  }, [fetchRecent]);
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">

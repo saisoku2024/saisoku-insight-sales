@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { supabase } from "@/lib/supabaseClient"
@@ -32,7 +32,7 @@ export default function LoyaltyPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  async function loadTiers() {
+  const loadTiers = useCallback(async () => {
     setLoading(true)
     setError(null)
 
@@ -65,11 +65,11 @@ export default function LoyaltyPage() {
     }
 
     setLoading(false)
-  }
+  }, [page, pageSize])
 
   useEffect(() => {
     void Promise.resolve().then(loadTiers)
-  }, [page])
+  }, [loadTiers])
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">

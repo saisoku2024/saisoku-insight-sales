@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import type { Stock } from "@/types";
 
@@ -18,7 +18,7 @@ export default function HistoryPage() {
   const [hasMore, setHasMore] = useState(false);
   const pageSize = 10;
 
-  async function fetchHistory() {
+  const fetchHistory = useCallback(async () => {
     const { data, count } = await supabase
       .from("product_accounts")
       .select("*", { count: "exact" })
@@ -30,12 +30,12 @@ export default function HistoryPage() {
     setHistory(rows.slice(0, pageSize));
     setTotalRows(count || 0);
     setHasMore(rows.length > pageSize);
-  }
+  }, [page, pageSize]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchHistory();
-  }, [page]);
+  }, [fetchHistory]);
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
