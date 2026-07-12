@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react"
 
+import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice"
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
+import { adminWrite } from "@/lib/admin-api-client"
 import { supabase } from "@/lib/supabaseClient"
 
 type UserBalance = {
@@ -23,6 +25,16 @@ type BalanceLog = {
   users?: { username: string | null; telegram_id: number | null } | null
 }
 
+type BalanceData = {
+  users: UserBalance[]
+  logs: BalanceLog[]
+  usersTotal: number
+  logsTotal: number
+  totalBalance: number
+}
+
+type BalanceAction = "add" | "deduct" | "reset"
+
 function rupiah(value: number) {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -36,6 +48,12 @@ function formatDate(value?: string | null) {
   return new Date(value).toLocaleString("id-ID")
 }
 
+function actionLabel(action: BalanceAction) {
+  if (action === "add") return "Add Balance"
+  if (action === "deduct") return "Deduct Balance"
+  return "Reset Balance"
+}
+
 export default function BalancePage() {
   const pageSize = 10
   const [users, setUsers] = useState<UserBalance[]>([])
@@ -45,60 +63,123 @@ export default function BalancePage() {
   const [usersTotal, setUsersTotal] = useState(0)
   const [logsTotal, setLogsTotal] = useState(0)
   const [totalBalance, setTotalBalance] = useState(0)
+  const [selectedUser, setSelectedUser] = useState<UserBalance | null>(null)
+  const [telegramId, setTelegramId] = useState("")
+  const [amount, setAmount] = useState("")
+  const [note, setNote] = useState("")
+  const [action, setAction] = useState<BalanceAction>("add")
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<ActionNoticeState>(null)
+
+  const showError = (message: string) => setNotice({ type: "error", message })
+  const showSuccess = (message: string) => setNotice({ type: "success", message })
+  const getErrorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unknown error")
 
   const loadBalanceData = useCallback(async () => {
     setLoading(true)
     setError(null)
 
-    const usersFrom = (usersPage - 1) * pageSize
-    const logsFrom = (logsPage - 1) * pageSize
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
 
-    const [usersResult, logsResult, balanceResult] = await Promise.all([
-      supabase
-        .from("users")
-        .select("id, username, telegram_id, role, balance, is_active", { count: "exact" })
-        .order("balance", { ascending: false })
-        .range(usersFrom, usersFrom + pageSize - 1),
-      supabase
-        .from("balance_logs")
-        .select("id, amount, type, note, created_at, users(username, telegram_id)", { count: "exact" })
-        .order("created_at", { ascending: false })
-        .range(logsFrom, logsFrom + pageSize - 1),
-      supabase.from("users").select("balance"),
-    ])
+      if (!session?.access_token) {
+        throw new Error("Session admin tidak ditemukan. Silakan login ulang.")
+      }
 
-    if (usersResult.error) {
-      setError(usersResult.error.message)
+      const params = new URLSearchParams({
+        usersPage: String(usersPage),
+        logsPage: String(logsPage),
+        pageSize: String(pageSize),
+      })
+      const res = await fetch(`/api/admin/balance?${params.toString()}`, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      })
+      const result = (await res.json()) as { data?: BalanceData; error?: string }
+
+      if (!res.ok || !result.data) {
+        throw new Error(result.error || "Gagal memuat data balance.")
+      }
+
+      setUsers(result.data.users)
+      setLogs(result.data.logs)
+      setUsersTotal(result.data.usersTotal)
+      setLogsTotal(result.data.logsTotal)
+      setTotalBalance(result.data.totalBalance)
+    } catch (error) {
+      console.error("loadBalanceData error:", error)
+      setError(getErrorMessage(error))
       setUsers([])
-    } else {
-      setUsers((usersResult.data as UserBalance[]) || [])
-      setUsersTotal(usersResult.count || 0)
-    }
-
-    if (logsResult.error) {
-      setError((current) => current ?? logsResult.error.message)
       setLogs([])
-    } else {
-      setLogs((logsResult.data as unknown as BalanceLog[]) || [])
-      setLogsTotal(logsResult.count || 0)
-    }
-
-    if (balanceResult.error) {
-      setError((current) => current ?? balanceResult.error.message)
+      setUsersTotal(0)
+      setLogsTotal(0)
       setTotalBalance(0)
-    } else {
-      const balances = (balanceResult.data as Pick<UserBalance, "balance">[]) || []
-      setTotalBalance(balances.reduce((total, user) => total + Number(user.balance || 0), 0))
     }
 
     setLoading(false)
-  }, [logsPage, pageSize, usersPage])
+  }, [logsPage, usersPage])
 
   useEffect(() => {
-    void Promise.resolve().then(loadBalanceData)
+    void loadBalanceData()
   }, [loadBalanceData])
+
+  function chooseUser(user: UserBalance, nextAction: BalanceAction) {
+    setSelectedUser(user)
+    setTelegramId(user.telegram_id ? String(user.telegram_id) : "")
+    setAction(nextAction)
+    setAmount(nextAction === "reset" ? "" : amount)
+    setNote("")
+  }
+
+  async function submitBalanceAction() {
+    if (saving) return
+
+    const numericTelegramId = Number(telegramId)
+    const numericAmount = Number(amount || 0)
+
+    if (!numericTelegramId || numericTelegramId <= 0) {
+      showError("Telegram ID target wajib valid.")
+      return
+    }
+
+    if (action !== "reset" && numericAmount <= 0) {
+      showError("Nominal wajib lebih dari 0.")
+      return
+    }
+
+    setSaving(true)
+
+    try {
+      const response = await adminWrite<{ user: UserBalance; result: { new_balance?: number } }>(
+        "/api/admin/balance",
+        {
+          body: {
+            action,
+            telegram_id: numericTelegramId,
+            amount: numericAmount,
+            note,
+          },
+        }
+      )
+
+      const newBalance = Number(response?.user?.balance ?? response?.result?.new_balance ?? 0)
+      showSuccess(`${actionLabel(action)} berhasil. Saldo baru: ${rupiah(newBalance)}.`)
+      setSelectedUser(response?.user || null)
+      setAmount("")
+      setNote("")
+      await loadBalanceData()
+    } catch (error) {
+      console.error("submitBalanceAction error:", error)
+      showError(`Gagal mengubah balance: ${getErrorMessage(error)}`)
+    }
+
+    setSaving(false)
+  }
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
@@ -108,9 +189,11 @@ export default function BalancePage() {
         </span>
         <h1 className="mt-3 text-[34px] leading-none">Wallet Balance</h1>
         <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
-          Read-only view saldo user dan mutasi balance terbaru.
+          Kelola saldo user, adjustment owner, dan mutasi balance terbaru.
         </p>
       </div>
+
+      <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />
 
       {error ? (
         <div className="insight-card border-red-500 bg-red-50 p-4 text-xl text-red-700">
@@ -133,6 +216,81 @@ export default function BalancePage() {
         </div>
       </div>
 
+      <div className="insight-card p-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-[30px] leading-none">Balance Adjustment</h2>
+          <p className="text-lg text-[var(--insight-muted)]">
+            Aksi ini khusus owner. Pilih user dari tabel atau masukkan Telegram ID manual.
+          </p>
+        </div>
+
+        <div className="mt-4 grid gap-3 lg:grid-cols-[180px_1fr_1fr_1.5fr_auto] lg:items-end">
+          <label className="block">
+            <span className="text-lg text-[var(--insight-muted)]">Action</span>
+            <select
+              value={action}
+              onChange={(e) => setAction(e.target.value as BalanceAction)}
+              className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+            >
+              <option value="add">Add Balance</option>
+              <option value="deduct">Deduct Balance</option>
+              <option value="reset">Reset Balance</option>
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-lg text-[var(--insight-muted)]">Telegram ID</span>
+            <input
+              value={telegramId}
+              onChange={(e) => {
+                setTelegramId(e.target.value)
+                setSelectedUser(null)
+              }}
+              className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+              placeholder="123456789"
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-lg text-[var(--insight-muted)]">Nominal</span>
+            <input
+              type="number"
+              min="0"
+              value={amount}
+              disabled={action === "reset"}
+              onChange={(e) => setAmount(e.target.value)}
+              className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none disabled:opacity-50"
+              placeholder={action === "reset" ? "Auto" : "10000"}
+            />
+          </label>
+
+          <label className="block">
+            <span className="text-lg text-[var(--insight-muted)]">Note</span>
+            <input
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+              placeholder="Adjustment owner"
+            />
+          </label>
+
+          <button
+            type="button"
+            onClick={() => void submitBalanceAction()}
+            disabled={saving}
+            className="h-11 border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40"
+          >
+            {saving ? "Saving..." : actionLabel(action)}
+          </button>
+        </div>
+
+        {selectedUser ? (
+          <div className="mt-3 text-lg text-[var(--insight-muted)]">
+            Target: @{selectedUser.username || "-"} / {selectedUser.telegram_id || "-"} / saldo {rupiah(selectedUser.balance)}
+          </div>
+        ) : null}
+      </div>
+
       <div className="insight-card overflow-hidden">
         <div className="border-b-[3px] border-[var(--insight-border)] p-4">
           <h2 className="text-[30px] leading-none">User Balance</h2>
@@ -146,21 +304,56 @@ export default function BalancePage() {
                 <th className="p-3">Role</th>
                 <th className="p-3">Balance</th>
                 <th className="p-3">Status</th>
+                <th className="p-3 text-right">Action</th>
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                    Loading balance...
+                  </td>
+                </tr>
+              ) : null}
+
+              {!loading && users.map((user) => (
                 <tr key={user.id} className="hover:bg-blue-50 dark:hover:bg-slate-800/60">
                   <td className="p-3">@{user.username || "-"}</td>
                   <td className="p-3">{user.telegram_id || "-"}</td>
                   <td className="p-3">{user.role}</td>
                   <td className="p-3">{rupiah(user.balance)}</td>
                   <td className="p-3">{user.is_active ? "Active" : "Inactive"}</td>
+                  <td className="p-3">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => chooseUser(user, "add")}
+                        className="border-[3px] border-[var(--insight-border)] bg-emerald-700 px-3 py-1.5 text-lg leading-none text-white"
+                      >
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => chooseUser(user, "deduct")}
+                        className="border-[3px] border-[var(--insight-border)] bg-amber-600 px-3 py-1.5 text-lg leading-none text-white"
+                      >
+                        Deduct
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => chooseUser(user, "reset")}
+                        className="border-[3px] border-[var(--insight-border)] bg-slate-700 px-3 py-1.5 text-lg leading-none text-white"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
+
               {!loading && users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                  <td colSpan={6} className="p-8 text-center text-xl text-[var(--insight-muted)]">
                     Belum ada data user.
                   </td>
                 </tr>

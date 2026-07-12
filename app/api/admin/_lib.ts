@@ -5,6 +5,7 @@ type AdminAuthResult =
   | {
       ok: true
       adminEmail: string
+      role: "owner" | "admin"
     }
   | {
       ok: false
@@ -97,5 +98,6 @@ export async function requireActiveAdmin(req: NextRequest): Promise<AdminAuthRes
   return {
     ok: true,
     adminEmail: userData.user.email || profile.email || "admin",
+    role: String(profile.role) === "owner" ? "owner" : "admin",
   }
 }
