@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { ChevronDown, LogOut } from "lucide-react"
 
@@ -20,10 +20,12 @@ function SidebarItem({
   item,
   pathname,
   onNavigate,
+  onBeforeNavigate,
 }: {
   item: DashboardNavItem
   pathname: string
   onNavigate?: () => void
+  onBeforeNavigate?: () => void
 }) {
   const active = isActivePath(pathname, item.href)
   const Icon = item.icon
@@ -31,7 +33,10 @@ function SidebarItem({
   return (
     <Link
       href={item.href}
-      onClick={onNavigate}
+      onClick={() => {
+        onBeforeNavigate?.()
+        onNavigate?.()
+      }}
       className={cn(
         "group flex h-10 items-center gap-2 border-[3px] px-2.5 text-lg leading-none transition-all",
         active
@@ -62,28 +67,18 @@ export function SidebarNav({
   onNavigate,
   onLogout,
 }: SidebarNavProps) {
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({})
-
-  // Initialize group state on path changes
-  useEffect(() => {
-    const nextOpenGroups: Record<string, boolean> = { ...openGroups }
-    groups.forEach((entry) => {
-      if (entry.type === "group") {
-        const hasActiveChild = entry.items.some((item) => isActivePath(pathname, item.href))
-        if (hasActiveChild) {
-          nextOpenGroups[entry.label] = true
-        }
-      }
+  const activeGroupLabel = useMemo(() => {
+    const activeEntry = groups.find((entry) => {
+      return entry.type === "group" && entry.items.some((item) => isActivePath(pathname, item.href))
     })
-    setOpenGroups(nextOpenGroups)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, groups])
+
+    return activeEntry?.type === "group" ? activeEntry.label : null
+  }, [groups, pathname])
+  const [manualOpenGroup, setManualOpenGroup] = useState<string | null>(null)
+  const openGroupLabel = manualOpenGroup ?? activeGroupLabel
 
   const toggleGroup = (label: string) => {
-    setOpenGroups((prev) => ({
-      ...prev,
-      [label]: !prev[label],
-    }))
+    setManualOpenGroup((currentLabel) => (currentLabel === label ? null : label))
   }
 
   return (
@@ -104,11 +99,12 @@ export function SidebarNav({
                 item={entry.item}
                 pathname={pathname}
                 onNavigate={onNavigate}
+                onBeforeNavigate={() => setManualOpenGroup(null)}
               />
             )
           }
 
-          const isOpen = Boolean(openGroups[entry.label])
+          const isOpen = openGroupLabel === entry.label
 
           return (
             <div key={entry.label} className="space-y-1.5">
@@ -129,6 +125,7 @@ export function SidebarNav({
                       item={item}
                       pathname={pathname}
                       onNavigate={onNavigate}
+                      onBeforeNavigate={() => setManualOpenGroup(null)}
                     />
                   ))}
                 </div>
