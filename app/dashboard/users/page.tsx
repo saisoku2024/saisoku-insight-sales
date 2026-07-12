@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
 import { supabase } from "@/lib/supabaseClient";
 import { adminWrite } from "@/lib/admin-api-client";
 import type { User } from "@/types";
@@ -11,8 +12,12 @@ export default function UsersPage() {
   const [hasMore, setHasMore] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editUser, setEditUser] = useState<User | null>(null);
+  const [notice, setNotice] = useState<ActionNoticeState>(null);
 
   const limit = 10;
+  const showError = (message: string) => setNotice({ type: "error", message });
+  const showSuccess = (message: string) => setNotice({ type: "success", message });
+  const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
 
   const loadUsers = useCallback(async () => {
     const { data, error } = await supabase
@@ -39,10 +44,11 @@ export default function UsersPage() {
         body: { id, action: "soft_delete" },
       });
     } catch (error) {
-      alert("Gagal delete user: " + (error instanceof Error ? error.message : "Unknown error"));
+      showError(`Gagal delete user: ${getErrorMessage(error)}`);
       return;
     }
 
+    showSuccess("User berhasil dinonaktifkan.");
     void loadUsers();
   }
 
@@ -55,11 +61,12 @@ export default function UsersPage() {
         body: { id: user.id, action: "toggle_status", is_active: newStatus },
       });
     } catch (error) {
-      alert("Gagal ubah status user: " + (error instanceof Error ? error.message : "Unknown error"));
+      showError(`Gagal ubah status user: ${getErrorMessage(error)}`);
       return;
     }
 
     setSelectedUser({ ...user, is_active: newStatus });
+    showSuccess("Status user berhasil diubah.");
     void loadUsers();
   }
 
@@ -78,11 +85,12 @@ export default function UsersPage() {
         },
       });
     } catch (error) {
-      alert("Gagal update user: " + (error instanceof Error ? error.message : "Unknown error"));
+      showError(`Gagal update user: ${getErrorMessage(error)}`);
       return;
     }
 
     setEditUser(null);
+    showSuccess("User berhasil diupdate.");
     void loadUsers();
   }
 
@@ -104,6 +112,8 @@ export default function UsersPage() {
           Kelola status, role, dan akses pengguna Telegram bot
         </p>
       </div>
+
+      <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />
 
       <div className="insight-card overflow-hidden">
         <div className="overflow-x-auto">

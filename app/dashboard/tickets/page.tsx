@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
 import { supabase } from "@/lib/supabaseClient";
 
 type Ticket = {
@@ -36,9 +37,12 @@ export default function TicketsPage() {
   const [sending, setSending] = useState(false);
   const [ticketError, setTicketError] = useState<string | null>(null);
   const [replyError, setReplyError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<ActionNoticeState>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const pageSize = 10;
+  const showError = (message: string) => setNotice({ type: "error", message });
+  const showSuccess = (message: string) => setNotice({ type: "success", message });
 
   async function loadTickets() {
     setLoadingTickets(true);
@@ -131,9 +135,10 @@ export default function TicketsPage() {
       setSelectedTicket((prev) => (prev ? { ...prev, status: "replied" } : null));
       setReplies((prev) => [...prev, replyData]);
       setNewReply("");
+      showSuccess("Balasan berhasil dikirim ke user.");
     } catch (e) {
       console.error("sendReply error:", e);
-      alert(e instanceof Error ? e.message : "Gagal mengirim balasan.");
+      showError(e instanceof Error ? e.message : "Gagal mengirim balasan.");
     }
 
     setSending(false);
@@ -148,7 +153,7 @@ export default function TicketsPage() {
       });
     } catch (e) {
       console.error("resolveTicket error:", e);
-      alert(e instanceof Error ? e.message : "Gagal menyelesaikan tiket.");
+      showError(e instanceof Error ? e.message : "Gagal menyelesaikan tiket.");
       return;
     }
 
@@ -156,6 +161,7 @@ export default function TicketsPage() {
       prev.map((t) => (t.id === selectedTicket.id ? { ...t, status: "resolved" } : t))
     );
     setSelectedTicket((prev) => (prev ? { ...prev, status: "resolved" } : null));
+    showSuccess("Tiket berhasil diselesaikan.");
   }
 
   useEffect(() => {
@@ -219,6 +225,8 @@ export default function TicketsPage() {
           </button>
         </div>
       </div>
+
+      <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* LEFT COLUMN: TICKET LIST */}

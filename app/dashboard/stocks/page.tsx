@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
 import { supabase } from "@/lib/supabaseClient";
 import { adminWrite } from "@/lib/admin-api-client";
 import type { Product, Stock } from "@/types";
@@ -72,11 +73,15 @@ export default function StocksPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [notice, setNotice] = useState<ActionNoticeState>(null);
 
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
   const [stats, setStats] = useState({ available: 0, sold: 0 });
+  const showError = (message: string) => setNotice({ type: "error", message });
+  const showSuccess = (message: string) => setNotice({ type: "success", message });
+  const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
 
   async function fetchProducts() {
     const { data } = await supabase
@@ -107,8 +112,14 @@ export default function StocksPage() {
   }, [page, search, filterProduct]);
 
   async function addStock() {
-    if (!productId) return alert("Pilih produk dulu.");
-    if (!email.trim()) return alert("Email wajib diisi.");
+    if (!productId) {
+      showError("Pilih produk dulu.");
+      return;
+    }
+    if (!email.trim()) {
+      showError("Email wajib diisi.");
+      return;
+    }
 
     try {
       await adminWrite<Stock[]>("/api/admin/stocks", {
@@ -122,7 +133,8 @@ export default function StocksPage() {
         },
       });
     } catch (error) {
-      return alert("Gagal add stock: " + (error instanceof Error ? error.message : "Unknown error"));
+      showError(`Gagal add stock: ${getErrorMessage(error)}`);
+      return;
     }
 
     setEmail("");
@@ -131,6 +143,7 @@ export default function StocksPage() {
     setPin("");
     setProductId("");
     setShowAddModal(false);
+    showSuccess("Stock berhasil ditambahkan.");
 
     void fetchStocks();
   }
@@ -150,11 +163,12 @@ export default function StocksPage() {
         },
       });
     } catch (error) {
-      alert("Gagal update stock: " + (error instanceof Error ? error.message : "Unknown error"));
+      showError(`Gagal update stock: ${getErrorMessage(error)}`);
       return;
     }
 
     setEditStockData(null);
+    showSuccess("Stock berhasil diupdate.");
     void fetchStocks();
   }
 
@@ -166,9 +180,10 @@ export default function StocksPage() {
         body: { id },
       });
     } catch (error) {
-      alert("Gagal delete stock: " + (error instanceof Error ? error.message : "Unknown error"));
+      showError(`Gagal delete stock: ${getErrorMessage(error)}`);
       return;
     }
+    showSuccess("Stock berhasil dihapus.");
     void fetchStocks();
   }
 
@@ -213,7 +228,7 @@ export default function StocksPage() {
       setUploading(false);
       setUploadProgress(100);
       void fetchStocks();
-      alert("✅ Bulk upload sukses");
+      showSuccess("Bulk upload sukses.");
     } catch (e: unknown) {
       setUploadError(e instanceof Error ? e.message : "Upload gagal");
       setUploading(false);
@@ -265,6 +280,8 @@ export default function StocksPage() {
           Manage account inventory, stock availability and bulk uploads
         </p>
       </div>
+
+      <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />
 
       {/* KPI CARDS */}
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
 import { supabase } from "@/lib/supabaseClient";
 import { adminWrite } from "@/lib/admin-api-client";
 import type { Product } from "@/types";
@@ -35,6 +36,11 @@ export default function ProductsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [notice, setNotice] = useState<ActionNoticeState>(null);
+
+  const showError = (message: string) => setNotice({ type: "error", message });
+  const showSuccess = (message: string) => setNotice({ type: "success", message });
+  const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
 
   const resetForm = () => {
     setCode("");
@@ -100,7 +106,7 @@ export default function ProductsPage() {
 
   async function addProduct() {
     if (!code || !name || !price || !duration) {
-      alert("Field tidak boleh kosong");
+      showError("Field tidak boleh kosong");
       return false;
     }
 
@@ -120,12 +126,13 @@ export default function ProductsPage() {
       });
     } catch (error) {
       console.error("addProduct error:", error);
-      alert(`Gagal menambah produk: ${error instanceof Error ? error.message : "Unknown error"}`);
+      showError(`Gagal menambah produk: ${getErrorMessage(error)}`);
       return false;
     }
 
     resetForm();
     await fetchProducts();
+    showSuccess("Produk berhasil ditambahkan.");
     return true;
   }
 
@@ -162,12 +169,13 @@ export default function ProductsPage() {
       });
     } catch (error) {
       console.error("updateProduct error:", error);
-      alert(`Gagal update produk: ${error instanceof Error ? error.message : "Unknown error"}`);
+      showError(`Gagal update produk: ${getErrorMessage(error)}`);
       return;
     }
 
     setShowModal(false);
     resetForm();
+    showSuccess("Produk berhasil diupdate.");
     void fetchProducts();
   }
 
@@ -182,16 +190,17 @@ export default function ProductsPage() {
       });
     } catch (error) {
       console.error("deleteProduct error:", error);
-      alert(`Gagal delete produk: ${error instanceof Error ? error.message : "Unknown error"}`);
+      showError(`Gagal delete produk: ${getErrorMessage(error)}`);
       return;
     }
 
+    showSuccess("Produk berhasil dihapus.");
     void fetchProducts();
   }
 
   async function deleteSelected() {
     if (selected.length === 0) {
-      alert("No product selected");
+      showError("No product selected");
       return;
     }
 
@@ -205,11 +214,12 @@ export default function ProductsPage() {
       });
     } catch (error) {
       console.error("deleteSelected error:", error);
-      alert(`Gagal delete product terpilih: ${error instanceof Error ? error.message : "Unknown error"}`);
+      showError(`Gagal delete product terpilih: ${getErrorMessage(error)}`);
       return;
     }
 
     setSelected([]);
+    showSuccess("Produk terpilih berhasil dihapus.");
     void fetchProducts();
   }
 
@@ -221,10 +231,11 @@ export default function ProductsPage() {
       });
     } catch (error) {
       console.error("toggleProduct error:", error);
-      alert(`Gagal ubah status produk: ${error instanceof Error ? error.message : "Unknown error"}`);
+      showError(`Gagal ubah status produk: ${getErrorMessage(error)}`);
       return;
     }
 
+    showSuccess("Status produk berhasil diubah.");
     void fetchProducts();
   }
 
@@ -261,6 +272,8 @@ export default function ProductsPage() {
           Manage all products available in the system.
         </p>
       </div>
+
+      <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />
 
       {/* TOOLBAR */}
       <div className="flex flex-wrap gap-3">
