@@ -1,5 +1,6 @@
 "use client"
 
+import type { EmailOtpType } from "@supabase/supabase-js"
 import { FormEvent, useEffect, useMemo, useState } from "react"
 import { ArrowRight, Eye, EyeOff, KeyRound } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -40,10 +41,36 @@ export default function UpdatePasswordPage() {
     let mounted = true
 
     const bootstrapRecovery = async () => {
-      const code = new URLSearchParams(window.location.search).get("code")
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get("code")
+      const tokenHash = params.get("token_hash")
+      const type = params.get("type")
 
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (!mounted) return
+
+        if (error) {
+          setErrorMessage("Link reset tidak valid atau sudah expired. Silakan kirim ulang reset password dari halaman login.")
+          setCanUpdatePassword(false)
+          setIsReady(true)
+          return
+        }
+      }
+
+      if (tokenHash) {
+        if (type !== "recovery") {
+          setErrorMessage("Link reset tidak valid atau sudah expired. Silakan kirim ulang reset password dari halaman login.")
+          setCanUpdatePassword(false)
+          setIsReady(true)
+          return
+        }
+
+        const otpType: EmailOtpType = "recovery"
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: otpType,
+        })
         if (!mounted) return
 
         if (error) {
