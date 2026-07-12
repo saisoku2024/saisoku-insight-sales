@@ -6,7 +6,9 @@
     "dev": "next dev -p 3004",
     "build": "next build",
     "start": "next start -p 3004",
-    "lint": "eslint"
+    "lint": "eslint",
+    "backup:data:full": "node scripts/backup-data.mjs --mode full",
+    "backup:data:critical": "node scripts/backup-data.mjs --mode critical --retention-days 14"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
