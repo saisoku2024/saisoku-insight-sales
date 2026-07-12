@@ -67,16 +67,16 @@ export function HeaderBar({
           <div
             className="
               hidden lg:flex
-              h-10
+              h-9
               items-center gap-2
               border-[3px] border-[var(--insight-border)]
               bg-[var(--insight-panel)]
-              px-3
-              shadow-[4px_4px_0_var(--insight-shadow)]
+              px-2.5
+              shadow-[3px_3px_0_var(--insight-shadow)]
             "
           >
             <Clock3 className="h-4 w-4 text-[var(--insight-blue)]" />
-            <span className="text-xl leading-none text-[var(--insight-text)]">
+            <span className="text-lg leading-none text-[var(--insight-text)]">
               {currentDateLabel}
             </span>
           </div>
@@ -84,7 +84,7 @@ export function HeaderBar({
           <button
             type="button"
             onClick={onToggleTheme}
-            className="insight-button flex h-10 min-w-[55px] items-center justify-center px-3"
+            className="insight-button flex h-9 min-w-[48px] items-center justify-center px-2"
             aria-label="Toggle Theme"
           >
             {isDark ? <Sun className="h-5 w-5 text-amber-500" /> : <Moon className="h-5 w-5" />}
@@ -92,18 +92,18 @@ export function HeaderBar({
           
           <div
             className="
-              hidden h-10 items-center gap-2
+              hidden h-9 items-center gap-2
               border-[3px] border-[var(--insight-border)]
               bg-[var(--insight-panel)]
-              px-3
-              shadow-[4px_4px_0_var(--insight-shadow)]
+              px-2.5
+              shadow-[3px_3px_0_var(--insight-shadow)]
               md:flex
             "
           >
             <div className="relative">
               <div
                 className="
-                  h-6 w-6
+                  h-5 w-5
                   border-2 border-[var(--insight-border)]
                   bg-[var(--insight-blue)]
                 "
@@ -119,13 +119,13 @@ export function HeaderBar({
               />
             </div>
 
-            <div className="min-w-0">
-              <p className="text-lg leading-none text-[var(--insight-text)]">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="text-lg leading-none text-[var(--insight-text)]">
                 {roleLabel}
-              </p>
-              <p className="text-base leading-none text-emerald-600 dark:text-emerald-400">
+              </span>
+              <span className="text-base leading-none text-emerald-600 dark:text-emerald-400">
                 Online
-              </p>
+              </span>
             </div>
           </div>
         </div>

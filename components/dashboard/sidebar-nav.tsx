@@ -33,7 +33,7 @@ function SidebarItem({
       href={item.href}
       onClick={onNavigate}
       className={cn(
-        "group flex items-center gap-2 border-[3px] px-2.5 py-1.5 text-lg leading-none transition-all",
+        "group flex h-10 items-center gap-2 border-[3px] px-2.5 text-lg leading-none transition-all",
         active
           ? "border-blue-700 bg-[var(--insight-blue)] text-white shadow-[2px_2px_0_var(--insight-shadow)]"
           : "border-[var(--insight-border)] bg-[var(--insight-panel)] text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] hover:-translate-y-0.5 hover:bg-blue-100 dark:hover:bg-slate-700"
@@ -115,7 +115,7 @@ export function SidebarNav({
               <button
                 type="button"
                 onClick={() => toggleGroup(entry.label)}
-                className="insight-button flex w-full items-center justify-between px-2.5 py-1.5 text-lg leading-none text-left"
+                className="insight-button flex h-10 w-full items-center justify-between px-2.5 text-lg leading-none text-left"
               >
                 <span>{entry.label}</span>
                 <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", isOpen && "rotate-180")} />
@@ -138,7 +138,7 @@ export function SidebarNav({
         })}
       </div>
 
-      <div className="mt-4 border-t-2 border-[var(--insight-border)] pt-3">
+      <div className="mt-6 border-t-2 border-[var(--insight-border)] pt-3">
         <button
           type="button"
           onClick={onLogout}
