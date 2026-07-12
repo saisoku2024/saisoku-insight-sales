@@ -11,17 +11,17 @@ import {
 async function updateReplyTicket(ticketId: string, feedback: string, adminEmail: string) {
   const updates = [
     {
-      status: "replied",
+      status: "assigned",
       feedback,
       replied_by: adminEmail,
       replied_at: new Date().toISOString(),
     },
     {
-      status: "replied",
+      status: "assigned",
       feedback,
     },
     {
-      status: "replied",
+      status: "assigned",
     },
   ]
 

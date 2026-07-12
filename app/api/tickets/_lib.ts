@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js"
 import { NextResponse, type NextRequest } from "next/server"
 
 type TicketRow = Record<string, unknown>
+export type TicketStatus = "open" | "on_progress" | "assigned" | "resolved"
 
 type AuthResult =
   | {
@@ -130,9 +131,10 @@ function buildStructuredTicketCode(ticket: TicketRow) {
   return `SID${formatTicketDateCode(ticket.created_at)}-${orderSegment}-${serial}`
 }
 
-function statusLabel(status: "open" | "assigned" | "resolved") {
+function statusLabel(status: TicketStatus) {
   if (status === "resolved") return "✅ [ RESOLVED ]"
   if (status === "assigned") return "🟦 [ ASSIGNED ]"
+  if (status === "on_progress") return "🔄 [ ON PROGRESS ]"
   return "⏳ [ OPEN ]"
 }
 
@@ -143,7 +145,7 @@ function buildStructuredTicketText({
   footer,
 }: {
   ticket: TicketRow
-  status: "open" | "assigned" | "resolved"
+  status: TicketStatus
   adminResponse?: string
   footer: string
 }) {
@@ -297,6 +299,29 @@ export function buildReplyText(ticket: TicketRow, feedback: string) {
   })
 }
 
+export function buildStatusText(ticket: TicketRow, status: TicketStatus) {
+  const responseByStatus: Record<TicketStatus, string> = {
+    open: "(Menunggu balasan admin...)",
+    on_progress: "Tiket sedang ditangani oleh admin.",
+    assigned: "Tiket telah diterima dan sedang dalam antrean penanganan admin.",
+    resolved: "Tiket telah diselesaikan oleh admin.",
+  }
+
+  const footerByStatus: Record<TicketStatus, string> = {
+    open: "Admin telah dinotifikasi. Harap tunggu balasan selanjutnya.",
+    on_progress: "Mohon tunggu, admin sedang memproses tiket Anda.",
+    assigned: "Admin telah mengambil tiket Anda dan akan memberi balasan berikutnya.",
+    resolved: "Terima kasih telah menggunakan Layanan SAISOKU.ID.",
+  }
+
+  return buildStructuredTicketText({
+    ticket,
+    status,
+    adminResponse: responseByStatus[status],
+    footer: footerByStatus[status],
+  })
+}
+
 export function buildResolvedText(ticket: TicketRow) {
   return buildStructuredTicketText({
     ticket,
@@ -336,4 +361,8 @@ export function buildTicketReplyTelegramText(ticket: TicketRow, feedback: string
 
 export function buildTicketResolvedTelegramText(ticket: TicketRow) {
   return buildResolvedText(ticket)
+}
+
+export function buildTicketStatusTelegramText(ticket: TicketRow, status: TicketStatus) {
+  return buildStatusText(ticket, status)
 }

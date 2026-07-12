@@ -8,13 +8,15 @@ type Ticket = {
   id: number;
   user_id: string;
   telegram_id: number;
-  status: "open" | "replied" | "resolved";
+  status: TicketStatus;
   created_at: string;
   users?: {
     username: string | null;
     name: string | null;
   } | null;
 };
+
+type TicketStatus = "open" | "on_progress" | "assigned" | "replied" | "resolved";
 
 type Reply = {
   id: string;
@@ -35,6 +37,8 @@ export default function TicketsPage() {
   const [loadingTickets, setLoadingTickets] = useState(false);
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [sending, setSending] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [nextStatus, setNextStatus] = useState<TicketStatus>("on_progress");
   const [ticketError, setTicketError] = useState<string | null>(null);
   const [replyError, setReplyError] = useState<string | null>(null);
   const [notice, setNotice] = useState<ActionNoticeState>(null);
@@ -43,6 +47,20 @@ export default function TicketsPage() {
   const pageSize = 10;
   const showError = (message: string) => setNotice({ type: "error", message });
   const showSuccess = (message: string) => setNotice({ type: "success", message });
+  const statusLabels: Record<TicketStatus, string> = {
+    open: "Open",
+    on_progress: "On Progress",
+    assigned: "Assigned",
+    replied: "Assigned",
+    resolved: "Resolved",
+  };
+  const statusClasses: Record<TicketStatus, string> = {
+    open: "bg-red-100 text-red-700",
+    on_progress: "bg-blue-100 text-blue-700",
+    assigned: "bg-yellow-100 text-yellow-700",
+    replied: "bg-yellow-100 text-yellow-700",
+    resolved: "bg-green-100 text-green-700",
+  };
 
   async function loadTickets() {
     setLoadingTickets(true);
@@ -130,9 +148,9 @@ export default function TicketsPage() {
       });
 
       setTickets((prev) =>
-        prev.map((t) => (t.id === selectedTicket.id ? { ...t, status: "replied" } : t))
+        prev.map((t) => (t.id === selectedTicket.id ? { ...t, status: "assigned" } : t))
       );
-      setSelectedTicket((prev) => (prev ? { ...prev, status: "replied" } : null));
+      setSelectedTicket((prev) => (prev ? { ...prev, status: "assigned" } : null));
       setReplies((prev) => [...prev, replyData]);
       setNewReply("");
       showSuccess("Balasan berhasil dikirim ke user.");
@@ -144,24 +162,27 @@ export default function TicketsPage() {
     setSending(false);
   }
 
-  async function resolveTicket() {
+  async function updateTicketStatus(status: TicketStatus) {
     if (!selectedTicket) return;
 
+    setUpdatingStatus(true);
     try {
-      await callTicketAction("/api/tickets/resolve", {
+      const result = await callTicketAction<{ status: TicketStatus }>("/api/tickets/status", {
         ticketId: String(selectedTicket.id),
+        status,
       });
+      const updatedStatus = result?.status || status;
+      setTickets((prev) =>
+        prev.map((t) => (t.id === selectedTicket.id ? { ...t, status: updatedStatus } : t))
+      );
+      setSelectedTicket((prev) => (prev ? { ...prev, status: updatedStatus } : null));
+      setNextStatus(updatedStatus === "resolved" ? "resolved" : updatedStatus);
+      showSuccess(`Status tiket diubah ke ${statusLabels[updatedStatus]}.`);
     } catch (e) {
-      console.error("resolveTicket error:", e);
-      showError(e instanceof Error ? e.message : "Gagal menyelesaikan tiket.");
-      return;
+      console.error("updateTicketStatus error:", e);
+      showError(e instanceof Error ? e.message : "Gagal mengubah status tiket.");
     }
-
-    setTickets((prev) =>
-      prev.map((t) => (t.id === selectedTicket.id ? { ...t, status: "resolved" } : t))
-    );
-    setSelectedTicket((prev) => (prev ? { ...prev, status: "resolved" } : null));
-    showSuccess("Tiket berhasil diselesaikan.");
+    setUpdatingStatus(false);
   }
 
   useEffect(() => {
@@ -172,6 +193,13 @@ export default function TicketsPage() {
   useEffect(() => {
     if (selectedTicket) {
       void loadReplies(selectedTicket.id);
+      setNextStatus(
+        selectedTicket.status === "open"
+          ? "on_progress"
+          : selectedTicket.status === "replied"
+          ? "assigned"
+          : selectedTicket.status
+      );
     } else {
       setReplies([]);
     }
@@ -243,7 +271,8 @@ export default function TicketsPage() {
             >
               <option value="all">Semua Status</option>
               <option value="open">Open</option>
-              <option value="replied">Replied</option>
+              <option value="on_progress">On Progress</option>
+              <option value="assigned">Assigned</option>
               <option value="resolved">Resolved</option>
             </select>
           </div>
@@ -274,14 +303,10 @@ export default function TicketsPage() {
                       <span className="text-xl">Tiket #{t.id}</span>
                       <span
                         className={`inline-block border-[2px] border-[var(--insight-border)] px-2 py-0.5 text-base leading-none ${
-                          t.status === "open"
-                            ? "bg-red-100 text-red-700"
-                            : t.status === "replied"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-green-100 text-green-700"
+                          statusClasses[t.status] || "bg-slate-100 text-slate-700"
                         }`}
                       >
-                        {t.status.toUpperCase()}
+                        {statusLabels[t.status] || t.status}
                       </span>
                     </div>
                     <div className="text-lg text-[var(--insight-muted)] flex justify-between w-full">
@@ -325,14 +350,25 @@ export default function TicketsPage() {
                   </p>
                 </div>
 
-                {selectedTicket.status !== "resolved" && (
-                  <button
-                    onClick={() => void resolveTicket()}
-                    className="border-[3px] border-[var(--insight-border)] bg-emerald-600 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-emerald-500"
+                <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                  <select
+                    value={nextStatus}
+                    onChange={(e) => setNextStatus(e.target.value as TicketStatus)}
+                    disabled={updatingStatus}
+                    className="h-10 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 text-lg text-[var(--insight-text)] outline-none"
                   >
-                    Selesaikan (Resolve)
+                    <option value="on_progress">On Progress</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="resolved">Resolved</option>
+                  </select>
+                  <button
+                    onClick={() => void updateTicketStatus(nextStatus)}
+                    disabled={updatingStatus || nextStatus === selectedTicket.status}
+                    className="border-[3px] border-[var(--insight-border)] bg-emerald-600 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-emerald-500 disabled:opacity-40 disabled:pointer-events-none"
+                  >
+                    {updatingStatus ? "Updating..." : "Update Status"}
                   </button>
-                )}
+                </div>
               </div>
 
               {/* Chat Messages Area */}
