@@ -95,7 +95,7 @@ export function SidebarNav({
         p-3
       "
     >
-      <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+      <div className="space-y-3 overflow-y-auto pr-1">
         {groups.map((entry) => {
           if (entry.type === "item") {
             return (
@@ -138,7 +138,7 @@ export function SidebarNav({
         })}
       </div>
 
-      <div className="mt-3 border-t-2 border-[var(--insight-border)] pt-3">
+      <div className="mt-4 border-t-2 border-[var(--insight-border)] pt-3">
         <button
           type="button"
           onClick={onLogout}
@@ -149,7 +149,7 @@ export function SidebarNav({
           {isLoggingOut ? "Signing out..." : "Logout"}
         </button>
 
-        <div className="mt-3 text-center text-sm leading-tight text-[var(--insight-muted)]">
+        <div className="mt-2 text-center text-xs leading-tight text-[var(--insight-muted)]">
           INSIGHT PANEL
           <br />
           Version 3.0
