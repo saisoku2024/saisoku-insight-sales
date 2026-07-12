@@ -57,7 +57,10 @@ export function getNumber(row: TicketRow, keys: string[]) {
 }
 
 export function ticketDisplayCode(ticket: TicketRow) {
-  return getString(ticket, ["ticket_code", "code", "ticket_id", "public_id", "sid"]) || `TICKET-${getString(ticket, ["id"]) || "-"}`
+  const existing = getString(ticket, ["ticket_code", "code", "ticket_id", "public_id", "sid"])
+  if (existing) return existing.replace(/^#/, "").replace(/^\[|\]$/g, "")
+
+  return buildStructuredTicketCode(ticket)
 }
 
 export function ticketNumericId(ticket: TicketRow) {
@@ -65,7 +68,7 @@ export function ticketNumericId(ticket: TicketRow) {
 }
 
 export function orderDisplayId(ticket: TicketRow) {
-  const raw = getString(ticket, ["order_code", "order_id", "transaction_code", "invoice_code"])
+  const raw = getString(ticket, ["order_code", "order_id", "transaction_code", "invoice_code", "invoice", "trx_code"])
   if (!raw) return "-"
 
   return raw.replace(/^#/, "")
@@ -80,6 +83,100 @@ export function escapeHtml(value: string) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
+}
+
+function formatTicketDate(value?: unknown) {
+  const date = typeof value === "string" || value instanceof Date ? new Date(value) : new Date()
+  const validDate = Number.isNaN(date.getTime()) ? new Date() : date
+
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .format(validDate)
+    .replace(".", ":")
+}
+
+function formatTicketDateCode(value?: unknown) {
+  const date = typeof value === "string" || value instanceof Date ? new Date(value) : new Date()
+  const validDate = Number.isNaN(date.getTime()) ? new Date() : date
+  const parts = new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(validDate)
+
+  const day = parts.find((part) => part.type === "day")?.value || "01"
+  const month = parts.find((part) => part.type === "month")?.value || "01"
+  const year = parts.find((part) => part.type === "year")?.value || "1970"
+
+  return `${year}${month}${day}`
+}
+
+function cleanOrderSegment(value: string) {
+  const cleaned = value.replace(/^#/, "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
+  return (cleaned || "GENERAL").slice(0, 8)
+}
+
+function buildStructuredTicketCode(ticket: TicketRow) {
+  const orderSegment = cleanOrderSegment(orderDisplayId(ticket))
+  const serial = ticketNumericId(ticket).replace(/\D/g, "").padStart(6, "0") || "000000"
+  return `SID${formatTicketDateCode(ticket.created_at)}-${orderSegment}-${serial}`
+}
+
+function statusLabel(status: "open" | "assigned" | "resolved") {
+  if (status === "resolved") return "✅ [ RESOLVED ]"
+  if (status === "assigned") return "🟦 [ ASSIGNED ]"
+  return "⏳ [ OPEN ]"
+}
+
+function buildStructuredTicketText({
+  ticket,
+  status,
+  adminResponse,
+  footer,
+}: {
+  ticket: TicketRow
+  status: "open" | "assigned" | "resolved"
+  adminResponse?: string
+  footer: string
+}) {
+  const code = ticketDisplayCode(ticket)
+  const orderId = orderDisplayId(ticket)
+  const createdAt = formatTicketDate(ticket.created_at)
+  const resolvedAt =
+    status === "resolved" ? formatTicketDate(ticket.resolved_at || new Date()) : "PENDING"
+  const userMessage = escapeHtml(ticketUserMessage(ticket))
+  const response = adminResponse ? escapeHtml(adminResponse) : "(Menunggu balasan admin...)"
+
+  return `<b>[ TICKET NOTIFICATION ]</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+▶ <b>TICKET ID</b>    : <code>${escapeHtml(code)}</code>
+▶ <b>ORDER ID</b>     : <code>${escapeHtml(orderId)}</code>
+▶ <b>STATUS</b>       : ${statusLabel(status)}
+
+<b>LOG AKTIVITAS</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[+] Dibuat     : ${createdAt}
+[-] Selesai    : ${resolvedAt}
+
+<b>PESAN DARI USER</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+&quot;${userMessage}&quot;
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+<b>RESPON ADMIN</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${response}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+<i>${escapeHtml(footer)}</i>`
 }
 
 export async function requireAdminSession(req: NextRequest): Promise<AuthResult> {
@@ -152,6 +249,20 @@ export async function getTicketWithUser(ticketId: string) {
     }
   }
 
+  const transactionId = getString(ticketRow, ["transaction_id"])
+  if (transactionId && orderDisplayId(ticketRow) === "-") {
+    const { data: transaction } = await adminSupabase
+      .from("transactions")
+      .select("invoice, trx_code")
+      .eq("id", transactionId)
+      .maybeSingle()
+
+    const orderCode = getString((transaction || {}) as TicketRow, ["invoice", "trx_code"])
+    if (orderCode) {
+      ticketRow.order_code = orderCode
+    }
+  }
+
   let telegramId = getNumber(ticketRow, ["telegram_id", "chat_id", "user_telegram_id"])
 
   if (!telegramId) {
@@ -178,32 +289,21 @@ export async function getTicketWithUser(ticketId: string) {
 }
 
 export function buildReplyText(ticket: TicketRow, feedback: string) {
-  const code = ticketDisplayCode(ticket)
-  const orderId = orderDisplayId(ticket)
-
-  return `✅ TIKET  [${escapeHtml(code)}]
-
-└ Tiket ID : #${escapeHtml(ticketNumericId(ticket))} - [${escapeHtml(code)}]
-└ ORDER ID : #${escapeHtml(orderId)}
-└ Status : Assigned
-└ Pesan : ${escapeHtml(ticketUserMessage(ticket))}
-
-└ feedback : ${escapeHtml(feedback)}
-
-====================`
+  return buildStructuredTicketText({
+    ticket,
+    status: "assigned",
+    adminResponse: feedback,
+    footer: "Admin telah membalas tiket Anda. Silakan cek respon di atas.",
+  })
 }
 
 export function buildResolvedText(ticket: TicketRow) {
-  const code = ticketDisplayCode(ticket)
-  const orderId = orderDisplayId(ticket)
-
-  return `✅ TIKET  [${escapeHtml(code)}]
-
-└ Tiket ID : #${escapeHtml(ticketNumericId(ticket))} - [${escapeHtml(code)}]
-└ ORDER ID : #${escapeHtml(orderId)}
-└ Status : Resolved
-
-Terima Kasih Telah menggunakan Layanan SAISOKU.ID`
+  return buildStructuredTicketText({
+    ticket,
+    status: "resolved",
+    adminResponse: "Tiket telah diselesaikan oleh admin.",
+    footer: "Terima kasih telah menggunakan Layanan SAISOKU.ID.",
+  })
 }
 
 export async function sendTelegramMessage(chatId: number, text: string) {
@@ -231,30 +331,9 @@ export async function sendTelegramMessage(chatId: number, text: string) {
 }
 
 export function buildTicketReplyTelegramText(ticket: TicketRow, feedback: string) {
-  const code = ticketDisplayCode(ticket)
-  const orderId = orderDisplayId(ticket)
-
-  return `✅ TIKET  [${escapeHtml(code)}]
-
-└ Tiket ID : #${escapeHtml(ticketNumericId(ticket))} - [${escapeHtml(code)}]
-└ ORDER ID : #${escapeHtml(orderId)}
-└ Status : Assigned
-└ Pesan : ${escapeHtml(ticketUserMessage(ticket))}
-
-└ feedback : ${escapeHtml(feedback)}
-
-====================`
+  return buildReplyText(ticket, feedback)
 }
 
 export function buildTicketResolvedTelegramText(ticket: TicketRow) {
-  const code = ticketDisplayCode(ticket)
-  const orderId = orderDisplayId(ticket)
-
-  return `✅ TIKET  [${escapeHtml(code)}]
-
-└ Tiket ID : #${escapeHtml(ticketNumericId(ticket))} - [${escapeHtml(code)}]
-└ ORDER ID : #${escapeHtml(orderId)}
-└ Status : Resolved
-
-Terima Kasih Telah menggunakan Layanan SAISOKU.ID`
+  return buildResolvedText(ticket)
 }
