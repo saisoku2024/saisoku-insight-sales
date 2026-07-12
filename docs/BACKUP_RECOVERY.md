@@ -54,10 +54,12 @@ backup_runs
 
 ### Auto Backup
 
-`vercel.json` schedules:
+`vercel.json` schedules are limited by Vercel Hobby rules:
 
-- Critical backup: every hour
-- Full backup: daily at `00:10 UTC`
+- Critical backup: daily at `17:10 UTC` / `00:10 WIB`
+- Full backup: weekly Sunday at `17:20 UTC` / Monday `00:20 WIB`
+
+For hourly critical backup, use Windows Task Scheduler or GitHub Actions with repository secrets.
 
 Required Vercel env:
 

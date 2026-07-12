@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/admin/backups?mode=critical",
-      "schedule": "0 * * * *"
+      "schedule": "10 17 * * *"
     },
     {
       "path": "/api/admin/backups?mode=full",
-      "schedule": "10 0 * * *"
+      "schedule": "20 17 * * 0"
     }
   ]
 }
