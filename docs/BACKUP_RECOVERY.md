@@ -155,6 +155,21 @@ If hacked or broken:
 4. Restore data from the newest clean backup.
 5. Compare balance and transaction logs after the incident time.
 
+Detailed rollback, restore, and incident SOP is in:
+
+```text
+docs/AVAILABILITY_RECOVERY.md
+```
+
+## Restore Safety Rules
+
+- Restore is owner-only.
+- Do not restore full data if only a few rows are wrong.
+- Always create a fresh backup before restore.
+- Prefer table-specific restore or row patch from backup reference.
+- Validate balance, transactions, stock, tickets, and voucher claims after restore.
+- Record the incident and backup file used.
+
 ## Notes
 
 JSON backups are practical for development and emergency inspection. For production-grade database restore, add `pg_dump` or Supabase point-in-time recovery when available.

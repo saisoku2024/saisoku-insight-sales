@@ -39,6 +39,22 @@ function statusClass(status: BackupRun["status"]) {
   return "bg-blue-100 text-blue-700"
 }
 
+const recoverySteps = [
+  "Rollback web dari deployment Vercel terakhir yang sehat.",
+  "Rollback bot dengan revert commit lalu deploy Supabase Edge Function.",
+  "Pilih backup bersih sebelum waktu incident.",
+  "Restore terbatas ke tabel/row terdampak, lalu validasi data penting.",
+]
+
+const healthChecks = [
+  "Login owner",
+  "Dashboard KPI",
+  "Products & Stocks",
+  "Users & Balance",
+  "Tickets",
+  "Bot Telegram",
+]
+
 export default function BackupSettingsPage() {
   const pageSize = 10
   const [runs, setRuns] = useState<BackupRun[]>([])
@@ -114,13 +130,13 @@ export default function BackupSettingsPage() {
   }
 
   return (
-    <div className="space-y-6 text-[var(--insight-text)]">
-      <div className="insight-card p-4">
-        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-blue-100 px-3 py-1 text-lg leading-none text-blue-800">
+    <div className="space-y-4 text-[var(--insight-text)]">
+      <div className="insight-card p-3">
+        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-blue-100 px-2.5 py-1 text-base leading-none text-blue-800">
           SETTINGS
         </span>
-        <h1 className="mt-3 text-[34px] leading-none">Backup</h1>
-        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+        <h1 className="mt-2 text-[28px] leading-none">Backup</h1>
+        <p className="mt-1 text-lg leading-none text-[var(--insight-muted)]">
           Manual backup dan auto backup data SAISOKU ke Supabase Storage private bucket.
         </p>
       </div>
@@ -128,14 +144,14 @@ export default function BackupSettingsPage() {
       <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />
 
       {error ? (
-        <div className="insight-card border-red-500 bg-red-50 p-4 text-xl text-red-700">
+        <div className="insight-card border-red-500 bg-red-50 p-3 text-lg text-red-700">
           {error}
         </div>
       ) : null}
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="insight-card p-4">
-          <div className="text-xl text-[var(--insight-muted)]">Manual Critical</div>
+      <div className="grid gap-3 lg:grid-cols-3">
+        <div className="insight-card p-3">
+          <div className="text-lg text-[var(--insight-muted)]">Manual Critical</div>
           <div className="mt-2 text-lg text-[var(--insight-muted)]">
             Tabel transaksi, saldo, stok, voucher, loyalty, dan tiket.
           </div>
@@ -143,14 +159,14 @@ export default function BackupSettingsPage() {
             type="button"
             onClick={() => void runManualBackup("critical")}
             disabled={Boolean(runningMode)}
-            className="mt-4 border-[3px] border-[var(--insight-border)] bg-blue-700 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-blue-600 disabled:opacity-40"
+            className="mt-3 border-[3px] border-[var(--insight-border)] bg-blue-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-blue-600 disabled:opacity-40"
           >
             {runningMode === "critical" ? "Running..." : "Run Critical"}
           </button>
         </div>
 
-        <div className="insight-card p-4">
-          <div className="text-xl text-[var(--insight-muted)]">Manual Full</div>
+        <div className="insight-card p-3">
+          <div className="text-lg text-[var(--insight-muted)]">Manual Full</div>
           <div className="mt-2 text-lg text-[var(--insight-muted)]">
             Semua tabel utama yang tercatat di sistem backup SAISOKU.
           </div>
@@ -158,26 +174,67 @@ export default function BackupSettingsPage() {
             type="button"
             onClick={() => void runManualBackup("full")}
             disabled={Boolean(runningMode)}
-            className="mt-4 border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40"
+            className="mt-3 border-[3px] border-[var(--insight-border)] bg-violet-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40"
           >
             {runningMode === "full" ? "Running..." : "Run Full"}
           </button>
         </div>
 
-        <div className="insight-card p-4">
-          <div className="text-xl text-[var(--insight-muted)]">Auto Backup</div>
+        <div className="insight-card p-3">
+          <div className="text-lg text-[var(--insight-muted)]">Auto Backup</div>
           <div className="mt-2 text-lg text-[var(--insight-muted)]">
-            Vercel Cron disiapkan untuk critical per jam dan full harian 00:10 UTC.
+            Vercel Cron Hobby: critical harian 00:10 WIB dan full mingguan Senin 00:20 WIB.
           </div>
-          <div className="mt-4 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-2 text-lg">
+          <div className="mt-3 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-1.5 text-lg">
             Butuh env <code>BACKUP_CRON_SECRET</code> di Vercel.
           </div>
         </div>
       </div>
 
+      <div className="grid gap-3 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="insight-card p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-2xl leading-none">Recovery Runbook</h2>
+            <span className="border-[3px] border-[var(--insight-border)] bg-amber-100 px-2 py-0.5 text-base leading-none text-amber-800">
+              Owner Only
+            </span>
+          </div>
+          <div className="mt-3 grid gap-2 md:grid-cols-2">
+            {recoverySteps.map((step, index) => (
+              <div key={step} className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-2">
+                <div className="text-base leading-none text-[var(--insight-muted)]">STEP {index + 1}</div>
+                <div className="mt-1 text-lg leading-tight">{step}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 text-base leading-tight text-[var(--insight-muted)]">
+            Detail SOP ada di <code>docs/AVAILABILITY_RECOVERY.md</code>. Restore full tidak disarankan bila hanya beberapa row yang salah.
+          </div>
+        </div>
+
+        <div className="insight-card p-3">
+          <h2 className="text-2xl leading-none">Health Checklist</h2>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {healthChecks.map((item) => (
+              <div key={item} className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-2 py-1.5 text-lg leading-none">
+                {item}
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-base leading-tight text-[var(--insight-muted)]">
+            <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-2">
+              RTO web/bot target 15-30 menit via rollback.
+            </div>
+            <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-2">
+              RPO mengikuti backup bersih terakhir.
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="insight-card overflow-hidden">
-        <div className="border-b-[3px] border-[var(--insight-border)] p-4">
-          <h2 className="text-[30px] leading-none">Backup Runs</h2>
+        <div className="border-b-[3px] border-[var(--insight-border)] p-3">
+          <h2 className="text-[26px] leading-none">Backup Runs</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
