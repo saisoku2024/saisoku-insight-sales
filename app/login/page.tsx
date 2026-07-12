@@ -20,7 +20,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [isResetLoading, setIsResetLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -38,6 +38,11 @@ export default function LoginPage() {
     const error = new URLSearchParams(window.location.search).get("error")
     if (error === "unauthorized") {
       setErrorMessage(getAdminAccessErrorMessage())
+    }
+
+    const reset = new URLSearchParams(window.location.search).get("reset")
+    if (reset === "success") {
+      setSuccessMessage("Password berhasil diperbarui. Silakan login dengan password baru.")
     }
   }, [])
 
@@ -119,44 +124,31 @@ export default function LoginPage() {
     }
   }
 
-  async function handleGoogleLogin() {
-    try {
-      setIsGoogleLoading(true)
-      setErrorMessage(null)
-      setSuccessMessage(null)
-      
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: typeof window !== "undefined" ? `${window.location.origin}/dashboard` : undefined,
-        },
-      })
-      
-      if (error) setErrorMessage(error.message)
-    } finally {
-      setIsGoogleLoading(false)
-    }
-  }
-
   async function handleResetPassword() {
     if (!email.trim()) {
       setErrorMessage("Masukkan email admin terlebih dahulu untuk reset password.")
       setSuccessMessage(null)
       return
     }
-    
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: typeof window !== "undefined" ? `${window.location.origin}/auth/update-password` : undefined,
-    })
-    
-    if (error) {
-      setErrorMessage(error.message)
+
+    try {
+      setIsResetLoading(true)
+      setErrorMessage(null)
       setSuccessMessage(null)
-      return
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/auth/update-password`,
+      })
+
+      if (error) {
+        setErrorMessage(error.message)
+        return
+      }
+
+      setSuccessMessage("Link reset password sudah dikirim. Cek inbox email admin lalu buka link recovery.")
+    } finally {
+      setIsResetLoading(false)
     }
-    
-    setErrorMessage(null)
-    setSuccessMessage("Link reset password sudah dikirim. Cek inbox lalu lanjutkan pembaruan password.")
   }
 
   if (isBooting) {
@@ -217,9 +209,10 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={handleResetPassword}
+              disabled={isResetLoading}
               className="border-0 bg-transparent p-0 text-lg leading-none text-[var(--insight-muted)] shadow-none transition hover:text-[var(--insight-text)]"
             >
-              Forgot your password?
+              {isResetLoading ? "Sending reset..." : "Forgot your password?"}
             </button>
           </div>
           <div className="flex items-center gap-2.5 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3.5 shadow-[4px_4px_0_var(--insight-shadow)]">
@@ -265,29 +258,6 @@ export default function LoginPage() {
           {!isSubmitting ? <ArrowRight className="h-4 w-4" /> : null}
         </button>
 
-        <div className="relative py-1">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t-[3px] border-[var(--insight-border)]" />
-          </div>
-          <div className="relative flex justify-center text-lg leading-none text-[var(--insight-muted)]">
-            <span className="bg-[var(--insight-panel)] px-3">or continue with</span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleGoogleLogin}
-          disabled={isGoogleLoading}
-          className="inline-flex h-14 w-full items-center justify-center gap-3 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-5 text-xl text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
-            <path d="M21.805 10.023H12v3.955h5.613c-.242 1.273-.967 2.35-2.06 3.072v2.548h3.327c1.946-1.79 3.07-4.426 2.925-7.378-.003-.742-.086-1.474-.245-2.197Z" fill="#4285F4" />
-            <path d="M12 22c2.7 0 4.964-.894 6.619-2.402l-3.327-2.548c-.925.62-2.11.986-3.292.986-2.528 0-4.67-1.706-5.437-4.004H3.13v2.632A9.996 9.996 0 0 0 12 22Z" fill="#34A853" />
-            <path d="M6.563 14.032A6.005 6.005 0 0 1 6.26 12c0-.706.122-1.39.303-2.032V7.336H3.13A10.002 10.002 0 0 0 2 12c0 1.61.384 3.13 1.13 4.664l3.433-2.632Z" fill="#FBBC04" />
-            <path d="M12 5.964c1.468 0 2.785.505 3.822 1.496l2.867-2.867C16.96 2.979 14.696 2 12 2A9.996 9.996 0 0 0 3.13 7.336l3.433 2.632C7.33 7.67 9.472 5.964 12 5.964Z" fill="#EA4335" />
-          </svg>
-          {isGoogleLoading ? "Redirecting to Google..." : "Continue with Google"}
-        </button>
       </form>
     </AuthShell>
   )

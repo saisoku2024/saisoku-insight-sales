@@ -21,12 +21,13 @@ export default function UpdatePasswordPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [canUpdatePassword, setCanUpdatePassword] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const canSubmit = useMemo(() => {
-    return password.trim().length >= 8 && confirmPassword.trim().length >= 8
-  }, [confirmPassword, password])
+    return canUpdatePassword && password.trim().length >= 8 && confirmPassword.trim().length >= 8
+  }, [canUpdatePassword, confirmPassword, password])
 
   useEffect(() => {
     const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
@@ -39,6 +40,20 @@ export default function UpdatePasswordPage() {
     let mounted = true
 
     const bootstrapRecovery = async () => {
+      const code = new URLSearchParams(window.location.search).get("code")
+
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (!mounted) return
+
+        if (error) {
+          setErrorMessage("Link reset tidak valid atau sudah expired. Silakan kirim ulang reset password dari halaman login.")
+          setCanUpdatePassword(false)
+          setIsReady(true)
+          return
+        }
+      }
+
       const {
         data: { session },
       } = await supabase.auth.getSession()
@@ -46,11 +61,13 @@ export default function UpdatePasswordPage() {
       if (!mounted) return
 
       if (session) {
+        setCanUpdatePassword(true)
         setIsReady(true)
         return
       }
 
       setErrorMessage("Link reset tidak valid atau sudah expired. Silakan kirim ulang reset password dari halaman login.")
+      setCanUpdatePassword(false)
       setIsReady(true)
     }
 
@@ -63,6 +80,7 @@ export default function UpdatePasswordPage() {
 
       if (event === "PASSWORD_RECOVERY" || session) {
         setErrorMessage(null)
+        setCanUpdatePassword(Boolean(session))
         setIsReady(true)
       }
     })
@@ -103,7 +121,7 @@ export default function UpdatePasswordPage() {
       setSuccessMessage(null)
 
       const { error } = await supabase.auth.updateUser({
-        password,
+        password: password.trim(),
       })
 
       if (error) {
@@ -114,9 +132,10 @@ export default function UpdatePasswordPage() {
       setSuccessMessage("Password berhasil diperbarui. Anda akan diarahkan kembali ke halaman login.")
       setPassword("")
       setConfirmPassword("")
+      await supabase.auth.signOut()
 
       window.setTimeout(() => {
-        router.replace("/login")
+        router.replace("/login?reset=success")
       }, 1800)
     } finally {
       setIsSubmitting(false)
