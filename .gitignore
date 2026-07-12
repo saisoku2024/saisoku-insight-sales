@@ -43,7 +43,7 @@ yarn-error.log*
 # local backup outputs
 
 SAISOKU_BACKUPS/
-backups/
+/backups/
 *.backup.zip
 
 # vercel

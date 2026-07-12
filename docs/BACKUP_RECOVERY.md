@@ -27,6 +27,50 @@ Do not commit `.env.backup.local`.
 
 ## Data Backup
 
+### Web Panel Backup
+
+Manual backup is available in:
+
+```text
+Dashboard > Settings > Backup
+```
+
+Owner can run:
+
+- Critical backup
+- Full backup
+
+The generated backup is stored in Supabase Storage private bucket:
+
+```text
+saisoku-backups
+```
+
+Backup history is stored in:
+
+```text
+backup_runs
+```
+
+### Auto Backup
+
+`vercel.json` schedules:
+
+- Critical backup: every hour
+- Full backup: daily at `00:10 UTC`
+
+Required Vercel env:
+
+```env
+BACKUP_CRON_SECRET=use-a-long-random-secret
+SAISOKU_BACKUP_BUCKET=saisoku-backups
+```
+
+Vercel Cron calls `/api/admin/backups?mode=critical` or `/api/admin/backups?mode=full`.
+The API only accepts cron runs when the request contains `Authorization: Bearer BACKUP_CRON_SECRET`.
+
+### Local Script Backup
+
 Critical backup, suitable for hourly runs:
 
 ```powershell
