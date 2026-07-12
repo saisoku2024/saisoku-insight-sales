@@ -6,6 +6,7 @@ import {
   readNumber,
   readString,
   requireActiveAdmin,
+  writeAdminAuditLog,
 } from "../_lib"
 
 const allowedActions = new Set(["add", "deduct", "reset"])
@@ -165,6 +166,20 @@ export async function POST(req: NextRequest) {
 
     const finalAmount = action === "reset" ? Number(targetUser.balance || 0) : amount
     if (action === "reset" && finalAmount <= 0) {
+      await writeAdminAuditLog(auth, {
+        action: "reset",
+        entity: "balance",
+        entityId: targetUser.id,
+        before: targetUser,
+        after: targetUser,
+        metadata: {
+          targetTelegramId,
+          amount: 0,
+          note,
+          noop: true,
+        },
+      })
+
       return NextResponse.json({
         data: {
           user: targetUser,
@@ -181,6 +196,20 @@ export async function POST(req: NextRequest) {
     )
     await attachNoteToLatestLog(String(targetUser.id), note)
     const refreshedUser = await findTargetUser(targetTelegramId)
+
+    await writeAdminAuditLog(auth, {
+      action,
+      entity: "balance",
+      entityId: targetUser.id,
+      before: targetUser,
+      after: refreshedUser,
+      metadata: {
+        targetTelegramId,
+        amount: finalAmount,
+        note,
+        rpcResult: result,
+      },
+    })
 
     return NextResponse.json({
       data: {

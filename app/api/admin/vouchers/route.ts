@@ -8,6 +8,7 @@ import {
   readNumber,
   readString,
   requireActiveAdmin,
+  writeAdminAuditLog,
 } from "../_lib"
 
 const allowedTargetRoles = new Set(["reguler", "reseller", "both"])
@@ -91,6 +92,13 @@ export async function POST(req: NextRequest) {
     const { data, error } = await adminSupabase!.from("vouchers").insert(payload).select().single()
     if (error) return jsonError(error.message, 500)
 
+    await writeAdminAuditLog(auth, {
+      action: "create",
+      entity: "vouchers",
+      entityId: data.id,
+      after: data,
+    })
+
     return NextResponse.json({ data })
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Gagal menambah voucher", 400)
@@ -106,6 +114,8 @@ export async function PATCH(req: NextRequest) {
     const id = readString(body.id)
     const action = readString(body.action)
     if (!id) return jsonError("Voucher ID wajib diisi.")
+
+    const { data: before } = await adminSupabase!.from("vouchers").select("*").eq("id", id).maybeSingle()
 
     let payload: Record<string, unknown>
     if (action === "toggle_status") {
@@ -128,6 +138,15 @@ export async function PATCH(req: NextRequest) {
 
     if (error) return jsonError(error.message, 500)
 
+    await writeAdminAuditLog(auth, {
+      action: action === "toggle_status" ? "toggle" : "update",
+      entity: "vouchers",
+      entityId: id,
+      before,
+      after: data,
+      metadata: { action, payload },
+    })
+
     return NextResponse.json({ data })
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Gagal update voucher", 400)
@@ -144,8 +163,17 @@ export async function DELETE(req: NextRequest) {
     const id = readString(body.id)
     if (!id) return jsonError("Voucher ID wajib diisi.")
 
+    const { data: before } = await adminSupabase!.from("vouchers").select("*").eq("id", id).maybeSingle()
+
     const { error } = await adminSupabase!.from("vouchers").delete().eq("id", id)
     if (error) return jsonError(error.message, 500)
+
+    await writeAdminAuditLog(auth, {
+      action: "delete",
+      entity: "vouchers",
+      entityId: id,
+      before,
+    })
 
     return NextResponse.json({ data: { ok: true } })
   } catch (error) {

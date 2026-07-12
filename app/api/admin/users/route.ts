@@ -7,6 +7,7 @@ import {
   readNullableString,
   readString,
   requireActiveAdmin,
+  writeAdminAuditLog,
 } from "../_lib"
 
 const allowedRoles = new Set(["owner", "admin", "reseller", "reguler"])
@@ -21,6 +22,8 @@ export async function PATCH(req: NextRequest) {
     const action = readString(body.action)
 
     if (!id) return jsonError("User ID wajib diisi.")
+
+    const { data: before } = await adminSupabase!.from("users").select("*").eq("id", id).maybeSingle()
 
     let payload: Record<string, unknown>
 
@@ -52,6 +55,15 @@ export async function PATCH(req: NextRequest) {
       .single()
 
     if (error) return jsonError(error.message, 500)
+
+    await writeAdminAuditLog(auth, {
+      action: action === "toggle_status" ? "toggle" : action === "soft_delete" ? "delete" : "update",
+      entity: "users",
+      entityId: id,
+      before,
+      after: data,
+      metadata: { action, payload },
+    })
 
     return NextResponse.json({ data })
   } catch (error) {

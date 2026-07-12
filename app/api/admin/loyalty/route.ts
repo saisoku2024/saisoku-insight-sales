@@ -8,6 +8,7 @@ import {
   readNumber,
   readString,
   requireActiveAdmin,
+  writeAdminAuditLog,
 } from "../_lib"
 
 function loyaltyPayload(body: Record<string, unknown>) {
@@ -91,6 +92,13 @@ export async function POST(req: NextRequest) {
 
     if (error) return jsonError(error.message, 500)
 
+    await writeAdminAuditLog(auth, {
+      action: "create",
+      entity: "loyalty_settings",
+      entityId: data.id,
+      after: data,
+    })
+
     return NextResponse.json({ data })
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Gagal menambah tier loyalty", 400)
@@ -106,6 +114,8 @@ export async function PATCH(req: NextRequest) {
     const id = readString(body.id)
     const action = readString(body.action)
     if (!id) return jsonError("Loyalty tier ID wajib diisi.")
+
+    const { data: before } = await adminSupabase!.from("loyalty_settings").select("*").eq("id", id).maybeSingle()
 
     let payload: Record<string, unknown>
 
@@ -128,6 +138,15 @@ export async function PATCH(req: NextRequest) {
       .single()
 
     if (error) return jsonError(error.message, 500)
+
+    await writeAdminAuditLog(auth, {
+      action: action === "toggle_status" ? "toggle" : "update",
+      entity: "loyalty_settings",
+      entityId: id,
+      before,
+      after: data,
+      metadata: { action, payload },
+    })
 
     return NextResponse.json({ data })
   } catch (error) {

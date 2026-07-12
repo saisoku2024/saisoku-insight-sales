@@ -7,6 +7,7 @@ import {
   requireAdminSession,
   sendTelegramMessage,
 } from "../_lib"
+import { writeAdminAuditLog } from "../../admin/_lib"
 
 async function updateReplyTicket(ticketId: string, feedback: string, adminEmail: string) {
   const updates = [
@@ -73,6 +74,15 @@ export async function POST(req: NextRequest) {
     await updateReplyTicket(ticketId, feedback, auth.adminEmail)
 
     await sendTelegramMessage(telegramId, text)
+
+    await writeAdminAuditLog({ adminEmail: auth.adminEmail }, {
+      action: "reply",
+      entity: "tickets",
+      entityId: ticketId,
+      before: ticket,
+      after: { ...ticket, status: "assigned", feedback },
+      metadata: { replyId: reply.id, telegramId },
+    })
 
     return NextResponse.json({ ok: true, data: reply })
   } catch (error) {

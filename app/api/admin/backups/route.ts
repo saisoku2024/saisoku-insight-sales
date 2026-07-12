@@ -7,6 +7,7 @@ import {
   readNumber,
   readString,
   requireActiveAdmin,
+  writeAdminAuditLog,
 } from "../_lib"
 
 export const runtime = "nodejs"
@@ -275,6 +276,15 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as Record<string, unknown>
     const mode = backupMode(readString(body.mode))
     const data = await runBackup(mode, auth.adminEmail)
+    await writeAdminAuditLog(auth, {
+      action: "run",
+      entity: "backup_runs",
+      entityId: data.id,
+      after: data,
+      metadata: { mode, storagePath: data.storage_path },
+      status: data.status === "success" ? "success" : "failed",
+      error: data.errors.length ? `Backup completed with ${data.errors.length} table error(s).` : null,
+    })
     return NextResponse.json({ data })
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Backup gagal", 500)

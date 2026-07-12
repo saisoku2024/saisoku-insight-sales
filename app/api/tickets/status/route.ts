@@ -8,6 +8,7 @@ import {
   sendTelegramMessage,
   type TicketStatus,
 } from "../_lib"
+import { writeAdminAuditLog } from "../../admin/_lib"
 
 const allowedStatuses: TicketStatus[] = ["open", "on_progress", "assigned", "resolved"]
 
@@ -62,6 +63,19 @@ export async function POST(req: NextRequest) {
       nextStatus
     )
     await sendTelegramMessage(telegramId, text)
+
+    await writeAdminAuditLog({ adminEmail: auth.adminEmail }, {
+      action: "status_update",
+      entity: "tickets",
+      entityId: ticketId,
+      before: ticket,
+      after: {
+        ...ticket,
+        status: nextStatus,
+        resolved_at: nextStatus === "resolved" ? new Date().toISOString() : ticket.resolved_at,
+      },
+      metadata: { status: nextStatus, telegramId },
+    })
 
     return NextResponse.json({ ok: true, data: { status: nextStatus } })
   } catch (error) {

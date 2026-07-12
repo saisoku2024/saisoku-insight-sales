@@ -6,6 +6,7 @@ import {
   readNullableString,
   readString,
   requireActiveAdmin,
+  writeAdminAuditLog,
 } from "../_lib"
 
 type StockInput = {
@@ -52,6 +53,14 @@ export async function POST(req: NextRequest) {
     const { data, error } = await adminSupabase!.from("product_accounts").insert(rows).select()
     if (error) return jsonError(error.message, 500)
 
+    await writeAdminAuditLog(auth, {
+      action: rows.length > 1 ? "bulk_create" : "create",
+      entity: "product_accounts",
+      entityId: rows.length === 1 ? data?.[0]?.id : null,
+      after: data,
+      metadata: { count: rows.length },
+    })
+
     return NextResponse.json({ data })
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Gagal menambah stock", 400)
@@ -66,6 +75,8 @@ export async function PATCH(req: NextRequest) {
     const body = (await req.json()) as Record<string, unknown>
     const id = readString(body.id)
     if (!id) return jsonError("Stock ID wajib diisi.")
+
+    const { data: before } = await adminSupabase!.from("product_accounts").select("*").eq("id", id).maybeSingle()
 
     const payload = {
       email: readString(body.email),
@@ -85,6 +96,15 @@ export async function PATCH(req: NextRequest) {
 
     if (error) return jsonError(error.message, 500)
 
+    await writeAdminAuditLog(auth, {
+      action: "update",
+      entity: "product_accounts",
+      entityId: id,
+      before,
+      after: data,
+      metadata: { payload },
+    })
+
     return NextResponse.json({ data })
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Gagal update stock", 400)
@@ -100,8 +120,17 @@ export async function DELETE(req: NextRequest) {
     const id = readString(body.id)
     if (!id) return jsonError("Stock ID wajib diisi.")
 
+    const { data: before } = await adminSupabase!.from("product_accounts").select("*").eq("id", id).maybeSingle()
+
     const { error } = await adminSupabase!.from("product_accounts").delete().eq("id", id)
     if (error) return jsonError(error.message, 500)
+
+    await writeAdminAuditLog(auth, {
+      action: "delete",
+      entity: "product_accounts",
+      entityId: id,
+      before,
+    })
 
     return NextResponse.json({ ok: true })
   } catch (error) {

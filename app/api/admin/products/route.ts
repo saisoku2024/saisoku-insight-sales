@@ -9,6 +9,7 @@ import {
   readString,
   readStringArray,
   requireActiveAdmin,
+  writeAdminAuditLog,
 } from "../_lib"
 
 function productPayload(body: Record<string, unknown>) {
@@ -48,6 +49,13 @@ export async function POST(req: NextRequest) {
     const { data, error } = await adminSupabase!.from("products").insert(payload).select().single()
     if (error) return jsonError(error.message, 500)
 
+    await writeAdminAuditLog(auth, {
+      action: "create",
+      entity: "products",
+      entityId: data.id,
+      after: data,
+    })
+
     return NextResponse.json({ data })
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Gagal menambah produk", 400)
@@ -62,6 +70,8 @@ export async function PATCH(req: NextRequest) {
     const body = (await req.json()) as Record<string, unknown>
     const id = readString(body.id)
     if (!id) return jsonError("Product ID wajib diisi.")
+
+    const { data: before } = await adminSupabase!.from("products").select("*").eq("id", id).maybeSingle()
 
     const isActive = readBoolean(body.is_active)
     const payload =
@@ -80,6 +90,15 @@ export async function PATCH(req: NextRequest) {
 
     if (error) return jsonError(error.message, 500)
 
+    await writeAdminAuditLog(auth, {
+      action: isActive === null ? "update" : "toggle",
+      entity: "products",
+      entityId: id,
+      before,
+      after: data,
+      metadata: { payload },
+    })
+
     return NextResponse.json({ data })
   } catch (error) {
     return jsonError(error instanceof Error ? error.message : "Gagal update produk", 400)
@@ -95,8 +114,18 @@ export async function DELETE(req: NextRequest) {
     const ids = readStringArray(body.ids)
     if (!ids.length) return jsonError("Product ID wajib diisi.")
 
+    const { data: before } = await adminSupabase!.from("products").select("*").in("id", ids)
+
     const { error } = await adminSupabase!.from("products").delete().in("id", ids)
     if (error) return jsonError(error.message, 500)
+
+    await writeAdminAuditLog(auth, {
+      action: "delete",
+      entity: "products",
+      entityId: ids.join(","),
+      before,
+      metadata: { ids, count: ids.length },
+    })
 
     return NextResponse.json({ ok: true })
   } catch (error) {

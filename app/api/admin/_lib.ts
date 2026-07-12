@@ -12,6 +12,22 @@ type AdminAuthResult =
       response: NextResponse
     }
 
+type AuditActor = {
+  adminEmail: string
+  role?: "owner" | "admin"
+}
+
+type AdminAuditLogInput = {
+  action: string
+  entity: string
+  entityId?: string | number | null
+  before?: unknown
+  after?: unknown
+  metadata?: Record<string, unknown> | null
+  status?: "success" | "failed"
+  error?: string | null
+}
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const supabaseServiceRoleKey =
@@ -54,6 +70,47 @@ export function readBoolean(value: unknown) {
 export function readStringArray(value: unknown) {
   if (!Array.isArray(value)) return []
   return value.map((item) => readString(item)).filter(Boolean)
+}
+
+function redactAuditValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map((item) => redactAuditValue(item))
+  if (!value || typeof value !== "object") return value
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, item]) => {
+      const lowerKey = key.toLowerCase()
+      const shouldRedact =
+        lowerKey.includes("password") ||
+        lowerKey.includes("token") ||
+        lowerKey.includes("secret") ||
+        lowerKey.includes("key") ||
+        lowerKey === "pin" ||
+        lowerKey.includes("authorization")
+
+      return [key, shouldRedact ? "[REDACTED]" : redactAuditValue(item)]
+    })
+  )
+}
+
+export async function writeAdminAuditLog(actor: AuditActor, input: AdminAuditLogInput) {
+  if (!adminSupabase) return
+
+  try {
+    await adminSupabase.from("admin_audit_logs").insert({
+      admin_email: actor.adminEmail,
+      admin_role: actor.role || "admin",
+      action: input.action,
+      entity: input.entity,
+      entity_id: input.entityId === undefined || input.entityId === null ? null : String(input.entityId),
+      before_data: input.before === undefined ? null : redactAuditValue(input.before),
+      after_data: input.after === undefined ? null : redactAuditValue(input.after),
+      metadata: input.metadata ? redactAuditValue(input.metadata) : null,
+      status: input.status || "success",
+      error: input.error || null,
+    })
+  } catch (error) {
+    console.error("writeAdminAuditLog error:", error)
+  }
 }
 
 export async function requireActiveAdmin(req: NextRequest): Promise<AdminAuthResult> {
