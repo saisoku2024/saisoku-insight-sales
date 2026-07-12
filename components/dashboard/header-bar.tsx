@@ -10,7 +10,7 @@ import {
 type HeaderBarProps = {
   title: string
   description: string
-  userEmail?: string | null
+  userRole?: string | null
   currentDateLabel: string
   onOpenSidebar: () => void
   isDark: boolean
@@ -20,12 +20,14 @@ type HeaderBarProps = {
 export function HeaderBar({
   title,
   description,
-  userEmail,
+  userRole,
   currentDateLabel,
   onOpenSidebar,
   isDark,
   onToggleTheme,
 }: HeaderBarProps) {
+  const roleLabel = userRole === "owner" ? "Owner" : "Admin"
+
   return (
     <header
       className="
@@ -118,8 +120,8 @@ export function HeaderBar({
             </div>
 
             <div className="min-w-0">
-              <p className="max-w-[240px] truncate text-lg leading-none text-[var(--insight-text)]">
-                {userEmail || "Admin"}
+              <p className="text-lg leading-none text-[var(--insight-text)]">
+                {roleLabel}
               </p>
               <p className="text-base leading-none text-emerald-600 dark:text-emerald-400">
                 Online

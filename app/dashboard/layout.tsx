@@ -31,7 +31,7 @@ export default function DashboardLayout({
   const [isReady, setIsReady] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<"owner" | "admin" | null>(null)
   const [isDark, setIsDark] = useState(false)
 
   const pageMeta = useMemo(() => getPageMeta(pathname), [pathname])
@@ -76,7 +76,7 @@ export default function DashboardLayout({
         return
       }
 
-      setUserEmail(profile.email ?? session.user.email ?? null)
+      setUserRole(profile.role)
       setIsReady(true)
     }
 
@@ -88,7 +88,7 @@ export default function DashboardLayout({
       if (!mounted) return
 
       if (!session) {
-        setUserEmail(null)
+        setUserRole(null)
         setIsReady(false)
         router.replace("/login")
         return
@@ -100,13 +100,13 @@ export default function DashboardLayout({
         if (!profile) {
           await supabase.auth.signOut()
           if (!mounted) return
-          setUserEmail(null)
+          setUserRole(null)
           setIsReady(false)
           router.replace("/login?error=unauthorized")
           return
         }
 
-        setUserEmail(profile.email ?? session.user.email ?? null)
+        setUserRole(profile.role)
         setIsReady(true)
       })
     })
@@ -151,7 +151,7 @@ export default function DashboardLayout({
       <HeaderBar
         title={pageMeta.title}
         description={pageMeta.description}
-        userEmail={userEmail}
+        userRole={userRole}
         currentDateLabel={currentDateLabel}
         onOpenSidebar={() => setSidebarOpen(true)}
         isDark={isDark}
@@ -159,11 +159,10 @@ export default function DashboardLayout({
       />
 
       <div className="flex min-h-[calc(100vh-60px)]">
-        <aside className="hidden w-[240px] shrink-0 lg:block">
+        <aside className="hidden w-[220px] shrink-0 lg:block">
           <SidebarNav
             pathname={pathname}
             groups={dashboardNavigation}
-            userEmail={userEmail}
             isLoggingOut={isLoggingOut}
             onLogout={handleLogout}
           />
@@ -185,7 +184,6 @@ export default function DashboardLayout({
                 <SidebarNav
                   pathname={pathname}
                   groups={dashboardNavigation}
-                  userEmail={userEmail}
                   isLoggingOut={isLoggingOut}
                   onNavigate={() => setSidebarOpen(false)}
                   onLogout={handleLogout}
