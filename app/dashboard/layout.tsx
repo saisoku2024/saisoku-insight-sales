@@ -30,6 +30,7 @@ export default function DashboardLayout({
 
   const [isReady, setIsReady] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [userRole, setUserRole] = useState<"owner" | "admin" | null>(null)
   const [isDark, setIsDark] = useState(false)
@@ -42,7 +43,17 @@ export default function DashboardLayout({
     const nextIsDark = storedTheme ? storedTheme === "dark" : true
     setIsDark(nextIsDark)
     document.documentElement.classList.toggle("dark", nextIsDark)
+
+    setSidebarCollapsed(window.localStorage.getItem("saisoku-sidebar-collapsed") === "true")
   }, [])
+
+  function toggleSidebarCollapsed() {
+    setSidebarCollapsed((currentValue) => {
+      const nextValue = !currentValue
+      window.localStorage.setItem("saisoku-sidebar-collapsed", String(nextValue))
+      return nextValue
+    })
+  }
 
   function toggleTheme() {
     setIsDark((currentValue) => {
@@ -156,17 +167,21 @@ export default function DashboardLayout({
         onOpenSidebar={() => setSidebarOpen(true)}
         isDark={isDark}
         onToggleTheme={toggleTheme}
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebarCollapsed={toggleSidebarCollapsed}
       />
 
       <div className="flex min-h-[calc(100vh-60px)]">
-        <aside className="hidden w-[220px] shrink-0 lg:block">
-          <SidebarNav
-            pathname={pathname}
-            groups={dashboardNavigation}
-            isLoggingOut={isLoggingOut}
-            onLogout={handleLogout}
-          />
-        </aside>
+        {!sidebarCollapsed ? (
+          <aside className="hidden w-[220px] shrink-0 lg:block">
+            <SidebarNav
+              pathname={pathname}
+              groups={dashboardNavigation}
+              isLoggingOut={isLoggingOut}
+              onLogout={handleLogout}
+            />
+          </aside>
+        ) : null}
 
         {sidebarOpen ? (
           <div className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm lg:hidden">
@@ -193,15 +208,15 @@ export default function DashboardLayout({
           </div>
         ) : null}
 
-        <div className="min-w-0 flex-1 p-4 sm:p-5 lg:p-[30px]">
+        <div className="min-w-0 flex-1 p-3 sm:p-4 lg:p-4">
           <main
             className="
               insight-dashboard
               min-w-0
-              border-4 border-[var(--insight-border)]
+              border-[3px] border-[var(--insight-border)]
               bg-[var(--insight-card)]
-              p-4 sm:p-5 lg:p-6
-              shadow-[8px_8px_0_var(--insight-shadow)]
+              p-3 sm:p-4 lg:p-4
+              shadow-[5px_5px_0_var(--insight-shadow)]
             "
           >
             {children}

@@ -116,11 +116,20 @@ html.dark .insight-button:hover {
   border-radius: 0 !important;
 }
 
+.insight-dashboard {
+  font-size: 18px;
+}
+
+.insight-dashboard .insight-card {
+  border-width: 3px;
+  box-shadow: 5px 5px 0 var(--insight-shadow);
+}
+
 .insight-dashboard button:not([aria-label="Close navigation"]):not([aria-label="Open navigation"]) {
   border: 3px solid var(--insight-border);
   background-color: var(--insight-panel);
   color: var(--insight-text);
-  box-shadow: 4px 4px 0 var(--insight-shadow);
+  box-shadow: 3px 3px 0 var(--insight-shadow);
 }
 
 .insight-dashboard input,
@@ -129,26 +138,41 @@ html.dark .insight-button:hover {
   border: 3px solid var(--insight-border) !important;
   background-color: var(--insight-panel) !important;
   color: var(--insight-text) !important;
-  box-shadow: 4px 4px 0 var(--insight-shadow);
+  box-shadow: 3px 3px 0 var(--insight-shadow);
 }
 
 .insight-dashboard table {
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .insight-dashboard th {
   border-bottom: 3px solid var(--insight-border);
   color: var(--insight-text);
   font-weight: 400;
+  padding: 0.5rem !important;
 }
 
 .insight-dashboard td {
   border-bottom: 2px solid color-mix(in srgb, var(--insight-border) 42%, transparent);
+  padding: 0.5rem !important;
 }
 
 .insight-dashboard ::placeholder {
   color: var(--insight-muted);
   opacity: 0.8;
+}
+
+.insight-dashboard :is(input, select) {
+  height: 2.25rem !important;
+  font-size: 18px !important;
+}
+
+.insight-dashboard :is(textarea) {
+  font-size: 18px !important;
+}
+
+.insight-dashboard :is(button, .insight-button) {
+  font-size: 18px;
 }

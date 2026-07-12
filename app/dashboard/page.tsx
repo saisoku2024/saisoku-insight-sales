@@ -51,14 +51,14 @@ function Panel({
 }) {
   return (
     <div className={`insight-card ${className}`}>
-      <div className="mb-4 flex items-start justify-between gap-4 p-4 pb-0">
+      <div className="mb-2 flex items-start justify-between gap-3 p-3 pb-0">
         <div>
-          <h2 className="text-[26px] leading-none text-[var(--insight-text)]">{title}</h2>
-          {subtitle ? <p className="mt-1 text-lg leading-none text-[var(--insight-muted)]">{subtitle}</p> : null}
+          <h2 className="text-2xl leading-none text-[var(--insight-text)]">{title}</h2>
+          {subtitle ? <p className="mt-1 text-base leading-none text-[var(--insight-muted)]">{subtitle}</p> : null}
         </div>
         {right}
       </div>
-      <div className="p-4 pt-2">
+      <div className="p-3 pt-2">
         {children}
       </div>
     </div>
@@ -75,9 +75,9 @@ function StatCard({
   accentClass?: string
 }) {
   return (
-    <div className="insight-card group flex min-h-30 flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
-      <div className="text-xl leading-none text-[var(--insight-muted)]">{label}</div>
-      <div className={`mt-2 text-[34px] leading-none ${accentClass}`}>
+    <div className="insight-card group flex min-h-22 flex-col justify-center p-3 transition-all duration-200 hover:-translate-y-0.5">
+      <div className="text-lg leading-none text-[var(--insight-muted)]">{label}</div>
+      <div className={`mt-1.5 text-[28px] leading-none ${accentClass}`}>
         {value}
       </div>
     </div>
@@ -90,9 +90,9 @@ function Skeleton({ className = "" }: { className?: string }) {
 
 function StatCardSkeleton() {
   return (
-    <div className="insight-card flex min-h-30 flex-col justify-center p-4">
+    <div className="insight-card flex min-h-22 flex-col justify-center p-3">
       <Skeleton className="h-3 w-28" />
-      <Skeleton className="mt-3 h-7 w-36" />
+      <Skeleton className="mt-2 h-6 w-32" />
     </div>
   )
 }
@@ -104,7 +104,7 @@ function ChartSkeleton() {
         <Skeleton className="h-3 w-44" />
         <Skeleton className="h-3 w-24" />
       </div>
-      <Skeleton className="h-60 w-full" />
+      <Skeleton className="h-52 w-full" />
     </div>
   )
 }
@@ -318,32 +318,32 @@ export default function DashboardPage() {
   }, [])
 
   return (
-    <div className="min-h-screen space-y-6 transition-colors">
+    <div className="space-y-4 transition-colors">
       
       {/* HEADER */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-[34px] leading-none text-[var(--insight-text)]">
+          <h1 className="text-[28px] leading-none text-[var(--insight-text)]">
             Overview
           </h1>
-          <p className="text-xl leading-none text-[var(--insight-muted)]">Dashboard analytics summary</p>
+          <p className="text-lg leading-none text-[var(--insight-muted)]">Dashboard analytics summary</p>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-1 text-lg leading-none text-[var(--insight-muted)] shadow-[4px_4px_0_var(--insight-shadow)]">
+          <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-2.5 py-1 text-base leading-none text-[var(--insight-muted)] shadow-[3px_3px_0_var(--insight-shadow)]">
             {updatedAt ? `Updated: ${updatedAt.toLocaleString("id-ID")}` : "—"}
           </div>
         </div>
       </div>
 
       {errorMsg ? (
-        <div className="border-[3px] border-red-700 bg-red-50 p-4 text-xl leading-none text-red-700 shadow-[4px_4px_0_#7f1d1d] dark:bg-red-950/30 dark:text-red-300">
+        <div className="border-[3px] border-red-700 bg-red-50 p-3 text-lg leading-none text-red-700 shadow-[3px_3px_0_#7f1d1d] dark:bg-red-950/30 dark:text-red-300">
           {errorMsg}
         </div>
       ) : null}
 
       {/* ROW 1: REVENUE STATS */}
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {loading ? (
           <>
             <StatCardSkeleton />
@@ -384,19 +384,19 @@ export default function DashboardPage() {
       </div>
 
       {/* ROW 2: CHARTS */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Panel
           title="Today Sales"
           subtitle="Jumlah transaksi paid hari ini per produk"
           right={<span className="border-[3px] border-[var(--insight-border)] bg-violet-100 px-2 py-1 text-base leading-none text-violet-800">Today</span>}
-          className="h-[320px]"
+          className="h-[280px]"
         >
           {loading ? (
             <ChartSkeleton />
           ) : todayChart && (todayChart.labels?.length ?? 0) > 0 ? (
             <Bar data={todayChart} options={chartOptionsCount} />
           ) : (
-            <div className="text-xl text-[var(--insight-muted)]">No sales today.</div>
+            <div className="text-lg text-[var(--insight-muted)]">No sales today.</div>
           )}
         </Panel>
 
@@ -404,20 +404,20 @@ export default function DashboardPage() {
           title="Monthly Sales"
           subtitle="Jumlah transaksi paid per bulan (Jan–Des tahun berjalan)"
           right={<span className="border-[3px] border-[var(--insight-border)] bg-cyan-100 px-2 py-1 text-base leading-none text-cyan-800">Year</span>}
-          className="h-[320px]"
+          className="h-[280px]"
         >
           {loading ? (
             <ChartSkeleton />
           ) : monthlySalesChart ? (
             <Bar data={monthlySalesChart} options={chartOptionsCount} />
           ) : (
-            <div className="text-xl text-[var(--insight-muted)]">No data.</div>
+            <div className="text-lg text-[var(--insight-muted)]">No data.</div>
           )}
         </Panel>
       </div>
 
       {/* ROW 3: USER STATS */}
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {loading ? (
           <>
             <StatCardSkeleton />

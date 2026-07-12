@@ -18,29 +18,29 @@ export function FeaturePlaceholder({
   note = "Tahap awal: struktur halaman sudah disiapkan mengikuti web mockup. Integrasi data real Supabase/bot dikerjakan per modul berikutnya.",
 }: FeaturePlaceholderProps) {
   return (
-    <div className="space-y-6 text-[var(--insight-text)]">
-      <div className="insight-card p-4">
-        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-violet-100 px-3 py-1 text-lg leading-none text-violet-800">
+    <div className="space-y-4 text-[var(--insight-text)]">
+      <div className="insight-card p-3">
+        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-violet-100 px-2.5 py-1 text-base leading-none text-violet-800">
           {badge}
         </span>
-        <h1 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">
+        <h1 className="mt-2 text-[28px] leading-none text-[var(--insight-text)]">
           {title}
         </h1>
-        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+        <p className="mt-1 text-lg leading-none text-[var(--insight-muted)]">
           {description}
         </p>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {features.map((feature) => (
           <div
             key={feature}
-            className="insight-card min-h-[120px] p-4 transition-all duration-200 hover:-translate-y-1"
+            className="insight-card min-h-[86px] p-3 transition-all duration-200 hover:-translate-y-0.5"
           >
-            <div className="text-xl leading-none text-[var(--insight-muted)]">
+            <div className="text-lg leading-none text-[var(--insight-muted)]">
               Module
             </div>
-            <div className="mt-3 text-[28px] leading-none text-[var(--insight-text)]">
+            <div className="mt-2 text-2xl leading-none text-[var(--insight-text)]">
               {feature}
             </div>
           </div>
@@ -49,11 +49,11 @@ export function FeaturePlaceholder({
 
       {columns.length > 0 ? (
         <div className="insight-card overflow-hidden">
-          <div className="border-b-[3px] border-[var(--insight-border)] p-4">
-            <span className="inline-block border-[3px] border-[var(--insight-border)] bg-cyan-100 px-3 py-1 text-lg leading-none text-cyan-800">
+          <div className="border-b-[3px] border-[var(--insight-border)] p-3">
+            <span className="inline-block border-[3px] border-[var(--insight-border)] bg-cyan-100 px-2.5 py-1 text-base leading-none text-cyan-800">
               PREVIEW
             </span>
-            <h2 className="mt-3 text-[30px] leading-none text-[var(--insight-text)]">
+            <h2 className="mt-2 text-[26px] leading-none text-[var(--insight-text)]">
               Struktur Data
             </h2>
           </div>
@@ -87,7 +87,7 @@ export function FeaturePlaceholder({
                   <tr>
                     <td
                       colSpan={columns.length}
-                      className="p-8 text-center text-xl text-[var(--insight-muted)]"
+                      className="p-6 text-center text-lg text-[var(--insight-muted)]"
                     >
                       Belum ada data preview.
                     </td>
@@ -99,9 +99,9 @@ export function FeaturePlaceholder({
         </div>
       ) : null}
 
-      <div className="insight-card border-yellow-500 bg-yellow-50 p-4 text-yellow-900 dark:bg-yellow-500/10 dark:text-yellow-100">
-        <div className="text-2xl leading-none">Catatan Implementasi</div>
-        <p className="mt-2 text-xl leading-tight">{note}</p>
+      <div className="insight-card border-yellow-500 bg-yellow-50 p-3 text-yellow-900 dark:bg-yellow-500/10 dark:text-yellow-100">
+        <div className="text-xl leading-none">Catatan Implementasi</div>
+        <p className="mt-1.5 text-lg leading-tight">{note}</p>
       </div>
     </div>
   )

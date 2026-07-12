@@ -5,6 +5,8 @@ import {
   Menu,
   Sun,
   Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react"
 
 type HeaderBarProps = {
@@ -13,6 +15,8 @@ type HeaderBarProps = {
   userRole?: string | null
   currentDateLabel: string
   onOpenSidebar: () => void
+  sidebarCollapsed: boolean
+  onToggleSidebarCollapsed: () => void
   isDark: boolean
   onToggleTheme: () => void
 }
@@ -23,6 +27,8 @@ export function HeaderBar({
   userRole,
   currentDateLabel,
   onOpenSidebar,
+  sidebarCollapsed,
+  onToggleSidebarCollapsed,
   isDark,
   onToggleTheme,
 }: HeaderBarProps) {
@@ -47,6 +53,16 @@ export function HeaderBar({
             aria-label="Open navigation"
           >
             <Menu className="h-5 w-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={onToggleSidebarCollapsed}
+            className="insight-button hidden h-9 w-9 items-center justify-center lg:inline-flex"
+            aria-label={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+            title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+          >
+            {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
 
           <div className="flex h-9 w-9 shrink-0 items-center justify-center border-[3px] border-[var(--insight-border)] bg-[var(--insight-cyan)] text-base shadow-[3px_3px_0_var(--insight-shadow)]">
