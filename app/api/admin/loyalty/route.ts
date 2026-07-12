@@ -104,15 +104,21 @@ export async function PATCH(req: NextRequest) {
   try {
     const body = (await req.json()) as Record<string, unknown>
     const id = readString(body.id)
+    const action = readString(body.action)
     if (!id) return jsonError("Loyalty tier ID wajib diisi.")
 
-    const isActive = readBoolean(body.is_active)
-    const payload =
-      isActive === null
-        ? loyaltyPayload(body)
-        : {
-            is_active: isActive,
-          }
+    let payload: Record<string, unknown>
+
+    if (action === "toggle_status") {
+      const isActive = readBoolean(body.is_active)
+      if (isActive === null) return jsonError("Status loyalty tier tidak valid.")
+      payload = { is_active: isActive }
+    } else {
+      payload = {
+        ...loyaltyPayload(body),
+        is_active: readBoolean(body.is_active) ?? true,
+      }
+    }
 
     const { data, error } = await adminSupabase!
       .from("loyalty_settings")

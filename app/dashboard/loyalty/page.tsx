@@ -176,6 +176,7 @@ export default function LoyaltyPage() {
         method: "PATCH",
         body: {
           id: String(tier.id),
+          action: "toggle_status",
           is_active: !tier.is_active,
         },
       })
