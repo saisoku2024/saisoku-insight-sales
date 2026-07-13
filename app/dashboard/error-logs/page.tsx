@@ -21,6 +21,21 @@ type ErrorLogsResponse = {
   totalRows: number
 }
 
+type DrainTestResponse = {
+  testId: string
+  drain: {
+    configured: boolean
+    hasUrl: boolean
+    hasToken: boolean
+    urlHost: string | null
+    result: {
+      ok: boolean
+      status: number
+      body: string
+    }
+  }
+}
+
 function formatDate(value: string) {
   return new Date(value).toLocaleString("id-ID")
 }
@@ -42,7 +57,9 @@ export default function ErrorLogsPage() {
   const [page, setPage] = useState(1)
   const [totalRows, setTotalRows] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [testingDrain, setTestingDrain] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [drainTest, setDrainTest] = useState<DrainTestResponse | null>(null)
 
   const loadLogs = useCallback(async () => {
     setLoading(true)
@@ -83,21 +100,80 @@ export default function ErrorLogsPage() {
     void loadLogs()
   }, [loadLogs])
 
+  async function testBetterStackDrain() {
+    setTestingDrain(true)
+    setError(null)
+    setDrainTest(null)
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!session?.access_token) {
+        throw new Error("Session admin tidak ditemukan. Silakan login ulang.")
+      }
+
+      const res = await fetch("/api/admin/error-logs/test-drain", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      })
+      const result = (await res.json()) as { data?: DrainTestResponse; error?: string }
+
+      if (!res.ok || !result.data) {
+        throw new Error(result.error || "Gagal test Better Stack.")
+      }
+
+      setDrainTest(result.data)
+      void loadLogs()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Gagal test Better Stack.")
+    }
+
+    setTestingDrain(false)
+  }
+
   return (
     <div className="space-y-4 text-[var(--insight-text)]">
       <div className="insight-card p-3">
-        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-red-100 px-2.5 py-1 text-base leading-none text-red-800">
-          REPORTS
-        </span>
-        <h1 className="mt-2 text-[28px] leading-none">Error Logs</h1>
-        <p className="mt-1 text-lg leading-none text-[var(--insight-muted)]">
-          Central log untuk error API, backup, restore, dan laporan client.
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <span className="inline-block border-[3px] border-[var(--insight-border)] bg-red-100 px-2.5 py-1 text-base leading-none text-red-800">
+              REPORTS
+            </span>
+            <h1 className="mt-2 text-[28px] leading-none">Error Logs</h1>
+            <p className="mt-1 text-lg leading-none text-[var(--insight-muted)]">
+              Central log untuk error API, backup, restore, dan laporan client.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={testBetterStackDrain}
+            disabled={testingDrain}
+            className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-bg)] px-3 py-2 text-lg shadow-[4px_4px_0_var(--insight-shadow)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {testingDrain ? "Testing..." : "Test Better Stack"}
+          </button>
+        </div>
       </div>
 
       {error ? (
         <div className="insight-card border-red-500 bg-red-50 p-3 text-lg text-red-700">
           {error}
+        </div>
+      ) : null}
+
+      {drainTest ? (
+        <div className={`insight-card p-3 text-lg ${drainTest.drain.result.ok ? "border-emerald-500 bg-emerald-50 text-emerald-800" : "border-red-500 bg-red-50 text-red-700"}`}>
+          <div>Test ID: {drainTest.testId}</div>
+          <div>
+            Env: configured={String(drainTest.drain.configured)}, url={String(drainTest.drain.hasUrl)}, token={String(drainTest.drain.hasToken)}
+          </div>
+          <div>Host: {drainTest.drain.urlHost || "-"}</div>
+          <div>Status Better Stack: {drainTest.drain.result.status} / {drainTest.drain.result.ok ? "OK" : "FAILED"}</div>
+          {drainTest.drain.result.body ? <div>Response: {shortText(drainTest.drain.result.body, 140)}</div> : null}
         </div>
       ) : null}
 
