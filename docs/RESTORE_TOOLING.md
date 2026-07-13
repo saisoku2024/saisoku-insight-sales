@@ -1,6 +1,6 @@
 # Restore Tooling
 
-Status saat ini: backup manual dan auto backup sudah tersedia. Restore aman tersedia sebagai `Preview Restore` dan `Append Restore` owner-only. Mode replace/full replace tetap manual/emergency karena risiko overwrite data aktif sangat tinggi.
+Status saat ini: backup manual dan auto backup sudah tersedia. Restore aman tersedia sebagai `Preview Restore`, `Append Restore`, dan `Safe Replace` owner-only. Full replace tetap manual/emergency karena risiko overwrite data aktif sangat tinggi.
 
 ## Prinsip restore
 
@@ -22,9 +22,9 @@ Status saat ini: backup manual dan auto backup sudah tersedia. Restore aman ters
    - jumlah row per tabel
    - estimasi tabel yang akan terdampak
 5. Owner pilih tabel yang ingin direstore lewat daftar comma-separated.
-6. Owner mengetik confirmation phrase: `RESTORE SAISOKU`.
+6. Owner mengetik confirmation phrase: `RESTORE SAISOKU` untuk append atau `REPLACE SAISOKU` untuk safe replace.
 7. Server membuat pre-restore backup.
-8. Server menjalankan append/upsert restore dalam batch.
+8. Server menjalankan append/upsert atau safe replace per primary key dalam batch.
 9. Server mencatat hasil restore ke audit log.
 
 ## Mode restore yang direkomendasikan
@@ -33,7 +33,8 @@ Status saat ini: backup manual dan auto backup sudah tersedia. Restore aman ters
 | --- | --- | --- |
 | Dry-run | Validasi file dan tampilkan dampak | Rendah |
 | Table append | Upsert data dari backup tanpa truncate tabel aktif | Sedang |
-| Table replace | Ganti isi tabel terpilih | Tinggi |
+| Safe replace | Hapus row dengan primary key yang ada di backup, lalu upsert row backup | Sedang-Tinggi |
+| Table replace penuh | Ganti isi tabel terpilih dengan truncate/delete all | Tinggi |
 | Full replace | Ganti banyak tabel sekaligus | Sangat tinggi, hanya emergency |
 
 ## Yang belum boleh dibuat sembarangan
@@ -42,7 +43,7 @@ Status saat ini: backup manual dan auto backup sudah tersedia. Restore aman ters
 - Restore otomatis dari cron.
 - Restore tanpa confirmation phrase.
 - Restore memakai backup yang tidak lolos validasi schema.
-- Replace/truncate restore dari web panel tanpa review manual.
+- Full replace/truncate restore dari web panel tanpa review manual.
 
 ## Emergency manual restore
 

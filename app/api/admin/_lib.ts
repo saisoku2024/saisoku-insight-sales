@@ -50,6 +50,14 @@ const supabaseServiceRoleKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SERVICE_ROLE ||
   process.env.SB_SERVICE_ROLE
+const errorLogDrainUrl =
+  process.env.ERROR_LOG_DRAIN_URL ||
+  process.env.LOGTAIL_INGEST_URL ||
+  ""
+const errorLogDrainToken =
+  process.env.ERROR_LOG_DRAIN_TOKEN ||
+  process.env.LOGTAIL_SOURCE_TOKEN ||
+  ""
 
 export const adminSupabase =
   supabaseUrl && supabaseServiceRoleKey
@@ -193,18 +201,41 @@ export async function writeAdminAuditLog(actor: AuditActor, input: AdminAuditLog
 export async function writeErrorLog(input: ErrorLogInput) {
   if (!adminSupabase) return
 
+  const payload = {
+    source: truncateText(input.source, 120) || "web",
+    level: input.level || "error",
+    message: truncateText(input.message, 500) || "Unknown error",
+    stack: truncateText(input.stack, 2000),
+    route: truncateText(input.route, 240),
+    actor: truncateText(input.actor, 240),
+    metadata: input.metadata ? redactAuditValue(input.metadata) : null,
+  }
+
   try {
-    await adminSupabase.from("error_logs").insert({
-      source: truncateText(input.source, 120) || "web",
-      level: input.level || "error",
-      message: truncateText(input.message, 500) || "Unknown error",
-      stack: truncateText(input.stack, 2000),
-      route: truncateText(input.route, 240),
-      actor: truncateText(input.actor, 240),
-      metadata: input.metadata ? redactAuditValue(input.metadata) : null,
-    })
+    await adminSupabase.from("error_logs").insert(payload)
   } catch (error) {
     console.error("writeErrorLog error:", error)
+  }
+
+  if (!errorLogDrainUrl) return
+
+  try {
+    await fetch(errorLogDrainUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(errorLogDrainToken ? { Authorization: `Bearer ${errorLogDrainToken}` } : {}),
+      },
+      body: JSON.stringify({
+        ...payload,
+        service: "saisoku-insight-sales",
+        environment: process.env.VERCEL_ENV || process.env.NODE_ENV || "development",
+        timestamp: new Date().toISOString(),
+      }),
+      signal: AbortSignal.timeout(1500),
+    })
+  } catch (error) {
+    console.error("external error log drain failed:", error)
   }
 }
 

@@ -41,11 +41,14 @@ type RestorePreview = {
     manifestRows: number
   }>
   confirmationPhrase: string
+  replaceConfirmationPhrase: string
+  allowedModes: Array<"preview" | "append" | "replace">
+  replaceTables: string[]
 }
 
 type RestoreResult = {
   ok: boolean
-  mode: "append"
+  mode: "append" | "replace"
   sourceBackupRunId: string
   preRestoreBackupId: string | null
   restoredTables: Array<{ table: string; rows: number }>
@@ -90,6 +93,7 @@ export default function BackupSettingsPage() {
   const [previewingRunId, setPreviewingRunId] = useState<string | null>(null)
   const [restoring, setRestoring] = useState(false)
   const [restorePreview, setRestorePreview] = useState<RestorePreview | null>(null)
+  const [restoreMode, setRestoreMode] = useState<"append" | "replace">("append")
   const [restoreTables, setRestoreTables] = useState("")
   const [restoreConfirmation, setRestoreConfirmation] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -171,6 +175,7 @@ export default function BackupSettingsPage() {
       })
       setRestorePreview(result)
       setRestoreTables(result.tables.map((table) => table.table).join(", "))
+      setRestoreMode("append")
       showSuccess(`Preview restore siap: ${result.tables.length} tabel ditemukan.`)
     } catch (error) {
       console.error("previewRestore error:", error)
@@ -180,7 +185,7 @@ export default function BackupSettingsPage() {
     setPreviewingRunId(null)
   }
 
-  async function runAppendRestore() {
+  async function runRestore() {
     if (!restorePreview || restoring) return
 
     setRestoring(true)
@@ -192,14 +197,14 @@ export default function BackupSettingsPage() {
         .filter(Boolean)
       const result = await adminWrite<RestoreResult>("/api/admin/backups/restore", {
         body: {
-          action: "append",
+          action: restoreMode,
           runId: restorePreview.run.id,
           tables,
           confirmation: restoreConfirmation,
         },
       })
       const errorText = result.errors.length ? `, ${result.errors.length} tabel error` : ""
-      showSuccess(`Restore append selesai: ${result.restoredRows.toLocaleString("id-ID")} rows${errorText}.`)
+      showSuccess(`Restore ${restoreMode} selesai: ${result.restoredRows.toLocaleString("id-ID")} rows${errorText}.`)
       setRestoreConfirmation("")
       await loadRuns()
     } catch (error) {
@@ -320,9 +325,11 @@ export default function BackupSettingsPage() {
               <span className="inline-block border-[3px] border-[var(--insight-border)] bg-amber-100 px-2.5 py-1 text-base leading-none text-amber-800">
                 RESTORE PREVIEW
               </span>
-              <h2 className="mt-2 text-[26px] leading-none">Append Restore</h2>
+              <h2 className="mt-2 text-[26px] leading-none">
+                {restoreMode === "replace" ? "Safe Replace" : "Append Restore"}
+              </h2>
               <p className="mt-1 text-lg leading-tight text-[var(--insight-muted)]">
-                Mode aman: upsert/append data dari backup tanpa truncate tabel aktif.
+                Mode aman: append/upsert atau safe replace row berdasarkan primary key dari backup.
               </p>
             </div>
             <button
@@ -372,6 +379,31 @@ export default function BackupSettingsPage() {
 
             <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3">
               <label className="block text-lg">
+                Mode
+                <select
+                  value={restoreMode}
+                  onChange={(event) => {
+                    const mode = event.target.value === "replace" ? "replace" : "append"
+                    setRestoreMode(mode)
+                    setRestoreConfirmation("")
+                    if (mode === "replace") {
+                      const safeTables = restorePreview.tables
+                        .map((table) => table.table)
+                        .filter((table) => restorePreview.replaceTables.includes(table))
+                        .slice(0, 5)
+                      setRestoreTables(safeTables.join(", "))
+                    } else {
+                      setRestoreTables(restorePreview.tables.map((table) => table.table).join(", "))
+                    }
+                  }}
+                  className="mt-1 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1.5 outline-none"
+                >
+                  <option value="append">Append / Upsert</option>
+                  <option value="replace">Safe Replace</option>
+                </select>
+              </label>
+
+              <label className="mt-3 block text-lg">
                 Tables
                 <textarea
                   value={restoreTables}
@@ -384,20 +416,23 @@ export default function BackupSettingsPage() {
                 <input
                   value={restoreConfirmation}
                   onChange={(event) => setRestoreConfirmation(event.target.value)}
-                  placeholder={restorePreview.confirmationPhrase}
+                  placeholder={restoreMode === "replace" ? restorePreview.replaceConfirmationPhrase : restorePreview.confirmationPhrase}
                   className="mt-1 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1.5 outline-none"
                 />
               </label>
               <button
                 type="button"
-                onClick={() => void runAppendRestore()}
-                disabled={restoring || restoreConfirmation !== restorePreview.confirmationPhrase}
+                onClick={() => void runRestore()}
+                disabled={
+                  restoring ||
+                  restoreConfirmation !== (restoreMode === "replace" ? restorePreview.replaceConfirmationPhrase : restorePreview.confirmationPhrase)
+                }
                 className="mt-3 border-[3px] border-[var(--insight-border)] bg-red-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {restoring ? "Restoring..." : "Run Append Restore"}
+                {restoring ? "Restoring..." : restoreMode === "replace" ? "Run Safe Replace" : "Run Append Restore"}
               </button>
               <p className="mt-2 text-base leading-tight text-[var(--insight-muted)]">
-                Sistem membuat critical backup baru sebelum restore dan mencatat aksi ini ke audit log.
+                Sistem membuat critical backup baru sebelum restore dan mencatat aksi ini ke audit log. Safe replace maksimal 5 tabel per eksekusi.
               </p>
             </div>
           </div>

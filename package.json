@@ -9,7 +9,9 @@
     "start": "next start -p 3004",
     "lint": "eslint",
     "audit:direct-write": "node scripts/direct-write-audit.mjs",
-    "verify": "npm run audit:direct-write && npm run lint && npx tsc --noEmit --pretty false && npm run build:clean",
+    "test:e2e": "playwright test",
+    "test:e2e:list": "playwright test --list",
+    "verify": "npm run audit:direct-write && npm run lint && npx tsc --noEmit --pretty false && npm run test:e2e:list && npm run build:clean",
     "backup:data:full": "node scripts/backup-data.mjs --mode full",
     "backup:data:critical": "node scripts/backup-data.mjs --mode critical --retention-days 14"
   },
@@ -25,11 +27,12 @@
     "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.3",
     "recharts": "^3.7.0",
+    "styled-jsx": "^5.1.6",
     "tailwind-merge": "^3.5.0",
-    "xlsx": "^0.18.5",
-    "styled-jsx": "^5.1.6"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -1,6 +1,6 @@
 # Error Tracking / Central Logs
 
-Status saat ini: internal central logs aktif. Project punya `error_logs`, `admin_audit_logs`, `api_rate_limits`, console log, dan log deployment Vercel/Supabase. Integrasi vendor eksternal seperti Sentry/Logtail masih opsional tahap berikutnya.
+Status saat ini: internal central logs aktif dan external log drain opsional tersedia. Project punya `error_logs`, `admin_audit_logs`, `api_rate_limits`, console log, dan log deployment Vercel/Supabase.
 
 ## Sumber log saat ini
 
@@ -12,6 +12,7 @@ Status saat ini: internal central logs aktif. Project punya `error_logs`, `admin
 | `error_logs` | Error API/restore/backup dan laporan client | Supabase table + halaman Error Logs |
 | `api_rate_limits` | Counter rate limit admin API | Supabase table |
 | Browser console | Error UI client-side | Browser user/admin |
+| External drain | Mirror error log ke Logtail/Axiom/webhook kompatibel | Env `ERROR_LOG_DRAIN_URL` |
 
 ## Standar logging
 
@@ -29,7 +30,23 @@ Log yang tidak boleh disimpan:
 
 ## Target upgrade
 
-Tahap berikut yang direkomendasikan jika ingin monitoring eksternal:
+## External drain
+
+Set env berikut di Vercel untuk mengirim mirror log ke provider eksternal seperti Logtail/Better Stack, Axiom, atau webhook internal:
+
+```env
+ERROR_LOG_DRAIN_URL=https://example-log-ingest-url
+ERROR_LOG_DRAIN_TOKEN=optional-bearer-token
+```
+
+Alias env yang juga didukung:
+
+```env
+LOGTAIL_INGEST_URL=https://example-logtail-ingest-url
+LOGTAIL_SOURCE_TOKEN=optional-source-token
+```
+
+## Tahap berikut jika ingin Sentry penuh
 
 1. Pasang Sentry untuk Next.js client + server route.
 2. Pasang Sentry atau structured log wrapper untuk Supabase Edge Function.

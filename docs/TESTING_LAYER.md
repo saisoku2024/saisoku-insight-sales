@@ -13,7 +13,24 @@ npm run verify
 - Direct-write audit untuk area frontend
 - ESLint
 - TypeScript typecheck
+- Playwright E2E test discovery
 - Next.js production build
+
+## E2E minimal
+
+```bash
+npm run test:e2e
+```
+
+Default test menjalankan public smoke untuk halaman login. Authenticated smoke akan aktif bila env berikut tersedia:
+
+```env
+E2E_ADMIN_EMAIL=owner@example.com
+E2E_ADMIN_PASSWORD=your-password
+E2E_BASE_URL=http://127.0.0.1:3004
+```
+
+Jika `E2E_BASE_URL` kosong, Playwright akan menjalankan `npm run dev` otomatis.
 
 ## Manual smoke test wajib
 

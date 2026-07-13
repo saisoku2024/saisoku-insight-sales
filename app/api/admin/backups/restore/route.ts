@@ -17,7 +17,30 @@ export const maxDuration = 60
 
 const backupBucket = process.env.SAISOKU_BACKUP_BUCKET || "saisoku-backups"
 const confirmationPhrase = "RESTORE SAISOKU"
+const replaceConfirmationPhrase = "REPLACE SAISOKU"
 const batchSize = 250
+const restorePrimaryKeys: Record<string, string[]> = {
+  users: ["id", "telegram_id"],
+  products: ["id"],
+  product_accounts: ["id"],
+  sold_accounts: ["id"],
+  transactions: ["id"],
+  pending_orders: ["id"],
+  deposit_requests: ["id"],
+  balance_logs: ["id"],
+  vouchers: ["id", "code"],
+  voucher_claims: ["id"],
+  loyalty_settings: ["id"],
+  tickets: ["id"],
+  ticket_replies: ["id"],
+  ticket_sessions: ["telegram_id"],
+  warranty_sessions: ["telegram_id"],
+  search_sessions: ["telegram_id"],
+  upload_sessions: ["telegram_id"],
+  upload_stock_session: ["telegram_id"],
+  user_states: ["telegram_id"],
+  users_profile: ["id", "telegram_id"],
+}
 
 type BackupPayload = {
   manifest?: {
@@ -98,6 +121,38 @@ async function upsertTable(table: string, rows: Array<Record<string, unknown>>) 
   return restored
 }
 
+function getPrimaryKey(table: string, rows: Array<Record<string, unknown>>) {
+  const candidates = restorePrimaryKeys[table] || ["id"]
+  const sample = rows[0] || {}
+  return candidates.find((key) => Object.hasOwn(sample, key)) || null
+}
+
+async function replaceTableRows(table: string, rows: Array<Record<string, unknown>>) {
+  if (!rows.length) return { rows: 0, key: null }
+
+  const key = getPrimaryKey(table, rows)
+  if (!key) {
+    throw new Error(`${table}: primary key tidak dikenali untuk safe replace.`)
+  }
+
+  const keys = rows
+    .map((row) => row[key])
+    .filter((value) => value !== undefined && value !== null)
+
+  if (!keys.length) {
+    throw new Error(`${table}: backup tidak punya nilai primary key ${key}.`)
+  }
+
+  for (let index = 0; index < keys.length; index += batchSize) {
+    const batchKeys = keys.slice(index, index + batchSize)
+    const { error } = await adminSupabase!.from(table).delete().in(key, batchKeys)
+    if (error) throw new Error(`${table}: ${error.message}`)
+  }
+
+  const restored = await upsertTable(table, rows)
+  return { rows: restored, key }
+}
+
 async function runPreRestoreBackup(req: NextRequest) {
   const authHeader = req.headers.get("authorization") || ""
   const response = await fetch(new URL("/api/admin/backups", req.url), {
@@ -130,7 +185,7 @@ export async function POST(req: NextRequest) {
     const requestedTables = sanitizeTables(body.tables)
 
     if (!runId) throw new Error("Backup run ID wajib diisi.")
-    if (!["preview", "append"].includes(action)) throw new Error("Action restore tidak valid.")
+    if (!["preview", "append", "replace"].includes(action)) throw new Error("Action restore tidak valid.")
 
     const { run, payload } = await readBackupPayload(runId)
     const preview = buildPreview(payload)
@@ -143,20 +198,29 @@ export async function POST(req: NextRequest) {
           manifest: payload.manifest || null,
           tables: preview,
           confirmationPhrase,
-          allowedModes: ["preview", "append"],
+          replaceConfirmationPhrase,
+          allowedModes: ["preview", "append", "replace"],
+          replaceTables: Object.keys(restorePrimaryKeys),
         },
       })
     }
 
     const confirmation = readString(body.confirmation)
-    if (confirmation !== confirmationPhrase) {
+    if (action === "append" && confirmation !== confirmationPhrase) {
       throw new Error(`Ketik "${confirmationPhrase}" untuk menjalankan restore append.`)
+    }
+    if (action === "replace" && confirmation !== replaceConfirmationPhrase) {
+      throw new Error(`Ketik "${replaceConfirmationPhrase}" untuk menjalankan safe replace.`)
     }
 
     const tables = (requestedTables.length ? requestedTables : preview.map((item) => item.table))
       .filter((table) => availableTables.has(table))
+      .filter((table) => action === "append" || Object.hasOwn(restorePrimaryKeys, table))
 
     if (!tables.length) throw new Error("Tidak ada tabel valid untuk restore.")
+    if (action === "replace" && tables.length > 5) {
+      throw new Error("Safe replace maksimal 5 tabel per eksekusi.")
+    }
 
     const preRestoreBackupId = await runPreRestoreBackup(req)
     const restoredTables: Array<{ table: string; rows: number }> = []
@@ -165,8 +229,13 @@ export async function POST(req: NextRequest) {
     for (const table of tables) {
       try {
         const rows = payload.tables?.[table] || []
-        const restored = await upsertTable(table, rows)
-        restoredTables.push({ table, rows: restored })
+        if (action === "replace") {
+          const restored = await replaceTableRows(table, rows)
+          restoredTables.push({ table, rows: restored.rows })
+        } else {
+          const restored = await upsertTable(table, rows)
+          restoredTables.push({ table, rows: restored })
+        }
       } catch (error) {
         errors.push({ table, error: error instanceof Error ? error.message : String(error) })
       }
@@ -176,7 +245,7 @@ export async function POST(req: NextRequest) {
     const status = errors.length ? "failed" : "success"
 
     await writeAdminAuditLog(auth, {
-      action: "append_restore",
+      action: action === "replace" ? "safe_replace_restore" : "append_restore",
       entity: "backup_runs",
       entityId: runId,
       after: {
@@ -187,7 +256,7 @@ export async function POST(req: NextRequest) {
       metadata: {
         sourceBackupRunId: runId,
         preRestoreBackupId,
-        mode: "append",
+        mode: action,
       },
       status,
       error: errors.length ? `Restore completed with ${errors.length} table error(s).` : null,
@@ -196,7 +265,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       data: {
         ok: errors.length === 0,
-        mode: "append",
+        mode: action,
         sourceBackupRunId: runId,
         preRestoreBackupId,
         restoredTables,
