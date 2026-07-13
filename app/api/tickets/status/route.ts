@@ -8,7 +8,7 @@ import {
   sendTelegramMessage,
   type TicketStatus,
 } from "../_lib"
-import { writeAdminAuditLog } from "../../admin/_lib"
+import { enforceAdminRateLimit, writeAdminAuditLog } from "../../admin/_lib"
 
 const allowedStatuses: TicketStatus[] = ["open", "on_progress", "assigned", "resolved"]
 
@@ -35,6 +35,8 @@ async function updateTicketStatus(ticketId: string, status: TicketStatus, adminE
 export async function POST(req: NextRequest) {
   const auth = await requireAdminSession(req)
   if (!auth.ok) return auth.response
+  const rateLimited = await enforceAdminRateLimit(req, { adminEmail: auth.adminEmail }, { scope: "tickets.status", limit: 25, windowSeconds: 60 })
+  if (rateLimited) return rateLimited
 
   try {
     const body = (await req.json()) as { ticketId?: unknown; status?: unknown }

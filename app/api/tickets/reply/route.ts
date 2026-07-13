@@ -7,7 +7,7 @@ import {
   requireAdminSession,
   sendTelegramMessage,
 } from "../_lib"
-import { writeAdminAuditLog } from "../../admin/_lib"
+import { enforceAdminRateLimit, writeAdminAuditLog } from "../../admin/_lib"
 
 async function updateReplyTicket(ticketId: string, feedback: string, adminEmail: string) {
   const updates = [
@@ -40,6 +40,8 @@ async function updateReplyTicket(ticketId: string, feedback: string, adminEmail:
 export async function POST(req: NextRequest) {
   const auth = await requireAdminSession(req)
   if (!auth.ok) return auth.response
+  const rateLimited = await enforceAdminRateLimit(req, { adminEmail: auth.adminEmail }, { scope: "tickets.reply", limit: 20, windowSeconds: 60 })
+  if (rateLimited) return rateLimited
 
   try {
     const body = (await req.json()) as { ticketId?: unknown; feedback?: unknown }

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import {
   adminSupabase,
+  enforceAdminRateLimit,
   jsonError,
   readBoolean,
   readNullableString,
@@ -37,6 +38,8 @@ function productPayload(body: Record<string, unknown>) {
 export async function POST(req: NextRequest) {
   const auth = await requireActiveAdmin(req)
   if (!auth.ok) return auth.response
+  const rateLimited = await enforceAdminRateLimit(req, auth, { scope: "admin.products.write", limit: 30, windowSeconds: 60 })
+  if (rateLimited) return rateLimited
 
   try {
     const body = (await req.json()) as Record<string, unknown>
@@ -65,6 +68,8 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const auth = await requireActiveAdmin(req)
   if (!auth.ok) return auth.response
+  const rateLimited = await enforceAdminRateLimit(req, auth, { scope: "admin.products.write", limit: 30, windowSeconds: 60 })
+  if (rateLimited) return rateLimited
 
   try {
     const body = (await req.json()) as Record<string, unknown>
@@ -108,6 +113,8 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const auth = await requireActiveAdmin(req)
   if (!auth.ok) return auth.response
+  const rateLimited = await enforceAdminRateLimit(req, auth, { scope: "admin.products.write", limit: 20, windowSeconds: 60 })
+  if (rateLimited) return rateLimited
 
   try {
     const body = (await req.json()) as Record<string, unknown>

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import {
   adminSupabase,
+  enforceAdminRateLimit,
   jsonError,
   readBoolean,
   readNullableString,
@@ -80,6 +81,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = await requireActiveAdmin(req)
   if (!auth.ok) return auth.response
+  const rateLimited = await enforceAdminRateLimit(req, auth, { scope: "admin.vouchers.write", limit: 25, windowSeconds: 60 })
+  if (rateLimited) return rateLimited
 
   try {
     const body = (await req.json()) as Record<string, unknown>
@@ -108,6 +111,8 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const auth = await requireActiveAdmin(req)
   if (!auth.ok) return auth.response
+  const rateLimited = await enforceAdminRateLimit(req, auth, { scope: "admin.vouchers.write", limit: 25, windowSeconds: 60 })
+  if (rateLimited) return rateLimited
 
   try {
     const body = (await req.json()) as Record<string, unknown>
@@ -157,6 +162,8 @@ export async function DELETE(req: NextRequest) {
   const auth = await requireActiveAdmin(req)
   if (!auth.ok) return auth.response
   if (auth.role !== "owner") return jsonError("Hanya owner yang dapat menghapus voucher.", 403)
+  const rateLimited = await enforceAdminRateLimit(req, auth, { scope: "admin.vouchers.write", limit: 15, windowSeconds: 60 })
+  if (rateLimited) return rateLimited
 
   try {
     const body = (await req.json()) as Record<string, unknown>

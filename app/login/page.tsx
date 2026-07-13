@@ -11,6 +11,8 @@ import { getActiveAdminProfile, getAdminAccessErrorMessage } from "@/lib/admin-a
 import { supabase } from "@/lib/supabaseClient"
 
 const THEME_STORAGE_KEY = "saisoku-theme"
+const RESET_COOLDOWN_SECONDS = 60
+const RESET_COOLDOWN_KEY = "saisoku-reset-password-next-at"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -21,6 +23,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isResetLoading, setIsResetLoading] = useState(false)
+  const [resetCooldown, setResetCooldown] = useState(0)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -44,6 +47,16 @@ export default function LoginPage() {
     if (reset === "success") {
       setSuccessMessage("Password berhasil diperbarui. Silakan login dengan password baru.")
     }
+  }, [])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const nextAt = Number(window.localStorage.getItem(RESET_COOLDOWN_KEY) || 0)
+      const secondsLeft = Math.max(0, Math.ceil((nextAt - Date.now()) / 1000))
+      setResetCooldown(secondsLeft)
+    }, 1000)
+
+    return () => window.clearInterval(timer)
   }, [])
 
   useEffect(() => {
@@ -125,6 +138,12 @@ export default function LoginPage() {
   }
 
   async function handleResetPassword() {
+    if (resetCooldown > 0) {
+      setErrorMessage(`Tunggu ${resetCooldown} detik sebelum kirim ulang reset password.`)
+      setSuccessMessage(null)
+      return
+    }
+
     if (!email.trim()) {
       setErrorMessage("Masukkan email admin terlebih dahulu untuk reset password.")
       setSuccessMessage(null)
@@ -146,6 +165,11 @@ export default function LoginPage() {
       }
 
       setSuccessMessage("Link reset password sudah dikirim. Cek inbox email admin lalu buka link recovery.")
+      window.localStorage.setItem(
+        RESET_COOLDOWN_KEY,
+        String(Date.now() + RESET_COOLDOWN_SECONDS * 1000)
+      )
+      setResetCooldown(RESET_COOLDOWN_SECONDS)
     } finally {
       setIsResetLoading(false)
     }
@@ -209,10 +233,14 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={handleResetPassword}
-              disabled={isResetLoading}
+              disabled={isResetLoading || resetCooldown > 0}
               className="border-0 bg-transparent p-0 text-lg leading-none text-[var(--insight-muted)] shadow-none transition hover:text-[var(--insight-text)]"
             >
-              {isResetLoading ? "Sending reset..." : "Forgot your password?"}
+              {isResetLoading
+                ? "Sending reset..."
+                : resetCooldown > 0
+                  ? `Wait ${resetCooldown}s`
+                  : "Forgot your password?"}
             </button>
           </div>
           <div className="flex items-center gap-2.5 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3.5 shadow-[4px_4px_0_var(--insight-shadow)]">

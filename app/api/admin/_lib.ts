@@ -28,6 +28,12 @@ type AdminAuditLogInput = {
   error?: string | null
 }
 
+type RateLimitInput = {
+  scope: string
+  limit: number
+  windowSeconds: number
+}
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const supabaseServiceRoleKey =
@@ -72,6 +78,26 @@ export function readStringArray(value: unknown) {
   return value.map((item) => readString(item)).filter(Boolean)
 }
 
+function getClientIp(req: NextRequest) {
+  const forwardedFor = req.headers.get("x-forwarded-for")
+  if (forwardedFor) return forwardedFor.split(",")[0]?.trim() || "unknown"
+  return req.headers.get("x-real-ip") || "unknown"
+}
+
+function rateLimitResponse(limit: number, windowSeconds: number, remainingSeconds: number) {
+  return NextResponse.json(
+    {
+      error: `Terlalu banyak request. Maksimal ${limit} request per ${windowSeconds} detik.`,
+    },
+    {
+      status: 429,
+      headers: {
+        "Retry-After": String(Math.max(1, remainingSeconds)),
+      },
+    }
+  )
+}
+
 function redactAuditValue(value: unknown): unknown {
   if (Array.isArray(value)) return value.map((item) => redactAuditValue(item))
   if (!value || typeof value !== "object") return value
@@ -111,6 +137,67 @@ export async function writeAdminAuditLog(actor: AuditActor, input: AdminAuditLog
   } catch (error) {
     console.error("writeAdminAuditLog error:", error)
   }
+}
+
+export async function enforceAdminRateLimit(
+  req: NextRequest,
+  actor: AuditActor | null,
+  input: RateLimitInput
+) {
+  if (!adminSupabase) return null
+
+  const actorKey = actor?.adminEmail || getClientIp(req)
+  const key = `${input.scope}:${actorKey}`.slice(0, 240)
+  const now = new Date()
+
+  try {
+    const { data, error } = await adminSupabase
+      .from("api_rate_limits")
+      .select("key, count, window_start")
+      .eq("key", key)
+      .maybeSingle()
+
+    if (error) throw error
+
+    const windowStart = data?.window_start ? new Date(String(data.window_start)) : null
+    const elapsedSeconds = windowStart ? Math.floor((now.getTime() - windowStart.getTime()) / 1000) : input.windowSeconds + 1
+    const isInsideWindow = windowStart && elapsedSeconds < input.windowSeconds
+
+    if (data && isInsideWindow) {
+      const currentCount = Number(data.count || 0)
+      if (currentCount >= input.limit) {
+        return rateLimitResponse(input.limit, input.windowSeconds, input.windowSeconds - elapsedSeconds)
+      }
+
+      const { error: updateError } = await adminSupabase
+        .from("api_rate_limits")
+        .update({
+          count: currentCount + 1,
+          updated_at: now.toISOString(),
+        })
+        .eq("key", key)
+
+      if (updateError) throw updateError
+      return null
+    }
+
+    const { error: upsertError } = await adminSupabase
+      .from("api_rate_limits")
+      .upsert({
+        key,
+        scope: input.scope,
+        actor: actorKey,
+        count: 1,
+        window_start: now.toISOString(),
+        updated_at: now.toISOString(),
+      })
+
+    if (upsertError) throw upsertError
+  } catch (error) {
+    console.error("enforceAdminRateLimit error:", error)
+  }
+
+  return null
 }
 
 export async function requireActiveAdmin(req: NextRequest): Promise<AdminAuthResult> {

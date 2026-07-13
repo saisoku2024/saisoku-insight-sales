@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import {
   adminSupabase,
+  enforceAdminRateLimit,
   jsonError,
   readNumber,
   readString,
@@ -271,6 +272,8 @@ export async function POST(req: NextRequest) {
   const auth = await requireActiveAdmin(req)
   if (!auth.ok) return auth.response
   if (auth.role !== "owner") return jsonError("Hanya owner yang dapat menjalankan backup.", 403)
+  const rateLimited = await enforceAdminRateLimit(req, auth, { scope: "admin.backups.run", limit: 3, windowSeconds: 3600 })
+  if (rateLimited) return rateLimited
 
   try {
     const body = (await req.json()) as Record<string, unknown>
