@@ -56,8 +56,21 @@ export function readString(value: unknown) {
   return typeof value === "string" ? value.trim() : ""
 }
 
+export function readLimitedString(value: unknown, field: string, maxLength: number) {
+  const text = readString(value)
+  if (text.length > maxLength) {
+    throw new Error(`${field} maksimal ${maxLength} karakter.`)
+  }
+  return text
+}
+
 export function readNullableString(value: unknown) {
   const text = readString(value)
+  return text ? text : null
+}
+
+export function readLimitedNullableString(value: unknown, field: string, maxLength: number) {
+  const text = readLimitedString(value, field, maxLength)
   return text ? text : null
 }
 
@@ -69,6 +82,21 @@ export function readNumber(value: unknown, fallback = 0) {
   return fallback
 }
 
+export function readNumberRange(
+  value: unknown,
+  field: string,
+  options: { fallback?: number; min?: number; max?: number } = {}
+) {
+  const numberValue = readNumber(value, options.fallback ?? 0)
+  if (options.min !== undefined && numberValue < options.min) {
+    throw new Error(`${field} minimal ${options.min}.`)
+  }
+  if (options.max !== undefined && numberValue > options.max) {
+    throw new Error(`${field} maksimal ${options.max}.`)
+  }
+  return numberValue
+}
+
 export function readBoolean(value: unknown) {
   return typeof value === "boolean" ? value : null
 }
@@ -76,6 +104,10 @@ export function readBoolean(value: unknown) {
 export function readStringArray(value: unknown) {
   if (!Array.isArray(value)) return []
   return value.map((item) => readString(item)).filter(Boolean)
+}
+
+export function ownerOnly(role: "owner" | "admin", message = "Hanya owner yang dapat menjalankan aksi ini.") {
+  return role === "owner" ? null : jsonError(message, 403)
 }
 
 function getClientIp(req: NextRequest) {

@@ -4,8 +4,9 @@ import {
   adminSupabase,
   enforceAdminRateLimit,
   jsonError,
+  ownerOnly,
   readBoolean,
-  readNullableString,
+  readLimitedNullableString,
   readString,
   requireActiveAdmin,
   writeAdminAuditLog,
@@ -35,17 +36,22 @@ export async function PATCH(req: NextRequest) {
       if (isActive === null) return jsonError("Status user tidak valid.")
       payload = { is_active: isActive }
     } else if (action === "soft_delete") {
+      const ownerError = ownerOnly(auth.role, "Hanya owner yang dapat menghapus user.")
+      if (ownerError) return ownerError
       payload = { deleted_at: new Date().toISOString() }
     } else {
       const role = readString(body.role)
       if (role && !allowedRoles.has(role)) {
         return jsonError("Role tidak valid.")
       }
+      if (["owner", "admin"].includes(role) && auth.role !== "owner") {
+        return jsonError("Hanya owner yang dapat memberi role owner/admin.", 403)
+      }
 
       payload = {
-        email: readNullableString(body.email),
-        name: readNullableString(body.name),
-        whatsapp: readNullableString(body.whatsapp),
+        email: readLimitedNullableString(body.email, "Email", 256),
+        name: readLimitedNullableString(body.name, "Nama", 120),
+        whatsapp: readLimitedNullableString(body.whatsapp, "WhatsApp", 40),
         role: role || "reguler",
       }
     }

@@ -5,8 +5,10 @@ import {
   enforceAdminRateLimit,
   jsonError,
   readBoolean,
-  readNullableString,
+  readLimitedNullableString,
+  readLimitedString,
   readNumber,
+  readNumberRange,
   readString,
   requireActiveAdmin,
   writeAdminAuditLog,
@@ -19,14 +21,13 @@ function normalizeCode(value: string) {
 }
 
 function voucherPayload(body: Record<string, unknown>) {
-  const code = normalizeCode(readString(body.code))
-  const reward_amount = readNumber(body.reward_amount, -1)
-  const quota = readNumber(body.quota, -1)
+  const code = normalizeCode(readLimitedString(body.code, "Kode voucher", 40))
+  const reward_amount = readNumberRange(body.reward_amount, "Nominal voucher", { min: 1, max: 100_000_000 })
+  const quota = readNumberRange(body.quota, "Kuota voucher", { min: 1, max: 100_000 })
   const target_role = readString(body.target_role) || "both"
 
   if (!code) throw new Error("Kode voucher wajib diisi.")
-  if (reward_amount <= 0) throw new Error("Nominal voucher wajib lebih dari 0.")
-  if (quota <= 0) throw new Error("Kuota voucher wajib lebih dari 0.")
+  if (!/^[A-Z0-9_-]+$/.test(code)) throw new Error("Kode voucher hanya boleh huruf, angka, underscore, atau strip.")
   if (!allowedTargetRoles.has(target_role)) throw new Error("Target role voucher tidak valid.")
 
   return {
@@ -35,7 +36,7 @@ function voucherPayload(body: Record<string, unknown>) {
     reward_amount,
     quota,
     target_role,
-    expired_at: readNullableString(body.expired_at),
+    expired_at: readLimitedNullableString(body.expired_at, "Expired at", 80),
   }
 }
 

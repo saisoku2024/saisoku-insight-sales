@@ -4,7 +4,9 @@ import {
   adminSupabase,
   enforceAdminRateLimit,
   jsonError,
-  readNullableString,
+  ownerOnly,
+  readLimitedNullableString,
+  readLimitedString,
   readString,
   requireActiveAdmin,
   writeAdminAuditLog,
@@ -19,21 +21,27 @@ type StockInput = {
   status?: string
 }
 
+const allowedStockStatuses = new Set(["available", "sold", "reserved", "inactive"])
+
 function stockPayload(body: Record<string, unknown>): StockInput {
-  const product_id = readString(body.product_id)
-  const email = readString(body.email)
+  const product_id = readLimitedString(body.product_id, "Product ID", 80)
+  const email = readLimitedString(body.email, "Email/no HP", 256)
+  const status = readLimitedString(body.status, "Status", 32) || "available"
 
   if (!product_id || !email) {
     throw new Error("Product dan email/no HP wajib diisi.")
+  }
+  if (!allowedStockStatuses.has(status)) {
+    throw new Error("Status stock tidak valid.")
   }
 
   return {
     product_id,
     email,
-    password: readNullableString(body.password),
-    profile: readNullableString(body.profile),
-    pin: readNullableString(body.pin),
-    status: readString(body.status) || "available",
+    password: readLimitedNullableString(body.password, "Password", 256),
+    profile: readLimitedNullableString(body.profile, "Profile", 120),
+    pin: readLimitedNullableString(body.pin, "PIN", 64),
+    status,
   }
 }
 
@@ -49,8 +57,8 @@ export async function POST(req: NextRequest) {
       ? body.items.map((item) => stockPayload((item || {}) as Record<string, unknown>))
       : [stockPayload(body)]
 
-    if (rows.length > 1000) {
-      return jsonError("Bulk upload maksimal 1000 row per request.")
+    if (rows.length > 500) {
+      return jsonError("Bulk upload maksimal 500 row per request.")
     }
 
     const { data, error } = await adminSupabase!.from("product_accounts").insert(rows).select()
@@ -84,10 +92,10 @@ export async function PATCH(req: NextRequest) {
     const { data: before } = await adminSupabase!.from("product_accounts").select("*").eq("id", id).maybeSingle()
 
     const payload = {
-      email: readString(body.email),
-      password: readNullableString(body.password),
-      profile: readNullableString(body.profile),
-      pin: readNullableString(body.pin),
+      email: readLimitedString(body.email, "Email/no HP", 256),
+      password: readLimitedNullableString(body.password, "Password", 256),
+      profile: readLimitedNullableString(body.profile, "Profile", 120),
+      pin: readLimitedNullableString(body.pin, "PIN", 64),
     }
 
     if (!payload.email) return jsonError("Email/no HP wajib diisi.")
@@ -119,6 +127,8 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const auth = await requireActiveAdmin(req)
   if (!auth.ok) return auth.response
+  const ownerError = ownerOnly(auth.role, "Hanya owner yang dapat menghapus stock.")
+  if (ownerError) return ownerError
   const rateLimited = await enforceAdminRateLimit(req, auth, { scope: "admin.stocks.write", limit: 20, windowSeconds: 60 })
   if (rateLimited) return rateLimited
 

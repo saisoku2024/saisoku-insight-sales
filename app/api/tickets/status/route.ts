@@ -8,7 +8,7 @@ import {
   sendTelegramMessage,
   type TicketStatus,
 } from "../_lib"
-import { enforceAdminRateLimit, writeAdminAuditLog } from "../../admin/_lib"
+import { enforceAdminRateLimit, readLimitedString, writeAdminAuditLog } from "../../admin/_lib"
 
 const allowedStatuses: TicketStatus[] = ["open", "on_progress", "assigned", "resolved"]
 
@@ -40,8 +40,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = (await req.json()) as { ticketId?: unknown; status?: unknown }
-    const ticketId = typeof body.ticketId === "string" ? body.ticketId.trim() : ""
-    const status = typeof body.status === "string" ? body.status.trim() : ""
+    const ticketId = readLimitedString(body.ticketId, "Ticket ID", 80)
+    const status = readLimitedString(body.status, "Status", 32)
 
     if (!ticketId) {
       return NextResponse.json({ error: "Ticket ID wajib diisi" }, { status: 400 })

@@ -5,18 +5,20 @@ import {
   enforceAdminRateLimit,
   jsonError,
   readBoolean,
-  readNullableString,
+  readLimitedNullableString,
+  readLimitedString,
   readNumber,
+  readNumberRange,
   readString,
   requireActiveAdmin,
   writeAdminAuditLog,
 } from "../_lib"
 
 function loyaltyPayload(body: Record<string, unknown>) {
-  const tier_name = readString(body.tier_name)
-  const min_order = readNumber(body.min_order, -1)
-  const max_order = readNumber(body.max_order, -1)
-  const discount_amount = readNumber(body.discount_amount, -1)
+  const tier_name = readLimitedString(body.tier_name, "Nama tier", 80)
+  const min_order = readNumberRange(body.min_order, "Min order", { min: 0, max: 1_000_000 })
+  const max_order = readNumberRange(body.max_order, "Max order", { min: 0, max: 1_000_000 })
+  const discount_amount = readNumberRange(body.discount_amount, "Diskon", { min: 0, max: 100_000_000 })
 
   if (!tier_name) {
     throw new Error("Nama tier wajib diisi.")
@@ -35,7 +37,7 @@ function loyaltyPayload(body: Record<string, unknown>) {
     min_order,
     max_order,
     discount_amount,
-    description: readNullableString(body.description),
+    description: readLimitedNullableString(body.description, "Deskripsi", 500),
   }
 }
 

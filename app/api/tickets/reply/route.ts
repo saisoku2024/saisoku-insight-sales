@@ -7,7 +7,7 @@ import {
   requireAdminSession,
   sendTelegramMessage,
 } from "../_lib"
-import { enforceAdminRateLimit, writeAdminAuditLog } from "../../admin/_lib"
+import { enforceAdminRateLimit, readLimitedString, writeAdminAuditLog } from "../../admin/_lib"
 
 async function updateReplyTicket(ticketId: string, feedback: string, adminEmail: string) {
   const updates = [
@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = (await req.json()) as { ticketId?: unknown; feedback?: unknown }
-    const ticketId = typeof body.ticketId === "string" ? body.ticketId.trim() : ""
-    const feedback = typeof body.feedback === "string" ? body.feedback.trim() : ""
+    const ticketId = readLimitedString(body.ticketId, "Ticket ID", 80)
+    const feedback = readLimitedString(body.feedback, "Feedback", 2000)
 
     if (!ticketId) {
       return NextResponse.json({ error: "Ticket ID wajib diisi" }, { status: 400 })

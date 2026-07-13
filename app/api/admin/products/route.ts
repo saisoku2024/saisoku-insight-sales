@@ -4,9 +4,11 @@ import {
   adminSupabase,
   enforceAdminRateLimit,
   jsonError,
+  ownerOnly,
   readBoolean,
-  readNullableString,
-  readNumber,
+  readLimitedNullableString,
+  readLimitedString,
+  readNumberRange,
   readString,
   readStringArray,
   requireActiveAdmin,
@@ -14,10 +16,10 @@ import {
 } from "../_lib"
 
 function productPayload(body: Record<string, unknown>) {
-  const product_code = readString(body.product_code)
-  const name = readString(body.name)
-  const price_normal = readNumber(body.price_normal)
-  const duration_days = readNumber(body.duration_days)
+  const product_code = readLimitedString(body.product_code, "Product code", 64)
+  const name = readLimitedString(body.name, "Nama produk", 120)
+  const price_normal = readNumberRange(body.price_normal, "Harga normal", { min: 1, max: 100_000_000 })
+  const duration_days = readNumberRange(body.duration_days, "Durasi", { min: 1, max: 3650 })
 
   if (!product_code || !name || price_normal <= 0 || duration_days <= 0) {
     throw new Error("Product code, name, price, dan duration wajib valid.")
@@ -27,11 +29,11 @@ function productPayload(body: Record<string, unknown>) {
     product_code,
     name,
     price_normal,
-    reseller_discount: readNumber(body.reseller_discount),
-    modal: readNumber(body.modal),
+    reseller_discount: readNumberRange(body.reseller_discount, "Diskon reseller", { min: 0, max: 100_000_000 }),
+    modal: readNumberRange(body.modal, "Modal", { min: 0, max: 100_000_000 }),
     duration_days,
-    description: readNullableString(body.description),
-    tos_description: readNullableString(body.tos_description),
+    description: readLimitedNullableString(body.description, "Deskripsi", 1000),
+    tos_description: readLimitedNullableString(body.tos_description, "TOS", 2000),
   }
 }
 
@@ -45,7 +47,7 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as Record<string, unknown>
     const payload = {
       ...productPayload(body),
-      template_message: readString(body.template_message) || "Email: {email}\nPassword: {password}",
+      template_message: readLimitedString(body.template_message, "Template message", 2000) || "Email: {email}\nPassword: {password}",
       is_active: true,
     }
 
@@ -113,6 +115,8 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const auth = await requireActiveAdmin(req)
   if (!auth.ok) return auth.response
+  const ownerError = ownerOnly(auth.role, "Hanya owner yang dapat menghapus produk.")
+  if (ownerError) return ownerError
   const rateLimited = await enforceAdminRateLimit(req, auth, { scope: "admin.products.write", limit: 20, windowSeconds: 60 })
   if (rateLimited) return rateLimited
 

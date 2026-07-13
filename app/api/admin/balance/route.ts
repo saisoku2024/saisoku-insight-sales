@@ -4,7 +4,9 @@ import {
   adminSupabase,
   enforceAdminRateLimit,
   jsonError,
+  readLimitedString,
   readNumber,
+  readNumberRange,
   readString,
   requireActiveAdmin,
   writeAdminAuditLog,
@@ -157,8 +159,8 @@ export async function POST(req: NextRequest) {
     const body = (await req.json()) as Record<string, unknown>
     const action = readString(body.action)
     const targetTelegramId = readNumber(body.telegram_id)
-    const amount = readNumber(body.amount)
-    const note = readString(body.note)
+    const amount = readNumberRange(body.amount, "Nominal", { min: 0, max: 100_000_000 })
+    const note = readLimitedString(body.note, "Note", 500)
 
     if (!allowedActions.has(action)) return jsonError("Action balance tidak valid.")
     if (!targetTelegramId || targetTelegramId <= 0) return jsonError("Telegram ID target wajib valid.")
