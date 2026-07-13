@@ -63,6 +63,16 @@ const errorLogDrainToken =
   process.env.LOGTAIL_SOURCE_TOKEN ||
   ""
 
+type ExternalErrorLogPayload = {
+  source: string
+  level: string
+  message: string
+  stack: string | null
+  route: string | null
+  actor: string | null
+  metadata: unknown
+}
+
 export const adminSupabase =
   supabaseUrl && supabaseServiceRoleKey
     ? createClient(supabaseUrl, supabaseServiceRoleKey, {
@@ -230,22 +240,53 @@ export async function writeErrorLog(input: ErrorLogInput) {
   if (!errorLogDrainUrl) return
 
   try {
-    await fetch(errorLogDrainUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(errorLogDrainToken ? { Authorization: `Bearer ${errorLogDrainToken}` } : {}),
-      },
-      body: JSON.stringify({
-        ...payload,
-        service: "saisoku-insight-sales",
-        environment: process.env.VERCEL_ENV || process.env.NODE_ENV || "development",
-        dt: new Date().toISOString(),
-      }),
-      signal: AbortSignal.timeout(1500),
-    })
+    const drainResult = await sendExternalErrorLog(payload)
+    if (!drainResult.ok) {
+      console.error("external error log drain rejected:", drainResult.status, drainResult.body)
+    }
   } catch (error) {
     console.error("external error log drain failed:", error)
+  }
+}
+
+export function getExternalErrorLogDrainStatus() {
+  return {
+    configured: Boolean(errorLogDrainUrl && errorLogDrainToken),
+    hasUrl: Boolean(errorLogDrainUrl),
+    hasToken: Boolean(errorLogDrainToken),
+    urlHost: errorLogDrainUrl ? new URL(errorLogDrainUrl).host : null,
+  }
+}
+
+export async function sendExternalErrorLog(payload: ExternalErrorLogPayload) {
+  if (!errorLogDrainUrl) {
+    return { ok: false, status: 0, body: "Missing error log drain URL" }
+  }
+
+  if (!errorLogDrainToken) {
+    return { ok: false, status: 0, body: "Missing error log drain token" }
+  }
+
+  const response = await fetch(errorLogDrainUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${errorLogDrainToken}`,
+    },
+    body: JSON.stringify({
+      ...payload,
+      service: "saisoku-insight-sales",
+      environment: process.env.VERCEL_ENV || process.env.NODE_ENV || "development",
+      dt: new Date().toISOString(),
+    }),
+    signal: AbortSignal.timeout(2500),
+  })
+
+  const body = await response.text().catch(() => "")
+  return {
+    ok: response.ok,
+    status: response.status,
+    body: truncateText(body, 500),
   }
 }
 
