@@ -34,6 +34,16 @@ type RateLimitInput = {
   windowSeconds: number
 }
 
+type ErrorLogInput = {
+  source: string
+  level?: "error" | "warn" | "info"
+  message: string
+  stack?: string | null
+  route?: string | null
+  actor?: string | null
+  metadata?: Record<string, unknown> | null
+}
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const supabaseServiceRoleKey =
@@ -150,6 +160,15 @@ function redactAuditValue(value: unknown): unknown {
   )
 }
 
+function truncateText(value: string | null | undefined, maxLength: number) {
+  if (!value) return null
+  return value.length > maxLength ? `${value.slice(0, maxLength)}...` : value
+}
+
+export function getErrorMessage(error: unknown, fallback = "Terjadi kesalahan") {
+  return error instanceof Error ? error.message : fallback
+}
+
 export async function writeAdminAuditLog(actor: AuditActor, input: AdminAuditLogInput) {
   if (!adminSupabase) return
 
@@ -169,6 +188,40 @@ export async function writeAdminAuditLog(actor: AuditActor, input: AdminAuditLog
   } catch (error) {
     console.error("writeAdminAuditLog error:", error)
   }
+}
+
+export async function writeErrorLog(input: ErrorLogInput) {
+  if (!adminSupabase) return
+
+  try {
+    await adminSupabase.from("error_logs").insert({
+      source: truncateText(input.source, 120) || "web",
+      level: input.level || "error",
+      message: truncateText(input.message, 500) || "Unknown error",
+      stack: truncateText(input.stack, 2000),
+      route: truncateText(input.route, 240),
+      actor: truncateText(input.actor, 240),
+      metadata: input.metadata ? redactAuditValue(input.metadata) : null,
+    })
+  } catch (error) {
+    console.error("writeErrorLog error:", error)
+  }
+}
+
+export async function writeRouteErrorLog(req: NextRequest, actor: AuditActor | null, route: string, error: unknown, metadata?: Record<string, unknown>) {
+  await writeErrorLog({
+    source: "web-api",
+    level: "error",
+    message: getErrorMessage(error),
+    stack: error instanceof Error ? error.stack || null : null,
+    route,
+    actor: actor?.adminEmail || null,
+    metadata: {
+      method: req.method,
+      url: req.nextUrl.pathname,
+      ...metadata,
+    },
+  })
 }
 
 export async function enforceAdminRateLimit(

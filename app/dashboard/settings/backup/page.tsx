@@ -28,6 +28,31 @@ type BackupListResponse = {
   totalRows: number
 }
 
+type RestorePreview = {
+  run: BackupRun
+  manifest: {
+    mode?: string
+    created_at?: string
+    errors?: Array<Record<string, unknown>>
+  } | null
+  tables: Array<{
+    table: string
+    rows: number
+    manifestRows: number
+  }>
+  confirmationPhrase: string
+}
+
+type RestoreResult = {
+  ok: boolean
+  mode: "append"
+  sourceBackupRunId: string
+  preRestoreBackupId: string | null
+  restoredTables: Array<{ table: string; rows: number }>
+  restoredRows: number
+  errors: Array<{ table: string; error: string }>
+}
+
 function formatDate(value?: string | null) {
   if (!value) return "-"
   return new Date(value).toLocaleString("id-ID")
@@ -62,6 +87,11 @@ export default function BackupSettingsPage() {
   const [totalRows, setTotalRows] = useState(0)
   const [loading, setLoading] = useState(true)
   const [runningMode, setRunningMode] = useState<BackupMode | null>(null)
+  const [previewingRunId, setPreviewingRunId] = useState<string | null>(null)
+  const [restoring, setRestoring] = useState(false)
+  const [restorePreview, setRestorePreview] = useState<RestorePreview | null>(null)
+  const [restoreTables, setRestoreTables] = useState("")
+  const [restoreConfirmation, setRestoreConfirmation] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<ActionNoticeState>(null)
 
@@ -127,6 +157,57 @@ export default function BackupSettingsPage() {
     }
 
     setRunningMode(null)
+  }
+
+  async function previewRestore(runId: string) {
+    setPreviewingRunId(runId)
+    setRestorePreview(null)
+    setRestoreTables("")
+    setRestoreConfirmation("")
+
+    try {
+      const result = await adminWrite<RestorePreview>("/api/admin/backups/restore", {
+        body: { action: "preview", runId },
+      })
+      setRestorePreview(result)
+      setRestoreTables(result.tables.map((table) => table.table).join(", "))
+      showSuccess(`Preview restore siap: ${result.tables.length} tabel ditemukan.`)
+    } catch (error) {
+      console.error("previewRestore error:", error)
+      showError(`Preview restore gagal: ${getErrorMessage(error)}`)
+    }
+
+    setPreviewingRunId(null)
+  }
+
+  async function runAppendRestore() {
+    if (!restorePreview || restoring) return
+
+    setRestoring(true)
+
+    try {
+      const tables = restoreTables
+        .split(",")
+        .map((table) => table.trim())
+        .filter(Boolean)
+      const result = await adminWrite<RestoreResult>("/api/admin/backups/restore", {
+        body: {
+          action: "append",
+          runId: restorePreview.run.id,
+          tables,
+          confirmation: restoreConfirmation,
+        },
+      })
+      const errorText = result.errors.length ? `, ${result.errors.length} tabel error` : ""
+      showSuccess(`Restore append selesai: ${result.restoredRows.toLocaleString("id-ID")} rows${errorText}.`)
+      setRestoreConfirmation("")
+      await loadRuns()
+    } catch (error) {
+      console.error("runAppendRestore error:", error)
+      showError(`Restore gagal: ${getErrorMessage(error)}`)
+    }
+
+    setRestoring(false)
   }
 
   return (
@@ -232,6 +313,97 @@ export default function BackupSettingsPage() {
         </div>
       </div>
 
+      {restorePreview ? (
+        <div className="insight-card p-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <span className="inline-block border-[3px] border-[var(--insight-border)] bg-amber-100 px-2.5 py-1 text-base leading-none text-amber-800">
+                RESTORE PREVIEW
+              </span>
+              <h2 className="mt-2 text-[26px] leading-none">Append Restore</h2>
+              <p className="mt-1 text-lg leading-tight text-[var(--insight-muted)]">
+                Mode aman: upsert/append data dari backup tanpa truncate tabel aktif.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setRestorePreview(null)}
+              className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3 py-1.5 text-lg leading-none shadow-[3px_3px_0_var(--insight-shadow)]"
+            >
+              Close
+            </button>
+          </div>
+
+          <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_0.9fr]">
+            <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3">
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div>
+                  <div className="text-base text-[var(--insight-muted)]">Backup</div>
+                  <div className="truncate text-lg" title={restorePreview.run.id}>{restorePreview.run.id}</div>
+                </div>
+                <div>
+                  <div className="text-base text-[var(--insight-muted)]">Mode</div>
+                  <div className="text-lg">{restorePreview.run.mode}</div>
+                </div>
+                <div>
+                  <div className="text-base text-[var(--insight-muted)]">Created</div>
+                  <div className="text-lg">{formatDate(restorePreview.run.created_at)}</div>
+                </div>
+              </div>
+              <div className="mt-3 max-h-48 overflow-auto border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)]">
+                <table className="w-full text-left">
+                  <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
+                    <tr>
+                      <th className="p-2">Table</th>
+                      <th className="p-2">Rows</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {restorePreview.tables.map((table) => (
+                      <tr key={table.table}>
+                        <td className="p-2">{table.table}</td>
+                        <td className="p-2">{table.rows.toLocaleString("id-ID")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3">
+              <label className="block text-lg">
+                Tables
+                <textarea
+                  value={restoreTables}
+                  onChange={(event) => setRestoreTables(event.target.value)}
+                  className="mt-1 h-24 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] p-2 text-base outline-none"
+                />
+              </label>
+              <label className="mt-3 block text-lg">
+                Confirmation
+                <input
+                  value={restoreConfirmation}
+                  onChange={(event) => setRestoreConfirmation(event.target.value)}
+                  placeholder={restorePreview.confirmationPhrase}
+                  className="mt-1 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1.5 outline-none"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => void runAppendRestore()}
+                disabled={restoring || restoreConfirmation !== restorePreview.confirmationPhrase}
+                className="mt-3 border-[3px] border-[var(--insight-border)] bg-red-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {restoring ? "Restoring..." : "Run Append Restore"}
+              </button>
+              <p className="mt-2 text-base leading-tight text-[var(--insight-muted)]">
+                Sistem membuat critical backup baru sebelum restore dan mencatat aksi ini ke audit log.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="insight-card overflow-hidden">
         <div className="border-b-[3px] border-[var(--insight-border)] p-3">
           <h2 className="text-[26px] leading-none">Backup Runs</h2>
@@ -248,12 +420,13 @@ export default function BackupSettingsPage() {
                 <th className="p-3">Rows</th>
                 <th className="p-3">Storage</th>
                 <th className="p-3">Error</th>
+                <th className="p-3">Action</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                  <td colSpan={9} className="p-8 text-center text-xl text-[var(--insight-muted)]">
                     Loading backup runs...
                   </td>
                 </tr>
@@ -275,12 +448,22 @@ export default function BackupSettingsPage() {
                     {run.storage_bucket && run.storage_path ? `${run.storage_bucket}/${run.storage_path}` : "-"}
                   </td>
                   <td className="max-w-xs truncate p-3" title={run.error || ""}>{run.error || "-"}</td>
+                  <td className="p-3">
+                    <button
+                      type="button"
+                      onClick={() => void previewRestore(run.id)}
+                      disabled={run.status !== "success" || previewingRunId === run.id}
+                      className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1 text-base leading-none shadow-[2px_2px_0_var(--insight-shadow)] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {previewingRunId === run.id ? "Loading..." : "Preview"}
+                    </button>
+                  </td>
                 </tr>
               ))}
 
               {!loading && runs.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                  <td colSpan={9} className="p-8 text-center text-xl text-[var(--insight-muted)]">
                     Belum ada riwayat backup.
                   </td>
                 </tr>

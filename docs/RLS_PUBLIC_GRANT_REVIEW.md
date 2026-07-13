@@ -31,6 +31,7 @@ Yang dilakukan migration:
 | `ticket_replies` | Ditolak | Next.js admin API |
 | `admin_audit_logs` | Ditolak | Server-side audit helper |
 | `api_rate_limits` | Ditolak | Server-side rate limit helper |
+| `error_logs` | Ditolak | Server-side error log helper |
 
 ## Query verifikasi
 

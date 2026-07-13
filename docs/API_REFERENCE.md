@@ -8,6 +8,12 @@ Base URL production:
 https://saisoku-insight-sales.vercel.app
 ```
 
+Spesifikasi OpenAPI dasar tersedia di:
+
+```text
+docs/openapi-admin.json
+```
+
 ## Auth
 
 Admin panel:

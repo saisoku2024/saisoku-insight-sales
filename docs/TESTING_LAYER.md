@@ -10,6 +10,7 @@ npm run verify
 
 `verify` menjalankan:
 
+- Direct-write audit untuk area frontend
 - ESLint
 - TypeScript typecheck
 - Next.js production build

@@ -1,6 +1,6 @@
 # Error Tracking / Central Logs
 
-Status saat ini: partial. Project sudah punya `admin_audit_logs`, `api_rate_limits`, console log, dan log deployment Vercel/Supabase. Belum ada error tracking terpusat seperti Sentry atau log pipeline seperti Logtail/Axiom.
+Status saat ini: internal central logs aktif. Project punya `error_logs`, `admin_audit_logs`, `api_rate_limits`, console log, dan log deployment Vercel/Supabase. Integrasi vendor eksternal seperti Sentry/Logtail masih opsional tahap berikutnya.
 
 ## Sumber log saat ini
 
@@ -9,6 +9,7 @@ Status saat ini: partial. Project sudah punya `admin_audit_logs`, `api_rate_limi
 | Vercel Function Logs | Error route API admin, backup cron, build/deploy log | Vercel dashboard |
 | Supabase Edge Logs | Error bot Telegram dan webhook | Supabase dashboard |
 | `admin_audit_logs` | Aksi admin penting | Supabase table + halaman Log Audit |
+| `error_logs` | Error API/restore/backup dan laporan client | Supabase table + halaman Error Logs |
 | `api_rate_limits` | Counter rate limit admin API | Supabase table |
 | Browser console | Error UI client-side | Browser user/admin |
 
@@ -28,7 +29,7 @@ Log yang tidak boleh disimpan:
 
 ## Target upgrade
 
-Tahap berikut yang direkomendasikan:
+Tahap berikut yang direkomendasikan jika ingin monitoring eksternal:
 
 1. Pasang Sentry untuk Next.js client + server route.
 2. Pasang Sentry atau structured log wrapper untuk Supabase Edge Function.

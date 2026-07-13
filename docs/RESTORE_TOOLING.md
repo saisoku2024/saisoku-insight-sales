@@ -1,6 +1,6 @@
 # Restore Tooling
 
-Status saat ini: backup manual dan auto backup sudah tersedia. Restore aman belum dibuat sebagai tombol production karena risiko overwrite data aktif sangat tinggi.
+Status saat ini: backup manual dan auto backup sudah tersedia. Restore aman tersedia sebagai `Preview Restore` dan `Append Restore` owner-only. Mode replace/full replace tetap manual/emergency karena risiko overwrite data aktif sangat tinggi.
 
 ## Prinsip restore
 
@@ -10,21 +10,21 @@ Status saat ini: backup manual dan auto backup sudah tersedia. Restore aman belu
 - Semua restore wajib masuk `admin_audit_logs`.
 - Restore harus bisa dry-run lebih dulu.
 
-## Flow tombol restore yang aman
+## Flow tombol restore yang tersedia
 
 1. Owner buka Settings > Backup.
 2. Owner pilih backup run dari daftar.
-3. Klik `Preview Restore`.
+3. Klik `Preview`.
 4. Server membaca manifest backup dan menampilkan:
    - mode backup
    - timestamp
    - tabel tersedia
    - jumlah row per tabel
    - estimasi tabel yang akan terdampak
-5. Owner pilih tabel yang ingin direstore.
+5. Owner pilih tabel yang ingin direstore lewat daftar comma-separated.
 6. Owner mengetik confirmation phrase: `RESTORE SAISOKU`.
 7. Server membuat pre-restore backup.
-8. Server menjalankan restore dalam batch.
+8. Server menjalankan append/upsert restore dalam batch.
 9. Server mencatat hasil restore ke audit log.
 
 ## Mode restore yang direkomendasikan
@@ -32,7 +32,7 @@ Status saat ini: backup manual dan auto backup sudah tersedia. Restore aman belu
 | Mode | Fungsi | Risiko |
 | --- | --- | --- |
 | Dry-run | Validasi file dan tampilkan dampak | Rendah |
-| Table append | Tambah data yang belum ada | Sedang |
+| Table append | Upsert data dari backup tanpa truncate tabel aktif | Sedang |
 | Table replace | Ganti isi tabel terpilih | Tinggi |
 | Full replace | Ganti banyak tabel sekaligus | Sangat tinggi, hanya emergency |
 
@@ -42,6 +42,7 @@ Status saat ini: backup manual dan auto backup sudah tersedia. Restore aman belu
 - Restore otomatis dari cron.
 - Restore tanpa confirmation phrase.
 - Restore memakai backup yang tidak lolos validasi schema.
+- Replace/truncate restore dari web panel tanpa review manual.
 
 ## Emergency manual restore
 

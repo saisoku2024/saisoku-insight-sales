@@ -65,6 +65,8 @@ Catatan audit 11 Juli 2026:
 - `docs/TESTING_LAYER.md`: baseline verify dan target integration/e2e.
 - `docs/RESTORE_TOOLING.md`: desain restore aman.
 - `docs/API_REFERENCE.md`: endpoint admin, ticket, backup, dan bot.
+- `docs/openapi-admin.json`: spesifikasi OpenAPI dasar.
+- `docs/DIRECT_WRITE_AUDIT.md`: audit frontend agar tidak write langsung ke Supabase.
 
 Tahap berikut yang disarankan:
 

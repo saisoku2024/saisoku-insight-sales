@@ -1,0 +1,175 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SAISOKU Admin API",
+    "version": "0.1.0",
+    "description": "Internal admin API for SAISOKU INSIGHT dashboard."
+  },
+  "servers": [
+    {
+      "url": "https://saisoku-insight-sales.vercel.app"
+    }
+  ],
+  "security": [
+    {
+      "supabaseBearer": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "supabaseBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Supabase access token"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/admin/audit": {
+      "get": {
+        "summary": "List admin audit logs",
+        "responses": {
+          "200": {
+            "description": "Audit log page"
+          }
+        }
+      }
+    },
+    "/api/admin/error-logs": {
+      "get": {
+        "summary": "List central error logs",
+        "responses": {
+          "200": {
+            "description": "Error log page"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create client-reported error log",
+        "responses": {
+          "200": {
+            "description": "Error log accepted"
+          }
+        }
+      }
+    },
+    "/api/admin/backups": {
+      "get": {
+        "summary": "List backup runs or trigger cron backup with cron secret",
+        "responses": {
+          "200": {
+            "description": "Backup run list"
+          }
+        }
+      },
+      "post": {
+        "summary": "Run manual backup",
+        "responses": {
+          "200": {
+            "description": "Backup result"
+          }
+        }
+      }
+    },
+    "/api/admin/backups/restore": {
+      "post": {
+        "summary": "Preview or run append restore from a backup",
+        "responses": {
+          "200": {
+            "description": "Restore preview or result"
+          }
+        }
+      }
+    },
+    "/api/admin/balance": {
+      "get": {
+        "summary": "List balances"
+      },
+      "post": {
+        "summary": "Add, deduct, or remove balance"
+      }
+    },
+    "/api/admin/products": {
+      "post": {
+        "summary": "Create product"
+      },
+      "patch": {
+        "summary": "Update product"
+      },
+      "delete": {
+        "summary": "Delete product"
+      }
+    },
+    "/api/admin/stocks": {
+      "post": {
+        "summary": "Create or bulk upload stock"
+      },
+      "patch": {
+        "summary": "Update stock"
+      },
+      "delete": {
+        "summary": "Delete stock"
+      }
+    },
+    "/api/admin/users": {
+      "patch": {
+        "summary": "Update user role/status"
+      }
+    },
+    "/api/admin/vouchers": {
+      "get": {
+        "summary": "List vouchers"
+      },
+      "post": {
+        "summary": "Create voucher"
+      },
+      "patch": {
+        "summary": "Update voucher"
+      },
+      "delete": {
+        "summary": "Delete voucher"
+      }
+    },
+    "/api/admin/loyalty": {
+      "get": {
+        "summary": "List loyalty settings"
+      },
+      "post": {
+        "summary": "Create loyalty setting"
+      },
+      "patch": {
+        "summary": "Update loyalty setting"
+      }
+    },
+    "/api/tickets/reply": {
+      "post": {
+        "summary": "Reply to ticket and notify Telegram user"
+      }
+    },
+    "/api/tickets/status": {
+      "post": {
+        "summary": "Update ticket status"
+      }
+    },
+    "/api/tickets/resolve": {
+      "post": {
+        "summary": "Resolve ticket"
+      }
+    },
+    "/api/tickets/file": {
+      "get": {
+        "summary": "Proxy Telegram ticket attachment"
+      }
+    }
+  }
+}

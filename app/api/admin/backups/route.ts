@@ -9,6 +9,7 @@ import {
   readString,
   requireActiveAdmin,
   writeAdminAuditLog,
+  writeRouteErrorLog,
 } from "../_lib"
 
 export const runtime = "nodejs"
@@ -238,6 +239,7 @@ export async function GET(req: NextRequest) {
       const data = await runBackup(mode, "vercel-cron")
       return NextResponse.json({ data })
     } catch (error) {
+      await writeRouteErrorLog(req, null, "GET /api/admin/backups cron", error, { mode })
       return jsonError(error instanceof Error ? error.message : "Auto backup gagal", 500)
     }
   }
@@ -290,6 +292,7 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json({ data })
   } catch (error) {
+    await writeRouteErrorLog(req, auth, "POST /api/admin/backups", error)
     return jsonError(error instanceof Error ? error.message : "Backup gagal", 500)
   }
 }

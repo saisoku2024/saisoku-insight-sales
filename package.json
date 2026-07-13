@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "next dev -p 3004",
     "build": "next build",
+    "build:clean": "node scripts/clean-next.mjs && next build",
     "start": "next start -p 3004",
     "lint": "eslint",
-    "verify": "npm run lint && npx tsc --noEmit --pretty false && npm run build",
+    "audit:direct-write": "node scripts/direct-write-audit.mjs",
+    "verify": "npm run audit:direct-write && npm run lint && npx tsc --noEmit --pretty false && npm run build:clean",
     "backup:data:full": "node scripts/backup-data.mjs --mode full",
     "backup:data:critical": "node scripts/backup-data.mjs --mode critical --retention-days 14"
   },
