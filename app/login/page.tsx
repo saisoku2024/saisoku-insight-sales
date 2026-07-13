@@ -192,26 +192,26 @@ export default function LoginPage() {
       rightTop={<AuthThemeToggle isDark={isDark} onToggle={toggleTheme} />}
     >
       <div>
-        <p className="text-lg leading-none text-[var(--insight-muted)]">
+        <p className="text-base leading-none text-[var(--insight-muted)]">
           Admin access
         </p>
-        <h2 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">
+        <h2 className="mt-2 text-[28px] leading-none text-[var(--insight-text)]">
           Sign in to your account
         </h2>
-        <p className="mt-2 text-xl leading-6 text-[var(--insight-muted)]">
+        <p className="mt-2 text-lg leading-5 text-[var(--insight-muted)]">
           Enter your credentials to access the INSIGHT dashboard
         </p>
       </div>
 
       <form
         onSubmit={handleLogin}
-        className="mt-7 space-y-4 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-5 shadow-[6px_6px_0_var(--insight-shadow)]"
+        className="mt-5 space-y-3 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-4 shadow-[6px_6px_0_var(--insight-shadow)]"
       >
         <div className="space-y-2">
-          <label htmlFor="email" className="text-xl leading-none text-[var(--insight-text)]">
+          <label htmlFor="email" className="text-lg leading-none text-[var(--insight-text)]">
             Email admin
           </label>
-          <div className="flex items-center gap-2.5 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3.5 shadow-[4px_4px_0_var(--insight-shadow)]">
+          <div className="flex items-center gap-2.5 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3 shadow-[4px_4px_0_var(--insight-shadow)]">
             <Mail className="h-4 w-4 text-[var(--insight-muted)]" />
             <input
               id="email"
@@ -219,7 +219,7 @@ export default function LoginPage() {
               placeholder="admin@saisoku.id"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="h-12 w-full border-0 bg-transparent text-xl outline-none placeholder:text-[var(--insight-muted)]"
+              className="h-11 w-full border-0 bg-transparent text-lg outline-none placeholder:text-[var(--insight-muted)]"
               autoComplete="email"
             />
           </div>
@@ -227,14 +227,14 @@ export default function LoginPage() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-3">
-            <label htmlFor="password" className="text-xl leading-none text-[var(--insight-text)]">
+            <label htmlFor="password" className="text-lg leading-none text-[var(--insight-text)]">
               Password
             </label>
             <button
               type="button"
               onClick={handleResetPassword}
               disabled={isResetLoading || resetCooldown > 0}
-              className="border-0 bg-transparent p-0 text-lg leading-none text-[var(--insight-muted)] shadow-none transition hover:text-[var(--insight-text)]"
+              className="border-0 bg-transparent p-0 text-base leading-none text-[var(--insight-muted)] shadow-none transition hover:text-[var(--insight-text)]"
             >
               {isResetLoading
                 ? "Sending reset..."
@@ -243,7 +243,7 @@ export default function LoginPage() {
                   : "Forgot your password?"}
             </button>
           </div>
-          <div className="flex items-center gap-2.5 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3.5 shadow-[4px_4px_0_var(--insight-shadow)]">
+          <div className="flex items-center gap-2.5 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3 shadow-[4px_4px_0_var(--insight-shadow)]">
             <LockKeyhole className="h-4 w-4 text-[var(--insight-muted)]" />
             <input
               id="password"
@@ -251,7 +251,7 @@ export default function LoginPage() {
               placeholder="Masukkan password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="h-12 w-full border-0 bg-transparent text-xl outline-none placeholder:text-[var(--insight-muted)]"
+              className="h-11 w-full border-0 bg-transparent text-lg outline-none placeholder:text-[var(--insight-muted)]"
               autoComplete="current-password"
             />
             <button
@@ -266,13 +266,13 @@ export default function LoginPage() {
         </div>
 
         {errorMessage ? (
-          <div className="border-[3px] border-red-700 bg-red-50 px-4 py-3 text-xl leading-none text-red-700 dark:bg-red-950/30 dark:text-red-200">
+          <div className="border-[3px] border-red-700 bg-red-50 px-3 py-2 text-lg leading-5 text-red-700 dark:bg-red-950/30 dark:text-red-200">
             {errorMessage}
           </div>
         ) : null}
         
         {successMessage ? (
-          <div className="border-[3px] border-emerald-700 bg-emerald-50 px-4 py-3 text-xl leading-none text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200">
+          <div className="border-[3px] border-emerald-700 bg-emerald-50 px-3 py-2 text-lg leading-5 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-200">
             {successMessage}
           </div>
         ) : null}
@@ -280,7 +280,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={!canSubmit || isSubmitting}
-          className="inline-flex h-14 w-full items-center justify-center gap-2 border-[3px] border-[var(--insight-border)] bg-slate-950 px-5 text-xl text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-slate-950"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 border-[3px] border-[var(--insight-border)] bg-slate-950 px-4 text-lg text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-white dark:text-slate-950"
         >
           {isSubmitting ? "Signing in..." : "Sign in to dashboard"}
           {!isSubmitting ? <ArrowRight className="h-4 w-4" /> : null}

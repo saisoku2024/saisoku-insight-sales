@@ -45,7 +45,7 @@ export function AuthShell({
 }: AuthShellProps) {
   return (
     <div className="min-h-screen px-4 py-4 text-[var(--insight-text)] transition-colors duration-300 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-      <header className="mx-auto mb-6 flex h-[60px] max-w-6xl items-center justify-between border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-5 shadow-[6px_6px_0_var(--insight-shadow)]">
+      <header className="mx-auto mb-5 flex h-[56px] max-w-5xl items-center justify-between border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-4 shadow-[6px_6px_0_var(--insight-shadow)]">
         <BrandMark />
         <div className="flex items-center gap-2">
           <div className="insight-button flex h-10 min-w-[55px] items-center justify-center px-3 text-xl">
@@ -55,27 +55,27 @@ export function AuthShell({
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="insight-card flex min-h-[520px] flex-col justify-between p-5 sm:p-6">
+      <main className="mx-auto grid max-w-5xl gap-5 lg:grid-cols-[0.9fr_0.82fr]">
+        <section className="insight-card flex min-h-[470px] flex-col justify-between p-5">
           <div>
             <span className="inline-block border-[3px] border-[var(--insight-border)] bg-violet-100 px-3 py-1 text-lg leading-none text-violet-800">
               {badge}
             </span>
 
-            <h1 className="mt-6 text-[54px] leading-none text-[var(--insight-text)] sm:text-[68px]">
+            <h1 className="mt-5 text-[50px] leading-none text-[var(--insight-text)] sm:text-[60px]">
               INSIGHT
             </h1>
 
-            <h2 className="mt-4 max-w-lg text-[34px] leading-none text-[var(--insight-text)]">
+            <h2 className="mt-3 max-w-lg text-[30px] leading-none text-[var(--insight-text)]">
               {title}
             </h2>
 
-            <p className="mt-4 max-w-xl text-xl leading-6 text-[var(--insight-muted)]">
+            <p className="mt-3 max-w-xl text-lg leading-6 text-[var(--insight-muted)]">
               {description}
             </p>
           </div>
 
-          <div className="mt-10 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+          <div className="mt-8 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
             {features.map((item) => {
               const Icon = item.icon
 
@@ -97,12 +97,12 @@ export function AuthShell({
           </div>
         </section>
 
-        <section className="insight-card flex min-h-[520px] items-center justify-center p-5 sm:p-6">
-          <div className="w-full max-w-md">{children}</div>
+        <section className="insight-card flex min-h-[470px] items-center justify-center p-5">
+          <div className="w-full max-w-sm">{children}</div>
         </section>
       </main>
 
-      <footer className="mx-auto mt-5 flex max-w-6xl flex-col gap-2 px-1 text-center text-lg leading-none text-[var(--insight-muted)] sm:flex-row sm:items-center sm:justify-between sm:text-left">
+      <footer className="mx-auto mt-5 flex max-w-5xl flex-col gap-2 px-1 text-center text-lg leading-none text-[var(--insight-muted)] sm:flex-row sm:items-center sm:justify-between sm:text-left">
         <p>© 2026 SAISOKU.ID Systems · INSIGHT Platform</p>
         <p>Internal Use Only</p>
       </footer>
