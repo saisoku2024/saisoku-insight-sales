@@ -5,11 +5,11 @@ import {
   adminSupabase,
   enforceAdminRateLimit,
   jsonError,
+  jsonRouteError,
   readString,
   readStringArray,
   requireActiveAdmin,
   writeAdminAuditLog,
-  writeRouteErrorLog,
 } from "../../_lib"
 
 export const runtime = "nodejs"
@@ -274,7 +274,6 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    await writeRouteErrorLog(req, auth, "POST /api/admin/backups/restore", error)
-    return jsonError(error instanceof Error ? error.message : "Restore gagal.", 500)
+    return jsonRouteError(req, auth, "POST /api/admin/backups/restore", error, "Restore gagal.", 500)
   }
 }

@@ -4,6 +4,7 @@ import {
   adminSupabase,
   enforceAdminRateLimit,
   jsonError,
+  jsonRouteError,
   ownerOnly,
   readBoolean,
   readLimitedNullableString,
@@ -63,7 +64,7 @@ export async function PATCH(req: NextRequest) {
       .select()
       .single()
 
-    if (error) return jsonError(error.message, 500)
+    if (error) return jsonRouteError(req, auth, "PATCH /api/admin/users update", error, "Gagal update user", 500)
 
     await writeAdminAuditLog(auth, {
       action: action === "toggle_status" ? "toggle" : action === "soft_delete" ? "delete" : "update",
@@ -76,6 +77,6 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ data })
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Gagal update user", 400)
+    return jsonRouteError(req, auth, "PATCH /api/admin/users", error, "Gagal update user", 400)
   }
 }

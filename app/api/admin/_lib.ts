@@ -50,11 +50,15 @@ const supabaseServiceRoleKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SERVICE_ROLE ||
   process.env.SB_SERVICE_ROLE
-const errorLogDrainUrl =
+const errorLogDrainUrl = normalizeDrainUrl(
+  process.env.BETTER_STACK_INGESTING_HOST ||
+  process.env.BETTER_STACK_ENDPOINT ||
   process.env.ERROR_LOG_DRAIN_URL ||
   process.env.LOGTAIL_INGEST_URL ||
   ""
+)
 const errorLogDrainToken =
+  process.env.BETTER_STACK_SOURCE_TOKEN ||
   process.env.ERROR_LOG_DRAIN_TOKEN ||
   process.env.LOGTAIL_SOURCE_TOKEN ||
   ""
@@ -173,6 +177,12 @@ function truncateText(value: string | null | undefined, maxLength: number) {
   return value.length > maxLength ? `${value.slice(0, maxLength)}...` : value
 }
 
+function normalizeDrainUrl(value: string) {
+  const text = value.trim()
+  if (!text) return ""
+  return /^https?:\/\//i.test(text) ? text : `https://${text}`
+}
+
 export function getErrorMessage(error: unknown, fallback = "Terjadi kesalahan") {
   return error instanceof Error ? error.message : fallback
 }
@@ -230,7 +240,7 @@ export async function writeErrorLog(input: ErrorLogInput) {
         ...payload,
         service: "saisoku-insight-sales",
         environment: process.env.VERCEL_ENV || process.env.NODE_ENV || "development",
-        timestamp: new Date().toISOString(),
+        dt: new Date().toISOString(),
       }),
       signal: AbortSignal.timeout(1500),
     })
@@ -253,6 +263,19 @@ export async function writeRouteErrorLog(req: NextRequest, actor: AuditActor | n
       ...metadata,
     },
   })
+}
+
+export async function jsonRouteError(
+  req: NextRequest,
+  actor: AuditActor | null,
+  route: string,
+  error: unknown,
+  fallback: string,
+  status = 400,
+  metadata?: Record<string, unknown>
+) {
+  await writeRouteErrorLog(req, actor, route, error, { status, ...metadata })
+  return jsonError(getErrorMessage(error, fallback), status)
 }
 
 export async function enforceAdminRateLimit(

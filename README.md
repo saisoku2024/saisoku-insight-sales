@@ -62,6 +62,7 @@ Catatan audit 11 Juli 2026:
 - `docs/RLS_PUBLIC_GRANT_REVIEW.md`: review RLS dan public write grant.
 - `docs/SECRETS_MANAGEMENT.md`: registry secret dan SOP rotasi.
 - `docs/ERROR_TRACKING.md`: standar log dan target central error tracking.
+- `docs/ERROR_LOG_AUDIT.md`: coverage audit jalur error web, bot, dan Better Stack.
 - `docs/TESTING_LAYER.md`: baseline verify dan target integration/e2e.
 - `docs/RESTORE_TOOLING.md`: desain restore aman.
 - `docs/API_REFERENCE.md`: endpoint admin, ticket, backup, dan bot.

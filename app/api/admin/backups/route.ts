@@ -5,6 +5,7 @@ import {
   adminSupabase,
   enforceAdminRateLimit,
   jsonError,
+  jsonRouteError,
   readNumber,
   readString,
   requireActiveAdmin,
@@ -292,7 +293,6 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json({ data })
   } catch (error) {
-    await writeRouteErrorLog(req, auth, "POST /api/admin/backups", error)
-    return jsonError(error instanceof Error ? error.message : "Backup gagal", 500)
+    return jsonRouteError(req, auth, "POST /api/admin/backups", error, "Backup gagal", 500)
   }
 }

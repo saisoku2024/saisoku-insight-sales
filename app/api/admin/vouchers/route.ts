@@ -4,6 +4,7 @@ import {
   adminSupabase,
   enforceAdminRateLimit,
   jsonError,
+  jsonRouteError,
   readBoolean,
   readLimitedNullableString,
   readLimitedString,
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { data, error } = await adminSupabase!.from("vouchers").insert(payload).select().single()
-    if (error) return jsonError(error.message, 500)
+    if (error) return jsonRouteError(req, auth, "POST /api/admin/vouchers insert", error, "Gagal menambah voucher", 500)
 
     await writeAdminAuditLog(auth, {
       action: "create",
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ data })
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Gagal menambah voucher", 400)
+    return jsonRouteError(req, auth, "POST /api/admin/vouchers", error, "Gagal menambah voucher", 400)
   }
 }
 
@@ -142,7 +143,7 @@ export async function PATCH(req: NextRequest) {
       .select()
       .single()
 
-    if (error) return jsonError(error.message, 500)
+    if (error) return jsonRouteError(req, auth, "PATCH /api/admin/vouchers update", error, "Gagal update voucher", 500)
 
     await writeAdminAuditLog(auth, {
       action: action === "toggle_status" ? "toggle" : "update",
@@ -155,7 +156,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ data })
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Gagal update voucher", 400)
+    return jsonRouteError(req, auth, "PATCH /api/admin/vouchers", error, "Gagal update voucher", 400)
   }
 }
 
@@ -174,7 +175,7 @@ export async function DELETE(req: NextRequest) {
     const { data: before } = await adminSupabase!.from("vouchers").select("*").eq("id", id).maybeSingle()
 
     const { error } = await adminSupabase!.from("vouchers").delete().eq("id", id)
-    if (error) return jsonError(error.message, 500)
+    if (error) return jsonRouteError(req, auth, "DELETE /api/admin/vouchers delete", error, "Gagal hapus voucher", 500)
 
     await writeAdminAuditLog(auth, {
       action: "delete",
@@ -185,6 +186,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ data: { ok: true } })
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Gagal hapus voucher", 400)
+    return jsonRouteError(req, auth, "DELETE /api/admin/vouchers", error, "Gagal hapus voucher", 400)
   }
 }

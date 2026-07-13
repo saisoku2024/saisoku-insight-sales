@@ -7,7 +7,7 @@ import {
   requireAdminSession,
   sendTelegramMessage,
 } from "../_lib"
-import { enforceAdminRateLimit, readLimitedString, writeAdminAuditLog } from "../../admin/_lib"
+import { enforceAdminRateLimit, jsonRouteError, readLimitedString, writeAdminAuditLog } from "../../admin/_lib"
 
 async function updateResolvedTicket(ticketId: string, adminEmail: string) {
   const updates = [
@@ -64,9 +64,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Gagal resolve ticket" },
-      { status: 500 }
-    )
+    return jsonRouteError(req, { adminEmail: auth.adminEmail }, "POST /api/tickets/resolve", error, "Gagal resolve ticket", 500)
   }
 }

@@ -13,6 +13,8 @@ Dokumen ini adalah registry dan SOP secret SAISOKU. Jangan pernah menaruh nilai 
 | `BACKUP_CRON_SECRET` | Vercel env | Owner | 90 hari | Jika log/request bocor |
 | `SAISOKU_BACKUP_BUCKET` | Vercel env | Owner/Admin teknis | Saat nama bucket berubah | Jika bucket policy salah |
 | `SAISOKU_BACKUP_DIR` | Local backup env opsional | Owner/Admin teknis | Saat struktur folder berubah | Jika komputer dev bocor |
+| `BETTER_STACK_INGESTING_HOST` | Vercel env + Supabase Edge Function secret | Owner/Admin teknis | Saat source Better Stack berubah | Jika source token bocor |
+| `BETTER_STACK_SOURCE_TOKEN` | Vercel env + Supabase Edge Function secret | Owner only | 60-90 hari | Wajib langsung jika bocor |
 
 ## Aturan penyimpanan
 

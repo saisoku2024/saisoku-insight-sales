@@ -7,7 +7,7 @@ import {
   requireAdminSession,
   sendTelegramMessage,
 } from "../_lib"
-import { enforceAdminRateLimit, readLimitedString, writeAdminAuditLog } from "../../admin/_lib"
+import { enforceAdminRateLimit, jsonRouteError, readLimitedString, writeAdminAuditLog } from "../../admin/_lib"
 
 async function updateReplyTicket(ticketId: string, feedback: string, adminEmail: string) {
   const updates = [
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (replyError) {
-      return NextResponse.json({ error: replyError.message }, { status: 500 })
+      return jsonRouteError(req, { adminEmail: auth.adminEmail }, "POST /api/tickets/reply insert", replyError, "Gagal menyimpan reply ticket", 500)
     }
 
     await updateReplyTicket(ticketId, feedback, auth.adminEmail)
@@ -88,9 +88,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, data: reply })
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Gagal membalas ticket" },
-      { status: 500 }
-    )
+    return jsonRouteError(req, { adminEmail: auth.adminEmail }, "POST /api/tickets/reply", error, "Gagal membalas ticket", 500)
   }
 }

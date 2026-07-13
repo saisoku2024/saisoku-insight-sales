@@ -4,6 +4,7 @@ import {
   adminSupabase,
   enforceAdminRateLimit,
   jsonError,
+  jsonRouteError,
   readBoolean,
   readLimitedNullableString,
   readLimitedString,
@@ -95,7 +96,7 @@ export async function POST(req: NextRequest) {
       .select()
       .single()
 
-    if (error) return jsonError(error.message, 500)
+    if (error) return jsonRouteError(req, auth, "POST /api/admin/loyalty insert", error, "Gagal menambah tier loyalty", 500)
 
     await writeAdminAuditLog(auth, {
       action: "create",
@@ -106,7 +107,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ data })
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Gagal menambah tier loyalty", 400)
+    return jsonRouteError(req, auth, "POST /api/admin/loyalty", error, "Gagal menambah tier loyalty", 400)
   }
 }
 
@@ -144,7 +145,7 @@ export async function PATCH(req: NextRequest) {
       .select()
       .single()
 
-    if (error) return jsonError(error.message, 500)
+    if (error) return jsonRouteError(req, auth, "PATCH /api/admin/loyalty update", error, "Gagal update tier loyalty", 500)
 
     await writeAdminAuditLog(auth, {
       action: action === "toggle_status" ? "toggle" : "update",
@@ -157,6 +158,6 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ data })
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Gagal update tier loyalty", 400)
+    return jsonRouteError(req, auth, "PATCH /api/admin/loyalty", error, "Gagal update tier loyalty", 400)
   }
 }

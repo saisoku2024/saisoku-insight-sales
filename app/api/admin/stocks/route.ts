@@ -4,6 +4,7 @@ import {
   adminSupabase,
   enforceAdminRateLimit,
   jsonError,
+  jsonRouteError,
   ownerOnly,
   readLimitedNullableString,
   readLimitedString,
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { data, error } = await adminSupabase!.from("product_accounts").insert(rows).select()
-    if (error) return jsonError(error.message, 500)
+    if (error) return jsonRouteError(req, auth, "POST /api/admin/stocks insert", error, "Gagal menambah stock", 500)
 
     await writeAdminAuditLog(auth, {
       action: rows.length > 1 ? "bulk_create" : "create",
@@ -74,7 +75,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ data })
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Gagal menambah stock", 400)
+    return jsonRouteError(req, auth, "POST /api/admin/stocks", error, "Gagal menambah stock", 400)
   }
 }
 
@@ -107,7 +108,7 @@ export async function PATCH(req: NextRequest) {
       .select()
       .single()
 
-    if (error) return jsonError(error.message, 500)
+    if (error) return jsonRouteError(req, auth, "PATCH /api/admin/stocks update", error, "Gagal update stock", 500)
 
     await writeAdminAuditLog(auth, {
       action: "update",
@@ -120,7 +121,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({ data })
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Gagal update stock", 400)
+    return jsonRouteError(req, auth, "PATCH /api/admin/stocks", error, "Gagal update stock", 400)
   }
 }
 
@@ -140,7 +141,7 @@ export async function DELETE(req: NextRequest) {
     const { data: before } = await adminSupabase!.from("product_accounts").select("*").eq("id", id).maybeSingle()
 
     const { error } = await adminSupabase!.from("product_accounts").delete().eq("id", id)
-    if (error) return jsonError(error.message, 500)
+    if (error) return jsonRouteError(req, auth, "DELETE /api/admin/stocks delete", error, "Gagal delete stock", 500)
 
     await writeAdminAuditLog(auth, {
       action: "delete",
@@ -151,6 +152,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Gagal delete stock", 400)
+    return jsonRouteError(req, auth, "DELETE /api/admin/stocks", error, "Gagal delete stock", 400)
   }
 }

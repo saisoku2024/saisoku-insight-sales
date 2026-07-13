@@ -12,7 +12,7 @@ Status saat ini: internal central logs aktif dan external log drain opsional ter
 | `error_logs` | Error API/restore/backup dan laporan client | Supabase table + halaman Error Logs |
 | `api_rate_limits` | Counter rate limit admin API | Supabase table |
 | Browser console | Error UI client-side | Browser user/admin |
-| External drain | Mirror error log ke Logtail/Axiom/webhook kompatibel | Env `ERROR_LOG_DRAIN_URL` |
+| Better Stack/Logtail | Mirror error log ke Better Stack Telemetry HTTP ingest | Env `BETTER_STACK_INGESTING_HOST` + `BETTER_STACK_SOURCE_TOKEN` |
 
 ## Standar logging
 
@@ -32,19 +32,44 @@ Log yang tidak boleh disimpan:
 
 ## External drain
 
-Set env berikut di Vercel untuk mengirim mirror log ke provider eksternal seperti Logtail/Better Stack, Axiom, atau webhook internal:
+Set env berikut di Vercel untuk web panel dan Supabase Edge Function secrets untuk bot:
+
+```env
+BETTER_STACK_INGESTING_HOST=your-source-ingesting-host
+BETTER_STACK_SOURCE_TOKEN=your-source-token
+```
+
+`BETTER_STACK_INGESTING_HOST` bisa berupa host saja atau URL lengkap. Contoh:
+
+```env
+BETTER_STACK_INGESTING_HOST=s123456.eu-nbg-2.betterstackdata.com
+```
+
+Better Stack HTTP ingest menerima JSON event via `POST https://$INGESTING_HOST` dengan header `Authorization: Bearer $SOURCE_TOKEN`.
+
+Env lama tetap didukung sebagai alias:
 
 ```env
 ERROR_LOG_DRAIN_URL=https://example-log-ingest-url
 ERROR_LOG_DRAIN_TOKEN=optional-bearer-token
-```
-
-Alias env yang juga didukung:
-
-```env
 LOGTAIL_INGEST_URL=https://example-logtail-ingest-url
 LOGTAIL_SOURCE_TOKEN=optional-source-token
 ```
+
+## Coverage saat ini
+
+Jalur yang sudah masuk `error_logs` internal dan mirror Better Stack bila env aktif:
+
+- Web admin API: products, stocks, users, vouchers, loyalty, balance.
+- Backup dan restore: manual backup, cron backup, preview/append/safe replace restore.
+- Ticket bridge: reply, status, resolve, dan proxy file Telegram.
+- Client-reported errors via `/api/admin/error-logs`.
+- Bot Edge Function: webhook catch, Telegram send/edit/callback/document/photo failure.
+
+Jalur yang sengaja tidak dilog:
+
+- Validasi ringan yang return langsung seperti field kosong, ID kosong, unauthorized, forbidden.
+- Read-only query error yang masih return langsung di beberapa `GET` endpoint; ini bisa dinaikkan nanti jika log terlalu sedikit.
 
 ## Tahap berikut jika ingin Sentry penuh
 

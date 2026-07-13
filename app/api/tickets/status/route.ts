@@ -8,7 +8,7 @@ import {
   sendTelegramMessage,
   type TicketStatus,
 } from "../_lib"
-import { enforceAdminRateLimit, readLimitedString, writeAdminAuditLog } from "../../admin/_lib"
+import { enforceAdminRateLimit, jsonRouteError, readLimitedString, writeAdminAuditLog } from "../../admin/_lib"
 
 const allowedStatuses: TicketStatus[] = ["open", "on_progress", "assigned", "resolved"]
 
@@ -81,9 +81,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, data: { status: nextStatus } })
   } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Gagal update status ticket" },
-      { status: 500 }
-    )
+    return jsonRouteError(req, { adminEmail: auth.adminEmail }, "POST /api/tickets/status", error, "Gagal update status ticket", 500)
   }
 }

@@ -4,6 +4,7 @@ import {
   adminSupabase,
   enforceAdminRateLimit,
   jsonError,
+  jsonRouteError,
   readLimitedString,
   readNumber,
   readNumberRange,
@@ -223,6 +224,6 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Gagal mengubah balance", 400)
+    return jsonRouteError(req, auth, "POST /api/admin/balance", error, "Gagal mengubah balance", 400)
   }
 }
