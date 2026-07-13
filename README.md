@@ -55,6 +55,17 @@ Catatan audit 11 Juli 2026:
 - Folder root `New Web Panel` dipertahankan sebagai referensi/mockup HTML lama, bukan target runtime utama.
 - Sesuai migration security saat ini, akses frontend Supabase untuk role `authenticated` bersifat read-only. Fitur tulis admin berikutnya sebaiknya lewat server-side API/RPC yang tervalidasi.
 
+## Dokumen operasional
+
+- `docs/AVAILABILITY_RECOVERY.md`: health check, incident response, dan recovery.
+- `docs/BACKUP_RECOVERY.md`: strategi backup data.
+- `docs/RLS_PUBLIC_GRANT_REVIEW.md`: review RLS dan public write grant.
+- `docs/SECRETS_MANAGEMENT.md`: registry secret dan SOP rotasi.
+- `docs/ERROR_TRACKING.md`: standar log dan target central error tracking.
+- `docs/TESTING_LAYER.md`: baseline verify dan target integration/e2e.
+- `docs/RESTORE_TOOLING.md`: desain restore aman.
+- `docs/API_REFERENCE.md`: endpoint admin, ticket, backup, dan bot.
+
 Tahap berikut yang disarankan:
 
 1. Refactor halaman `products`, `stocks`, `transactions`, dan `users` ke komponen reusable supaya style benar-benar konsisten.
