@@ -95,6 +95,26 @@ Catatan audit 11 Juli 2026:
 - `docs/openapi-admin.json`: spesifikasi OpenAPI dasar.
 - `docs/DIRECT_WRITE_AUDIT.md`: audit frontend agar tidak write langsung ke Supabase.
 
+## Riwayat Update
+
+Tracking ringkas dari pengembangan awal sampai versi terbaru:
+
+| Tanggal | Commit | Update |
+| --- | --- | --- |
+| 11 Juli 2026 | `fb52ade` | Sidebar dashboard diselaraskan dengan susunan final mockup web panel. |
+| 11 Juli 2026 | `4595e31` | Page read-only Supabase mulai dihubungkan ke data asli: balance, pricing, loyalty, vouchers, dan log balance. |
+| 11 Juli 2026 | `ff8c667` | Dashboard dikunci menjadi admin-only melalui RPC/profile admin aktif. |
+| 11 Juli 2026 | `1a11ed7` | Pagination ditambahkan untuk dashboard read views agar tabel lebih nyaman dipakai. |
+| 11 Juli 2026 | `ac9762c` | Ticket status actions ditambahkan untuk flow operasional admin. |
+| 11 Juli 2026 | `78bb462` | Loyalty tier management diaktifkan lewat API admin server-side. |
+| 16 Juli 2026 | `de0f44e` | Struktur project dirapikan ke folder standar: `config`, `features`, `services`, `schemas`, `providers`, `store`, dan `styles`. |
+
+Catatan tracking:
+
+- File ini menjadi catatan utama progress web panel.
+- Setiap milestone besar berikutnya wajib menambahkan baris baru di bagian Riwayat Update.
+- Perubahan schema/RLS/RPC Supabase tetap dicatat di migration repo bot, lalu diringkas di README ini bila berdampak ke web panel.
+
 Tahap berikut yang disarankan:
 
 1. Pecah halaman `products`, `stocks`, `transactions`, dan `users` ke folder `features/*`.
