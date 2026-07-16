@@ -6,7 +6,7 @@ Dashboard admin untuk reporting penjualan, pengelolaan stock account, transaksi,
 
 - Login page dibuat lebih profesional dan siap dipakai untuk admin internal.
 - Layout dashboard dirapikan dengan sidebar responsif, topbar, grouping menu, dan auth guard.
-- Struktur kode dipisah ke komponen reusable (`components/auth`, `components/dashboard`, `components/brand`).
+- Struktur kode dipisah ke komponen reusable dan folder domain standar (`components`, `config`, `features`, `services`, `schemas`, `providers`, `store`, `styles`).
 - File backup / file sampah yang tidak terpakai dibersihkan.
 - Root route diarahkan ke login, lalu redirect otomatis ke dashboard jika sesi masih aktif.
 
@@ -14,16 +14,41 @@ Dashboard admin untuk reporting penjualan, pengelolaan stock account, transaksi,
 
 ```bash
 app/
+  api/
+  auth/
   dashboard/
   login/
 components/
   auth/
-  brand/
   dashboard/
-lib/
+  shared/
+  ui/
+config/
   navigation.ts
-  supabaseClient.ts
+features/
+hooks/
+lib/
+  supabase/
+providers/
+repositories/
+schemas/
+services/
+  admin/
+  auth/
+store/
+styles/
+types/
 ```
+
+Prinsip struktur:
+
+- `app/` hanya untuk route Next.js, layout, dan route handler API.
+- `components/` untuk UI reusable lintas fitur.
+- `features/` untuk logic/komponen domain ketika page mulai besar.
+- `config/` untuk konfigurasi statis seperti navigation/routes.
+- `services/` untuk client/server service dan helper API.
+- `schemas/` untuk validasi payload sebelum fitur write/action dibuka.
+- `styles/` untuk global CSS dan style asset bersama.
 
 ## Menjalankan project
 
@@ -54,6 +79,7 @@ Catatan audit 11 Juli 2026:
 - `saisoku-insight-sales` diarahkan sebagai source utama admin panel Next.js.
 - Folder root `New Web Panel` dipertahankan sebagai referensi/mockup HTML lama, bukan target runtime utama.
 - Sesuai migration security saat ini, akses frontend Supabase untuk role `authenticated` bersifat read-only. Fitur tulis admin berikutnya sebaiknya lewat server-side API/RPC yang tervalidasi.
+- Struktur folder admin panel sudah diarahkan ke feature-based architecture agar page besar bisa dipisah bertahap tanpa merusak route.
 
 ## Dokumen operasional
 
@@ -71,6 +97,6 @@ Catatan audit 11 Juli 2026:
 
 Tahap berikut yang disarankan:
 
-1. Refactor halaman `products`, `stocks`, `transactions`, dan `users` ke komponen reusable supaya style benar-benar konsisten.
-2. Tambahkan server-side route protection / middleware jika nanti ingin harden auth lebih jauh.
+1. Pecah halaman `products`, `stocks`, `transactions`, dan `users` ke folder `features/*`.
+2. Tambahkan schema validasi untuk payload write admin di `schemas/`.
 3. Rapikan type data Supabase agar penggunaan `any` bisa dikurangi.

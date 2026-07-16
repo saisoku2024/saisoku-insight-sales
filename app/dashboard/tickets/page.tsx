@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabase/client";
 
 type Ticket = {
   id: number;

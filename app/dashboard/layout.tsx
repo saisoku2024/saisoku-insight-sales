@@ -7,9 +7,9 @@ import { usePathname, useRouter } from "next/navigation"
 import { AuthLoadingScreen } from "@/components/auth/auth-loading-screen"
 import { HeaderBar } from "@/components/dashboard/header-bar"
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
-import { getActiveAdminProfile } from "@/lib/admin-auth"
-import { dashboardNavigation, getPageMeta } from "@/lib/navigation"
-import { supabase } from "@/lib/supabaseClient"
+import { getActiveAdminProfile } from "@/services/auth/admin-auth.service"
+import { dashboardNavigation, getPageMeta } from "@/config/navigation"
+import { supabase } from "@/lib/supabase/client"
 
 function formatCurrentDate() {
   return new Intl.DateTimeFormat("id-ID", {

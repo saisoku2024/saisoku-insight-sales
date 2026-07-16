@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from "react"
 
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice"
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
-import { adminWrite } from "@/lib/admin-api-client"
-import { supabase } from "@/lib/supabaseClient"
+import { adminWrite } from "@/services/admin/admin-api-client"
+import { supabase } from "@/lib/supabase/client"
 
 type UserBalance = {
   id: string

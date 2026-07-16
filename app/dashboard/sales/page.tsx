@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { PaginationControls } from "@/components/dashboard/pagination-controls";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabase/client";
 import type { SalesStats, RecentTransaction } from "@/types";
 
 export default function SalesPage() {

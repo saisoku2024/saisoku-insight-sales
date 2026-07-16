@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation"
 import { AuthLoadingScreen } from "@/components/auth/auth-loading-screen"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { AuthThemeToggle } from "@/components/auth/auth-theme-toggle"
-import { supabase } from "@/lib/supabaseClient"
+import { supabase } from "@/lib/supabase/client"
 
 const THEME_STORAGE_KEY = "saisoku-theme"
 

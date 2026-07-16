@@ -1,5 +1,5 @@
-import { supabase } from "@/lib/supabaseClient"
-import { adminWrite } from "@/lib/admin-api-client"
+import { supabase } from "@/lib/supabase/client"
+import { adminWrite } from "@/services/admin/admin-api-client"
 import { User } from "@/types/user"
 
 export async function getUsersRepository(

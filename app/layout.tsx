@@ -1,5 +1,7 @@
-import "./globals.css"
 import { VT323 } from "next/font/google"
+
+import { AppProviders } from "@/providers/app-providers"
+import "@/styles/globals.css"
 
 const vt323 = VT323({
   subsets: ["latin"],
@@ -13,7 +15,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={vt323.className}>{children}</body>
+      <body className={vt323.className}>
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   )
 }

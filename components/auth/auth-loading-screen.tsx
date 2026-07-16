@@ -1,6 +1,6 @@
 import { LoaderCircle } from "lucide-react"
 
-import { BrandMark } from "@/components/brand/brand-mark"
+import { BrandMark } from "@/components/shared/brand-mark"
 
 export function AuthLoadingScreen({
   title = "Menyiapkan dashboard",

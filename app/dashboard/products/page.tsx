@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
-import { supabase } from "@/lib/supabaseClient";
-import { adminWrite } from "@/lib/admin-api-client";
+import { supabase } from "@/lib/supabase/client";
+import { adminWrite } from "@/services/admin/admin-api-client";
 import type { Product } from "@/types";
 
 function currencyIDR(v: number) {

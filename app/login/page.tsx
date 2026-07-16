@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation"
 import { AuthLoadingScreen } from "@/components/auth/auth-loading-screen"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { AuthThemeToggle } from "@/components/auth/auth-theme-toggle"
-import { getActiveAdminProfile, getAdminAccessErrorMessage } from "@/lib/admin-auth"
-import { supabase } from "@/lib/supabaseClient"
+import { getActiveAdminProfile, getAdminAccessErrorMessage } from "@/services/auth/admin-auth.service"
+import { supabase } from "@/lib/supabase/client"
 
 const THEME_STORAGE_KEY = "saisoku-theme"
 const RESET_COOLDOWN_SECONDS = 60

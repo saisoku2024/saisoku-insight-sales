@@ -4,9 +4,10 @@ import { useMemo, useState } from "react"
 import Link from "next/link"
 import { ChevronDown, LogOut } from "lucide-react"
 
-import type { DashboardNavEntry, DashboardNavItem } from "@/lib/navigation"
+import { BrandMark } from "@/components/shared/brand-mark"
+import type { DashboardNavEntry, DashboardNavItem } from "@/config/navigation"
 import { cn } from "@/lib/utils"
-import { isActivePath } from "@/lib/navigation"
+import { isActivePath } from "@/config/navigation"
 
 type SidebarNavProps = {
   pathname: string

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { BarChart3, Boxes, ShieldCheck } from "lucide-react"
-import { BrandMark } from "@/components/brand/brand-mark"
+import { BrandMark } from "@/components/shared/brand-mark"
 
 type AuthFeature = {
   title: string
