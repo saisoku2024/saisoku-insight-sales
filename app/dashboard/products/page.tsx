@@ -257,6 +257,10 @@ export default function ProductsPage() {
     "border-[3px] border-[var(--insight-border)] bg-red-600 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
   const inputClass =
     "h-10 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none";
+  const labelClass =
+    "mb-1 block text-base leading-none tracking-wide text-[var(--insight-muted)]";
+  const textareaClass =
+    "h-24 w-full resize-none border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-xl text-[var(--insight-text)] outline-none";
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
@@ -424,27 +428,51 @@ export default function ProductsPage() {
             </h2>
 
             <div className="grid grid-cols-2 gap-3">
-              <input className={inputClass} placeholder="Product Code" value={code} onChange={(e) => setCode(e.target.value)} />
-              <input className={inputClass} placeholder="Product name" value={name} onChange={(e) => setName(e.target.value)} />
-              <input type="number" className={inputClass} placeholder="Price normal" value={price} onChange={(e) => setPrice(e.target.value)} />
-              <input type="number" className={inputClass} placeholder="Reseller discount" value={discount} onChange={(e) => setDiscount(e.target.value)} />
-              <input type="number" className={inputClass} placeholder="Modal / harga beli" value={modal} onChange={(e) => setModal(e.target.value)} />
-              <input type="number" className={inputClass} placeholder="Duration days" value={duration} onChange={(e) => setDuration(e.target.value)} />
+              <label>
+                <span className={labelClass}>Product Code</span>
+                <input className={inputClass} placeholder="Contoh: DS1B" value={code} onChange={(e) => setCode(e.target.value)} />
+              </label>
+              <label>
+                <span className={labelClass}>Product Name</span>
+                <input className={inputClass} placeholder="Contoh: Disney+ Premium" value={name} onChange={(e) => setName(e.target.value)} />
+              </label>
+              <label>
+                <span className={labelClass}>Price Normal</span>
+                <input type="number" className={inputClass} placeholder="Harga jual user" value={price} onChange={(e) => setPrice(e.target.value)} />
+              </label>
+              <label>
+                <span className={labelClass}>Reseller Discount</span>
+                <input type="number" className={inputClass} placeholder="Potongan reseller" value={discount} onChange={(e) => setDiscount(e.target.value)} />
+              </label>
+              <label>
+                <span className={labelClass}>Modal / Harga Beli</span>
+                <input type="number" className={inputClass} placeholder="Harga modal" value={modal} onChange={(e) => setModal(e.target.value)} />
+              </label>
+              <label>
+                <span className={labelClass}>Duration Days</span>
+                <input type="number" className={inputClass} placeholder="Masa aktif hari" value={duration} onChange={(e) => setDuration(e.target.value)} />
+              </label>
             </div>
 
-            <textarea
-              className="mt-3 h-24 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-xl text-[var(--insight-text)] outline-none resize-none"
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+            <label className="mt-3 block">
+              <span className={labelClass}>Description / Detail Produk</span>
+              <textarea
+                className={textareaClass}
+                placeholder="Tuliskan benefit, plan, device, garansi, dll."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </label>
 
-            <textarea
-              className="mt-3 h-24 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-xl text-[var(--insight-text)] outline-none resize-none"
-              placeholder="Terms of Service"
-              value={tos}
-              onChange={(e) => setTos(e.target.value)}
-            />
+            <label className="mt-3 block">
+              <span className={labelClass}>Terms / Catatan Pengiriman</span>
+              <textarea
+                className={textareaClass}
+                placeholder="S&K, info login, rules claim garansi, dan catatan untuk buyer."
+                value={tos}
+                onChange={(e) => setTos(e.target.value)}
+              />
+            </label>
 
             <div className="mt-5 flex justify-end gap-3">
               <button
@@ -473,27 +501,51 @@ export default function ProductsPage() {
             </h2>
 
             <div className="grid grid-cols-2 gap-3">
-              <input className={inputClass} value={code} onChange={(e) => setCode(e.target.value)} placeholder="Product Code" />
-              <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
-              <input type="number" className={inputClass} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Price" />
-              <input type="number" className={inputClass} value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="Discount" />
-              <input type="number" className={inputClass} value={modal} onChange={(e) => setModal(e.target.value)} placeholder="Modal / harga beli" />
-              <input type="number" className={inputClass} value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="Duration" />
+              <label>
+                <span className={labelClass}>Product Code</span>
+                <input className={inputClass} value={code} onChange={(e) => setCode(e.target.value)} placeholder="Contoh: DS1B" />
+              </label>
+              <label>
+                <span className={labelClass}>Product Name</span>
+                <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="Nama produk" />
+              </label>
+              <label>
+                <span className={labelClass}>Price Normal</span>
+                <input type="number" className={inputClass} value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Harga jual user" />
+              </label>
+              <label>
+                <span className={labelClass}>Reseller Discount</span>
+                <input type="number" className={inputClass} value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder="Potongan reseller" />
+              </label>
+              <label>
+                <span className={labelClass}>Modal / Harga Beli</span>
+                <input type="number" className={inputClass} value={modal} onChange={(e) => setModal(e.target.value)} placeholder="Harga modal" />
+              </label>
+              <label>
+                <span className={labelClass}>Duration Days</span>
+                <input type="number" className={inputClass} value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="Masa aktif hari" />
+              </label>
             </div>
 
-            <textarea
-              className="mt-3 h-24 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-xl text-[var(--insight-text)] outline-none resize-none"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description"
-            />
+            <label className="mt-3 block">
+              <span className={labelClass}>Description / Detail Produk</span>
+              <textarea
+                className={textareaClass}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Tuliskan benefit, plan, device, garansi, dll."
+              />
+            </label>
 
-            <textarea
-              className="mt-3 h-24 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-xl text-[var(--insight-text)] outline-none resize-none"
-              value={tos}
-              onChange={(e) => setTos(e.target.value)}
-              placeholder="Terms of Service"
-            />
+            <label className="mt-3 block">
+              <span className={labelClass}>Terms / Catatan Pengiriman</span>
+              <textarea
+                className={textareaClass}
+                value={tos}
+                onChange={(e) => setTos(e.target.value)}
+                placeholder="S&K, info login, rules claim garansi, dan catatan untuk buyer."
+              />
+            </label>
 
             <div className="mt-5 flex justify-end gap-3">
               <button
