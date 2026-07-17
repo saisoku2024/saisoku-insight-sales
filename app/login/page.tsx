@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { AuthLoadingScreen } from "@/components/auth/auth-loading-screen"
 import { AuthShell } from "@/components/auth/auth-shell"
 import { AuthThemeToggle } from "@/components/auth/auth-theme-toggle"
+import { recordPanelAccessEvent } from "@/services/admin/access-log-client"
 import { getActiveAdminProfile, getAdminAccessErrorMessage } from "@/services/auth/admin-auth.service"
 import { supabase } from "@/lib/supabase/client"
 
@@ -131,6 +132,11 @@ export default function LoginPage() {
         return
       }
 
+      void recordPanelAccessEvent({
+        eventType: "login_success",
+        path: "/login",
+        metadata: { role: profile.role },
+      })
       router.replace("/dashboard")
     } finally {
       setIsSubmitting(false)

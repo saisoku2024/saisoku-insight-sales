@@ -41,6 +41,7 @@ const fullTables = [
   "user_states",
   "users_profile",
   "debug_webhook_logs",
+  "admin_access_logs",
 ]
 
 const criticalTables = [

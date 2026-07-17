@@ -10,6 +10,7 @@ import {
   DollarSign,
   FileText,
   Gift,
+  Globe2,
   LayoutDashboard,
   Package,
   ShieldCheck,
@@ -137,6 +138,12 @@ export const dashboardNavigation: DashboardNavEntry[] = [
         href: "/dashboard/log-audit",
         icon: FileText,
         description: "Aktivitas admin dan perubahan sistem",
+      },
+      {
+        title: "Access Logs",
+        href: "/dashboard/access-logs",
+        icon: Globe2,
+        description: "Login, page view, IP, lokasi, dan browser",
       },
       {
         title: "Error Logs",

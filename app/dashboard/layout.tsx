@@ -8,6 +8,7 @@ import { AuthLoadingScreen } from "@/components/auth/auth-loading-screen"
 import { HeaderBar } from "@/components/dashboard/header-bar"
 import { PanelRoleProvider } from "@/components/dashboard/panel-access-context"
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
+import { recordPanelAccessEvent } from "@/services/admin/access-log-client"
 import { getActiveAdminProfile } from "@/services/auth/admin-auth.service"
 import { dashboardNavigation, getPageMeta } from "@/config/navigation"
 import { supabase } from "@/lib/supabase/client"
@@ -132,6 +133,16 @@ export default function DashboardLayout({
   useEffect(() => {
     setSidebarOpen(false)
   }, [pathname])
+
+  useEffect(() => {
+    if (!isReady || !userRole) return
+
+    void recordPanelAccessEvent({
+      eventType: "page_view",
+      path: pathname,
+      metadata: { role: userRole },
+    })
+  }, [isReady, pathname, userRole])
 
   async function handleLogout() {
     try {
