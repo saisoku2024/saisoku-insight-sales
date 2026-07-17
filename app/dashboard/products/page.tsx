@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
+import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context";
 import { supabase } from "@/lib/supabase/client";
 import { adminWrite } from "@/services/admin/admin-api-client";
 import type { Product } from "@/types";
@@ -11,6 +12,7 @@ function currencyIDR(v: number) {
 }
 
 export default function ProductsPage() {
+  const isViewer = useIsViewer();
   const [products, setProducts] = useState<Product[]>([]);
   const [stocks, setStocks] = useState<Record<string, number>>({});
   const [selected, setSelected] = useState<string[]>([]);
@@ -255,6 +257,7 @@ export default function ProductsPage() {
     "border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
   const btnDanger =
     "border-[3px] border-[var(--insight-border)] bg-red-600 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
+  const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0";
   const inputClass =
     "h-10 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none";
   const labelClass =
@@ -283,15 +286,23 @@ export default function ProductsPage() {
       <div className="flex flex-wrap gap-3">
         <button
           onClick={() => {
+            if (isViewer) return;
             resetForm();
             setShowAddModal(true);
           }}
-          className={btnPrimary}
+          disabled={isViewer}
+          title={isViewer ? viewerOnlyTitle : undefined}
+          className={btnPrimary + viewerDisabledClass}
         >
           + Add Product
         </button>
 
-        <button onClick={() => void deleteSelected()} className={btnDanger}>
+        <button
+          onClick={() => void deleteSelected()}
+          disabled={isViewer}
+          title={isViewer ? viewerOnlyTitle : undefined}
+          className={btnDanger + viewerDisabledClass}
+        >
           Delete Selected
         </button>
       </div>
@@ -361,9 +372,11 @@ export default function ProductsPage() {
                     <td className="p-3">
                       <button
                         onClick={() => void toggleProduct(p.id, p.is_active)}
+                        disabled={isViewer}
+                        title={isViewer ? viewerOnlyTitle : undefined}
                         className={`border-[3px] border-[var(--insight-border)] px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] ${
                           p.is_active ? "bg-green-600" : "bg-gray-500"
-                        }`}
+                        }${viewerDisabledClass}`}
                       >
                         {p.is_active ? "Active" : "Inactive"}
                       </button>
@@ -371,14 +384,21 @@ export default function ProductsPage() {
                     <td className="p-3">
                       <div className="flex gap-2">
                         <button
-                          onClick={() => startEdit(p)}
-                          className="border-[3px] border-[var(--insight-border)] bg-amber-400 px-3 py-1 text-lg leading-none text-black shadow-[4px_4px_0_var(--insight-shadow)]"
+                          onClick={() => {
+                            if (isViewer) return;
+                            startEdit(p);
+                          }}
+                          disabled={isViewer}
+                          title={isViewer ? viewerOnlyTitle : undefined}
+                          className={"border-[3px] border-[var(--insight-border)] bg-amber-400 px-3 py-1 text-lg leading-none text-black shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => void deleteProduct(p.id)}
-                          className="border-[3px] border-[var(--insight-border)] bg-red-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+                          disabled={isViewer}
+                          title={isViewer ? viewerOnlyTitle : undefined}
+                          className={"border-[3px] border-[var(--insight-border)] bg-red-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
                         >
                           Del
                         </button>
@@ -483,7 +503,9 @@ export default function ProductsPage() {
               </button>
               <button
                 onClick={async () => { const ok = await addProduct(); if (ok) setShowAddModal(false); }}
-                className="border-[3px] border-[var(--insight-border)] bg-green-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+                disabled={isViewer}
+                title={isViewer ? viewerOnlyTitle : undefined}
+                className={"border-[3px] border-[var(--insight-border)] bg-green-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
               >
                 Create Product
               </button>
@@ -556,7 +578,9 @@ export default function ProductsPage() {
               </button>
               <button
                 onClick={() => void updateProduct()}
-                className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+                disabled={isViewer}
+                title={isViewer ? viewerOnlyTitle : undefined}
+                className={"border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
               >
                 Update Product
               </button>

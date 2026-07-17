@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice"
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
+import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context"
 import { adminWrite } from "@/services/admin/admin-api-client"
 import { supabase } from "@/lib/supabase/client"
 
@@ -55,6 +56,7 @@ function actionLabel(action: BalanceAction) {
 }
 
 export default function BalancePage() {
+  const isViewer = useIsViewer()
   const pageSize = 10
   const [users, setUsers] = useState<UserBalance[]>([])
   const [logs, setLogs] = useState<BalanceLog[]>([])
@@ -76,6 +78,7 @@ export default function BalancePage() {
   const showError = (message: string) => setNotice({ type: "error", message })
   const showSuccess = (message: string) => setNotice({ type: "success", message })
   const getErrorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unknown error")
+  const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50"
 
   const loadBalanceData = useCallback(async () => {
     setLoading(true)
@@ -277,8 +280,9 @@ export default function BalancePage() {
           <button
             type="button"
             onClick={() => void submitBalanceAction()}
-            disabled={saving}
-            className="h-11 border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40"
+            disabled={saving || isViewer}
+            title={isViewer ? viewerOnlyTitle : undefined}
+            className={"h-11 border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40" + viewerDisabledClass}
           >
             {saving ? "Saving..." : actionLabel(action)}
           </button>
@@ -327,22 +331,37 @@ export default function BalancePage() {
                     <div className="flex justify-end gap-2">
                       <button
                         type="button"
-                        onClick={() => chooseUser(user, "add")}
-                        className="border-[3px] border-[var(--insight-border)] bg-emerald-700 px-3 py-1.5 text-lg leading-none text-white"
+                        onClick={() => {
+                          if (isViewer) return
+                          chooseUser(user, "add")
+                        }}
+                        disabled={isViewer}
+                        title={isViewer ? viewerOnlyTitle : undefined}
+                        className={"border-[3px] border-[var(--insight-border)] bg-emerald-700 px-3 py-1.5 text-lg leading-none text-white" + viewerDisabledClass}
                       >
                         Add
                       </button>
                       <button
                         type="button"
-                        onClick={() => chooseUser(user, "deduct")}
-                        className="border-[3px] border-[var(--insight-border)] bg-amber-600 px-3 py-1.5 text-lg leading-none text-white"
+                        onClick={() => {
+                          if (isViewer) return
+                          chooseUser(user, "deduct")
+                        }}
+                        disabled={isViewer}
+                        title={isViewer ? viewerOnlyTitle : undefined}
+                        className={"border-[3px] border-[var(--insight-border)] bg-amber-600 px-3 py-1.5 text-lg leading-none text-white" + viewerDisabledClass}
                       >
                         Deduct
                       </button>
                       <button
                         type="button"
-                        onClick={() => chooseUser(user, "reset")}
-                        className="border-[3px] border-[var(--insight-border)] bg-slate-700 px-3 py-1.5 text-lg leading-none text-white"
+                        onClick={() => {
+                          if (isViewer) return
+                          chooseUser(user, "reset")
+                        }}
+                        disabled={isViewer}
+                        title={isViewer ? viewerOnlyTitle : undefined}
+                        className={"border-[3px] border-[var(--insight-border)] bg-slate-700 px-3 py-1.5 text-lg leading-none text-white" + viewerDisabledClass}
                       >
                         Reset
                       </button>

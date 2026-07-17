@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
+import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context"
 import { supabase } from "@/lib/supabase/client"
 
 type ErrorLog = {
@@ -52,6 +53,7 @@ function shortText(value: string | null | undefined, max = 48) {
 }
 
 export default function ErrorLogsPage() {
+  const isViewer = useIsViewer()
   const pageSize = 10
   const [logs, setLogs] = useState<ErrorLog[]>([])
   const [page, setPage] = useState(1)
@@ -101,6 +103,7 @@ export default function ErrorLogsPage() {
   }, [loadLogs])
 
   async function testBetterStackDrain() {
+    if (isViewer) return
     setTestingDrain(true)
     setError(null)
     setDrainTest(null)
@@ -151,7 +154,8 @@ export default function ErrorLogsPage() {
           <button
             type="button"
             onClick={testBetterStackDrain}
-            disabled={testingDrain}
+            disabled={isViewer || testingDrain}
+            title={isViewer ? viewerOnlyTitle : undefined}
             className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-bg)] px-3 py-2 text-lg shadow-[4px_4px_0_var(--insight-shadow)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {testingDrain ? "Testing..." : "Test Better Stack"}

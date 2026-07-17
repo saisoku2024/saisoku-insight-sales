@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice"
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
+import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context"
 import { adminWrite } from "@/services/admin/admin-api-client"
 import { supabase } from "@/lib/supabase/client"
 
@@ -66,6 +67,7 @@ function roleLabel(role?: string | null) {
 }
 
 export default function VouchersPage() {
+  const isViewer = useIsViewer()
   const pageSize = 10
   const [vouchers, setVouchers] = useState<Voucher[]>([])
   const [form, setForm] = useState<VoucherForm>(emptyForm)
@@ -82,6 +84,7 @@ export default function VouchersPage() {
   const showError = (message: string) => setNotice({ type: "error", message })
   const showSuccess = (message: string) => setNotice({ type: "success", message })
   const getErrorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unknown error")
+  const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50"
 
   const loadVouchers = useCallback(async () => {
     setLoading(true)
@@ -344,8 +347,9 @@ export default function VouchersPage() {
             <button
               type="button"
               onClick={() => void saveVoucher()}
-              disabled={saving}
-              className="w-full border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40"
+              disabled={saving || isViewer}
+              title={isViewer ? viewerOnlyTitle : undefined}
+              className={"w-full border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40" + viewerDisabledClass}
             >
               {saving ? "Saving..." : editingVoucher ? "Update Voucher" : "Add Voucher"}
             </button>
@@ -401,24 +405,33 @@ export default function VouchersPage() {
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
-                          onClick={() => startEdit(voucher)}
-                          className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3 py-1.5 text-lg leading-none"
+                          onClick={() => {
+                            if (isViewer) return
+                            startEdit(voucher)
+                          }}
+                          disabled={isViewer}
+                          title={isViewer ? viewerOnlyTitle : undefined}
+                          className={"border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3 py-1.5 text-lg leading-none" + viewerDisabledClass}
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => void toggleVoucher(voucher)}
+                          disabled={isViewer}
+                          title={isViewer ? viewerOnlyTitle : undefined}
                           className={`border-[3px] border-[var(--insight-border)] px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] ${
                             voucher.is_active ? "bg-slate-700 hover:bg-slate-600" : "bg-emerald-700 hover:bg-emerald-600"
-                          }`}
+                          }${viewerDisabledClass}`}
                         >
                           {voucher.is_active ? "Off" : "On"}
                         </button>
                         <button
                           type="button"
                           onClick={() => void deleteVoucher(voucher)}
-                          className="border-[3px] border-[var(--insight-border)] bg-red-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-red-600"
+                          disabled={isViewer}
+                          title={isViewer ? viewerOnlyTitle : undefined}
+                          className={"border-[3px] border-[var(--insight-border)] bg-red-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-red-600" + viewerDisabledClass}
                         >
                           Del
                         </button>

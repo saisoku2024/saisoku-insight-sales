@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice"
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
+import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context"
 import { adminWrite } from "@/services/admin/admin-api-client"
 import { supabase } from "@/lib/supabase/client"
 
@@ -84,6 +85,7 @@ const healthChecks = [
 ]
 
 export default function BackupSettingsPage() {
+  const isViewer = useIsViewer()
   const pageSize = 10
   const [runs, setRuns] = useState<BackupRun[]>([])
   const [page, setPage] = useState(1)
@@ -102,6 +104,7 @@ export default function BackupSettingsPage() {
   const showError = (message: string) => setNotice({ type: "error", message })
   const showSuccess = (message: string) => setNotice({ type: "success", message })
   const getErrorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unknown error")
+  const viewerDisabledClass = isViewer ? " cursor-not-allowed opacity-50 grayscale" : ""
 
   const loadRuns = useCallback(async () => {
     setLoading(true)
@@ -144,7 +147,7 @@ export default function BackupSettingsPage() {
   }, [loadRuns])
 
   async function runManualBackup(mode: BackupMode) {
-    if (runningMode) return
+    if (isViewer || runningMode) return
 
     setRunningMode(mode)
 
@@ -164,6 +167,7 @@ export default function BackupSettingsPage() {
   }
 
   async function previewRestore(runId: string) {
+    if (isViewer) return
     setPreviewingRunId(runId)
     setRestorePreview(null)
     setRestoreTables("")
@@ -186,7 +190,7 @@ export default function BackupSettingsPage() {
   }
 
   async function runRestore() {
-    if (!restorePreview || restoring) return
+    if (isViewer || !restorePreview || restoring) return
 
     setRestoring(true)
 
@@ -244,8 +248,9 @@ export default function BackupSettingsPage() {
           <button
             type="button"
             onClick={() => void runManualBackup("critical")}
-            disabled={Boolean(runningMode)}
-            className="mt-3 border-[3px] border-[var(--insight-border)] bg-blue-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-blue-600 disabled:opacity-40"
+            disabled={isViewer || Boolean(runningMode)}
+            title={isViewer ? viewerOnlyTitle : undefined}
+            className={`mt-3 border-[3px] border-[var(--insight-border)] bg-blue-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-40${viewerDisabledClass}`}
           >
             {runningMode === "critical" ? "Running..." : "Run Critical"}
           </button>
@@ -259,8 +264,9 @@ export default function BackupSettingsPage() {
           <button
             type="button"
             onClick={() => void runManualBackup("full")}
-            disabled={Boolean(runningMode)}
-            className="mt-3 border-[3px] border-[var(--insight-border)] bg-violet-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40"
+            disabled={isViewer || Boolean(runningMode)}
+            title={isViewer ? viewerOnlyTitle : undefined}
+            className={`mt-3 border-[3px] border-[var(--insight-border)] bg-violet-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-40${viewerDisabledClass}`}
           >
             {runningMode === "full" ? "Running..." : "Run Full"}
           </button>
@@ -382,6 +388,8 @@ export default function BackupSettingsPage() {
                 Mode
                 <select
                   value={restoreMode}
+                  disabled={isViewer}
+                  title={isViewer ? viewerOnlyTitle : undefined}
                   onChange={(event) => {
                     const mode = event.target.value === "replace" ? "replace" : "append"
                     setRestoreMode(mode)
@@ -396,7 +404,7 @@ export default function BackupSettingsPage() {
                       setRestoreTables(restorePreview.tables.map((table) => table.table).join(", "))
                     }
                   }}
-                  className="mt-1 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1.5 outline-none"
+                  className={`mt-1 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1.5 outline-none disabled:cursor-not-allowed disabled:opacity-60${viewerDisabledClass}`}
                 >
                   <option value="append">Append / Upsert</option>
                   <option value="replace">Safe Replace</option>
@@ -408,7 +416,9 @@ export default function BackupSettingsPage() {
                 <textarea
                   value={restoreTables}
                   onChange={(event) => setRestoreTables(event.target.value)}
-                  className="mt-1 h-24 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] p-2 text-base outline-none"
+                  disabled={isViewer}
+                  title={isViewer ? viewerOnlyTitle : undefined}
+                  className={`mt-1 h-24 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] p-2 text-base outline-none disabled:cursor-not-allowed disabled:opacity-60${viewerDisabledClass}`}
                 />
               </label>
               <label className="mt-3 block text-lg">
@@ -417,7 +427,9 @@ export default function BackupSettingsPage() {
                   value={restoreConfirmation}
                   onChange={(event) => setRestoreConfirmation(event.target.value)}
                   placeholder={restoreMode === "replace" ? restorePreview.replaceConfirmationPhrase : restorePreview.confirmationPhrase}
-                  className="mt-1 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1.5 outline-none"
+                  disabled={isViewer}
+                  title={isViewer ? viewerOnlyTitle : undefined}
+                  className={`mt-1 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1.5 outline-none disabled:cursor-not-allowed disabled:opacity-60${viewerDisabledClass}`}
                 />
               </label>
               <button
@@ -425,9 +437,11 @@ export default function BackupSettingsPage() {
                 onClick={() => void runRestore()}
                 disabled={
                   restoring ||
+                  isViewer ||
                   restoreConfirmation !== (restoreMode === "replace" ? restorePreview.replaceConfirmationPhrase : restorePreview.confirmationPhrase)
                 }
-                className="mt-3 border-[3px] border-[var(--insight-border)] bg-red-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                title={isViewer ? viewerOnlyTitle : undefined}
+                className={`mt-3 border-[3px] border-[var(--insight-border)] bg-red-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-40${viewerDisabledClass}`}
               >
                 {restoring ? "Restoring..." : restoreMode === "replace" ? "Run Safe Replace" : "Run Append Restore"}
               </button>
@@ -487,8 +501,9 @@ export default function BackupSettingsPage() {
                     <button
                       type="button"
                       onClick={() => void previewRestore(run.id)}
-                      disabled={run.status !== "success" || previewingRunId === run.id}
-                      className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1 text-base leading-none shadow-[2px_2px_0_var(--insight-shadow)] disabled:cursor-not-allowed disabled:opacity-40"
+                      disabled={isViewer || run.status !== "success" || previewingRunId === run.id}
+                      title={isViewer ? viewerOnlyTitle : undefined}
+                      className={`border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1 text-base leading-none shadow-[2px_2px_0_var(--insight-shadow)] disabled:cursor-not-allowed disabled:opacity-40${viewerDisabledClass}`}
                     >
                       {previewingRunId === run.id ? "Loading..." : "Preview"}
                     </button>

@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
+import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context";
 import { supabase } from "@/lib/supabase/client";
 import { adminWrite } from "@/services/admin/admin-api-client";
 import type { User } from "@/types";
 
 export default function UsersPage() {
+  const isViewer = useIsViewer();
   const [users, setUsers] = useState<User[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -18,6 +20,7 @@ export default function UsersPage() {
   const showError = (message: string) => setNotice({ type: "error", message });
   const showSuccess = (message: string) => setNotice({ type: "success", message });
   const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
+  const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50";
 
   const loadUsers = useCallback(async () => {
     const { data, error } = await supabase
@@ -177,8 +180,13 @@ export default function UsersPage() {
                   </td>
                   <td className="p-3">
                     <button
-                      onClick={() => setEditUser(u)}
-                      className="insight-button px-3 py-1 text-lg leading-none"
+                      onClick={() => {
+                        if (isViewer) return;
+                        setEditUser(u);
+                      }}
+                      disabled={isViewer}
+                      title={isViewer ? viewerOnlyTitle : undefined}
+                      className={"insight-button px-3 py-1 text-lg leading-none" + viewerDisabledClass}
                     >
                       Edit
                     </button>
@@ -186,7 +194,9 @@ export default function UsersPage() {
                   <td className="p-3">
                     <button
                       onClick={() => void deleteUser(u.id)}
-                      className="border-[3px] border-[var(--insight-border)] bg-red-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+                      disabled={isViewer}
+                      title={isViewer ? viewerOnlyTitle : undefined}
+                      className={"border-[3px] border-[var(--insight-border)] bg-red-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
                     >
                       Delete
                     </button>
@@ -259,9 +269,11 @@ export default function UsersPage() {
             <div className="mt-6 flex justify-between gap-3">
               <button
                 onClick={() => void toggleUserStatus(selectedUser)}
+                disabled={isViewer}
+                title={isViewer ? viewerOnlyTitle : undefined}
                 className={`border-[3px] border-[var(--insight-border)] px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] ${
                   selectedUser.is_active ? "bg-yellow-500" : "bg-green-600"
-                }`}
+                }${viewerDisabledClass}`}
               >
                 {selectedUser.is_active ? "Suspend User" : "Activate User"}
               </button>
@@ -324,7 +336,9 @@ export default function UsersPage() {
 
               <button
                 onClick={() => void updateUser()}
-                className="border-[3px] border-[var(--insight-border)] bg-green-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+                disabled={isViewer}
+                title={isViewer ? viewerOnlyTitle : undefined}
+                className={"border-[3px] border-[var(--insight-border)] bg-green-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
               >
                 Save
               </button>

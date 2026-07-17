@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 
 import { AuthLoadingScreen } from "@/components/auth/auth-loading-screen"
 import { HeaderBar } from "@/components/dashboard/header-bar"
+import { PanelRoleProvider } from "@/components/dashboard/panel-access-context"
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
 import { getActiveAdminProfile } from "@/services/auth/admin-auth.service"
 import { dashboardNavigation, getPageMeta } from "@/config/navigation"
@@ -152,13 +153,14 @@ export default function DashboardLayout({
   }
 
   return (
-    <div
-      className="
-        min-h-screen
-        text-[var(--insight-text)]
-        transition-colors duration-300
-      "
-    >
+    <PanelRoleProvider role={userRole || "viewer"}>
+      <div
+        className="
+          min-h-screen
+          text-[var(--insight-text)]
+          transition-colors duration-300
+        "
+      >
       <HeaderBar
         title={pageMeta.title}
         description={pageMeta.description}
@@ -228,6 +230,7 @@ export default function DashboardLayout({
           </main>
         </div>
       </div>
-    </div>
+      </div>
+    </PanelRoleProvider>
   )
 }

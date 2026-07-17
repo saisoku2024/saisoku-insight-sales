@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice"
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
+import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context"
 import { adminWrite } from "@/services/admin/admin-api-client"
 import { supabase } from "@/lib/supabase/client"
 
@@ -50,6 +51,7 @@ function rupiah(value: number) {
 }
 
 export default function LoyaltyPage() {
+  const isViewer = useIsViewer()
   const pageSize = 10
   const [tiers, setTiers] = useState<LoyaltyTier[]>([])
   const [form, setForm] = useState<LoyaltyFormState>(emptyForm)
@@ -65,6 +67,7 @@ export default function LoyaltyPage() {
   const showError = (message: string) => setNotice({ type: "error", message })
   const showSuccess = (message: string) => setNotice({ type: "success", message })
   const getErrorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unknown error")
+  const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50"
 
   const loadTiers = useCallback(async () => {
     setLoading(true)
@@ -306,8 +309,9 @@ export default function LoyaltyPage() {
             <button
               type="button"
               onClick={() => void saveTier()}
-              disabled={saving}
-              className="w-full border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40"
+              disabled={saving || isViewer}
+              title={isViewer ? viewerOnlyTitle : undefined}
+              className={"w-full border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40" + viewerDisabledClass}
             >
               {saving ? "Saving..." : editingTier ? "Update Tier" : "Add Tier"}
             </button>
@@ -357,17 +361,24 @@ export default function LoyaltyPage() {
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
-                          onClick={() => startEdit(tier)}
-                          className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3 py-1.5 text-lg leading-none"
+                          onClick={() => {
+                            if (isViewer) return
+                            startEdit(tier)
+                          }}
+                          disabled={isViewer}
+                          title={isViewer ? viewerOnlyTitle : undefined}
+                          className={"border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3 py-1.5 text-lg leading-none" + viewerDisabledClass}
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => void toggleTier(tier)}
+                          disabled={isViewer}
+                          title={isViewer ? viewerOnlyTitle : undefined}
                           className={`border-[3px] border-[var(--insight-border)] px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] ${
                             tier.is_active ? "bg-slate-700 hover:bg-slate-600" : "bg-emerald-700 hover:bg-emerald-600"
-                          }`}
+                          }${viewerDisabledClass}`}
                         >
                           {tier.is_active ? "Off" : "On"}
                         </button>

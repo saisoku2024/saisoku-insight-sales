@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
+import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context";
 import { supabase } from "@/lib/supabase/client";
 
 type Ticket = {
@@ -27,6 +28,7 @@ type Reply = {
 };
 
 export default function TicketsPage() {
+  const isViewer = useIsViewer();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [replies, setReplies] = useState<Reply[]>([]);
@@ -45,6 +47,7 @@ export default function TicketsPage() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const pageSize = 10;
+  const viewerDisabledClass = isViewer ? " cursor-not-allowed opacity-50 grayscale" : "";
   const showError = (message: string) => setNotice({ type: "error", message });
   const showSuccess = (message: string) => setNotice({ type: "success", message });
   const statusLabels: Record<TicketStatus, string> = {
@@ -136,7 +139,7 @@ export default function TicketsPage() {
   }
 
   async function sendReply() {
-    if (!selectedTicket || !newReply.trim() || sending) return;
+    if (isViewer || !selectedTicket || !newReply.trim() || sending) return;
 
     setSending(true);
     const replyText = newReply.trim();
@@ -163,7 +166,7 @@ export default function TicketsPage() {
   }
 
   async function updateTicketStatus(status: TicketStatus) {
-    if (!selectedTicket) return;
+    if (isViewer || !selectedTicket) return;
 
     setUpdatingStatus(true);
     try {
@@ -354,8 +357,9 @@ export default function TicketsPage() {
                   <select
                     value={nextStatus}
                     onChange={(e) => setNextStatus(e.target.value as TicketStatus)}
-                    disabled={updatingStatus}
-                    className="h-10 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 text-lg text-[var(--insight-text)] outline-none"
+                    disabled={updatingStatus || isViewer}
+                    title={isViewer ? viewerOnlyTitle : undefined}
+                    className={`h-10 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 text-lg text-[var(--insight-text)] outline-none disabled:cursor-not-allowed disabled:opacity-60${viewerDisabledClass}`}
                   >
                     <option value="on_progress">On Progress</option>
                     <option value="assigned">Assigned</option>
@@ -363,8 +367,9 @@ export default function TicketsPage() {
                   </select>
                   <button
                     onClick={() => void updateTicketStatus(nextStatus)}
-                    disabled={updatingStatus || nextStatus === selectedTicket.status}
-                    className="border-[3px] border-[var(--insight-border)] bg-emerald-600 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-emerald-500 disabled:opacity-40 disabled:pointer-events-none"
+                    disabled={isViewer || updatingStatus || nextStatus === selectedTicket.status}
+                    title={isViewer ? viewerOnlyTitle : undefined}
+                    className={`border-[3px] border-[var(--insight-border)] bg-emerald-600 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none${viewerDisabledClass}`}
                   >
                     {updatingStatus ? "Updating..." : "Update Status"}
                   </button>
@@ -458,19 +463,21 @@ export default function TicketsPage() {
                     value={newReply}
                     onChange={(e) => setNewReply(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
+                      if (!isViewer && e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         void sendReply();
                       }
                     }}
                     placeholder="Tulis balasan Anda ke pembeli..."
-                    disabled={sending}
-                    className="flex-1 h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg text-[var(--insight-text)] outline-none"
+                    disabled={isViewer || sending}
+                    title={isViewer ? viewerOnlyTitle : undefined}
+                    className={`flex-1 h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg text-[var(--insight-text)] outline-none disabled:cursor-not-allowed disabled:opacity-60${viewerDisabledClass}`}
                   />
                   <button
                     onClick={() => void sendReply()}
-                    disabled={sending || !newReply.trim()}
-                    className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-5 py-2 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-blue-500 disabled:opacity-40 disabled:pointer-events-none"
+                    disabled={isViewer || sending || !newReply.trim()}
+                    title={isViewer ? viewerOnlyTitle : undefined}
+                    className={`border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-5 py-2 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none${viewerDisabledClass}`}
                   >
                     {sending ? "Sending..." : "Kirim"}
                   </button>

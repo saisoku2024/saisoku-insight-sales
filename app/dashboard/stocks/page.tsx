@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
+import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context";
 import { supabase } from "@/lib/supabase/client";
 import { adminWrite } from "@/services/admin/admin-api-client";
 import type { Product, Stock } from "@/types";
@@ -52,6 +53,7 @@ function getProductName(products: Stock["products"]) {
 }
 
 export default function StocksPage() {
+  const isViewer = useIsViewer();
   const [products, setProducts] = useState<Product[]>([]);
   const [stocks, setStocks] = useState<Stock[]>([]);
 
@@ -82,6 +84,7 @@ export default function StocksPage() {
   const showError = (message: string) => setNotice({ type: "error", message });
   const showSuccess = (message: string) => setNotice({ type: "success", message });
   const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
+  const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50";
 
   async function fetchProducts() {
     const { data } = await supabase
@@ -343,27 +346,36 @@ export default function StocksPage() {
         </select>
 
         <button
-          onClick={() => setShowAddModal(true)}
-          className="border-[3px] border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+          onClick={() => {
+            if (isViewer) return;
+            setShowAddModal(true);
+          }}
+          disabled={isViewer}
+          title={isViewer ? viewerOnlyTitle : undefined}
+          className={"border-[3px] border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
         >
           + Add Stock
         </button>
 
-        <label className="inline-flex h-11 cursor-pointer items-center border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-4 text-xl text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)]">
+        <label
+          className={`inline-flex h-11 items-center border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-4 text-xl text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] ${isViewer ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+          title={isViewer ? viewerOnlyTitle : undefined}
+        >
           Pilih CSV
           <input
             type="file"
             accept=".csv"
+            disabled={isViewer}
             className="hidden"
             onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
           />
         </label>
 
         <button
-          disabled={!filterProduct || !csvFile || uploading}
+          disabled={isViewer || !filterProduct || !csvFile || uploading}
           onClick={() => void bulkUploadCsv()}
-          className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] disabled:opacity-40"
-          title={!filterProduct ? "Pilih produk dulu" : ""}
+          className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] disabled:cursor-not-allowed disabled:opacity-40"
+          title={isViewer ? viewerOnlyTitle : !filterProduct ? "Pilih produk dulu" : ""}
         >
           {uploading ? `Uploading ${uploadProgress}%` : "Bulk Upload"}
         </button>
@@ -419,14 +431,21 @@ export default function StocksPage() {
                   <td className="p-4">
                     <div className="flex gap-2">
                       <button
-                        onClick={() => setEditStockData(s)}
-                        className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+                        onClick={() => {
+                          if (isViewer) return;
+                          setEditStockData(s);
+                        }}
+                        disabled={isViewer}
+                        title={isViewer ? viewerOnlyTitle : undefined}
+                        className={"border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => void deleteStock(s.id)}
-                        className="border-[3px] border-[var(--insight-border)] bg-red-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+                        disabled={isViewer}
+                        title={isViewer ? viewerOnlyTitle : undefined}
+                        className={"border-[3px] border-[var(--insight-border)] bg-red-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
                       >
                         Delete
                       </button>
@@ -529,7 +548,9 @@ export default function StocksPage() {
               </button>
               <button
                 onClick={() => void addStock()}
-                className="border-[3px] border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+                disabled={isViewer}
+                title={isViewer ? viewerOnlyTitle : undefined}
+                className={"border-[3px] border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
               >
                 Save Stock
               </button>
@@ -571,7 +592,9 @@ export default function StocksPage() {
               </button>
               <button
                 onClick={() => void updateStock()}
-                className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+                disabled={isViewer}
+                title={isViewer ? viewerOnlyTitle : undefined}
+                className={"border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
               >
                 Update Stock
               </button>

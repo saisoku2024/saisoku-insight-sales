@@ -9,6 +9,7 @@ import {
   readNumber,
   readString,
   requireActiveAdmin,
+  requirePanelAccess,
   writeAdminAuditLog,
   writeRouteErrorLog,
 } from "../_lib"
@@ -245,9 +246,8 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const auth = await requireActiveAdmin(req)
+  const auth = await requirePanelAccess(req)
   if (!auth.ok) return auth.response
-  if (auth.role !== "owner") return jsonError("Hanya owner yang dapat melihat backup.", 403)
 
   const page = Math.max(1, readNumber(req.nextUrl.searchParams.get("page"), 1))
   const pageSize = Math.min(50, Math.max(1, readNumber(req.nextUrl.searchParams.get("pageSize"), 10)))
