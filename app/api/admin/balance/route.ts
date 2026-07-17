@@ -10,6 +10,7 @@ import {
   readNumberRange,
   readString,
   requireActiveAdmin,
+  requirePanelAccess,
   writeAdminAuditLog,
 } from "../_lib"
 
@@ -106,7 +107,7 @@ async function attachNoteToLatestLog(userId: string, note: string) {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await requireActiveAdmin(req)
+  const auth = await requirePanelAccess(req)
   if (!auth.ok) return auth.response
 
   const usersPage = Math.max(1, readNumber(req.nextUrl.searchParams.get("usersPage"), 1))

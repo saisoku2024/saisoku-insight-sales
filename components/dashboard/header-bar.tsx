@@ -32,7 +32,7 @@ export function HeaderBar({
   isDark,
   onToggleTheme,
 }: HeaderBarProps) {
-  const roleLabel = userRole === "owner" ? "Owner" : "Admin"
+  const roleLabel = userRole === "owner" ? "Owner" : userRole === "viewer" ? "Viewer" : "Admin"
 
   return (
     <header

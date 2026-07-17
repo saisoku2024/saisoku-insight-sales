@@ -1,6 +1,19 @@
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse, type NextRequest } from "next/server"
 
+export type PanelRole = "owner" | "admin" | "viewer"
+
+type PanelAuthResult =
+  | {
+      ok: true
+      adminEmail: string
+      role: PanelRole
+    }
+  | {
+      ok: false
+      response: NextResponse
+    }
+
 type AdminAuthResult =
   | {
       ok: true
@@ -14,7 +27,7 @@ type AdminAuthResult =
 
 type AuditActor = {
   adminEmail: string
-  role?: "owner" | "admin"
+  role?: PanelRole
 }
 
 type AdminAuditLogInput = {
@@ -138,7 +151,7 @@ export function readStringArray(value: unknown) {
   return value.map((item) => readString(item)).filter(Boolean)
 }
 
-export function ownerOnly(role: "owner" | "admin", message = "Hanya owner yang dapat menjalankan aksi ini.") {
+export function ownerOnly(role: PanelRole, message = "Hanya owner yang dapat menjalankan aksi ini.") {
   return role === "owner" ? null : jsonError(message, 403)
 }
 
@@ -380,7 +393,7 @@ export async function enforceAdminRateLimit(
   return null
 }
 
-export async function requireActiveAdmin(req: NextRequest): Promise<AdminAuthResult> {
+export async function requirePanelAccess(req: NextRequest): Promise<PanelAuthResult> {
   if (!supabaseUrl || !supabaseAnonKey || !adminSupabase) {
     return {
       ok: false,
@@ -415,13 +428,32 @@ export async function requireActiveAdmin(req: NextRequest): Promise<AdminAuthRes
   const { data: profileData, error: profileError } = await userSupabase.rpc("get_admin_profile")
   const profile = Array.isArray(profileData) ? profileData[0] : null
 
-  if (profileError || !profile?.is_active || !["owner", "admin"].includes(String(profile.role))) {
-    return { ok: false, response: jsonError("Akses ditolak. Admin aktif diperlukan.", 403) }
+  if (profileError || !profile?.is_active || !["owner", "admin", "viewer"].includes(String(profile.role))) {
+    return { ok: false, response: jsonError("Akses ditolak. Akun panel aktif diperlukan.", 403) }
   }
+
+  const role = String(profile.role) as PanelRole
 
   return {
     ok: true,
-    adminEmail: userData.user.email || profile.email || "admin",
-    role: String(profile.role) === "owner" ? "owner" : "admin",
+    adminEmail: userData.user.email || profile.email || "panel-user",
+    role,
+  }
+}
+
+export async function requireActiveAdmin(req: NextRequest): Promise<AdminAuthResult> {
+  const auth = await requirePanelAccess(req)
+  if (!auth.ok) return auth
+
+  if (!["owner", "admin"].includes(auth.role)) {
+    return { ok: false, response: jsonError("Mode viewer hanya boleh melihat data.", 403) }
+  }
+
+  const role = auth.role === "owner" ? "owner" : "admin"
+
+  return {
+    ok: true,
+    adminEmail: auth.adminEmail,
+    role,
   }
 }

@@ -12,6 +12,7 @@ import {
   readNumberRange,
   readString,
   requireActiveAdmin,
+  requirePanelAccess,
   writeAdminAuditLog,
 } from "../_lib"
 
@@ -43,7 +44,7 @@ function loyaltyPayload(body: Record<string, unknown>) {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await requireActiveAdmin(req)
+  const auth = await requirePanelAccess(req)
   if (!auth.ok) return auth.response
 
   const page = Math.max(1, readNumber(req.nextUrl.searchParams.get("page"), 1))

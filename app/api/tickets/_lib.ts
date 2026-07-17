@@ -8,6 +8,7 @@ type AuthResult =
   | {
       ok: true
       adminEmail: string
+      role: "owner" | "admin"
     }
   | {
       ok: false
@@ -214,9 +215,28 @@ export async function requireAdminSession(req: NextRequest): Promise<AuthResult>
     }
   }
 
+  const userSupabase = createClient(supabaseUrl!, supabaseAnonKey!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  })
+  const { data: profileData, error: profileError } = await userSupabase.rpc("get_admin_profile")
+  const profile = Array.isArray(profileData) ? profileData[0] : null
+
+  if (profileError || !profile?.is_active || !["owner", "admin"].includes(String(profile.role))) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Mode viewer hanya boleh melihat ticket." }, { status: 403 }),
+    }
+  }
+
   return {
     ok: true,
     adminEmail: data.user.email || "admin",
+    role: String(profile.role) === "owner" ? "owner" : "admin",
   }
 }
 

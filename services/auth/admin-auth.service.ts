@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase/client"
 export type AdminProfile = {
   auth_user_id: string
   email: string
-  role: "owner" | "admin"
+  role: "owner" | "admin" | "viewer"
   is_active: boolean
 }
 
@@ -21,5 +21,5 @@ export async function getActiveAdminProfile() {
 }
 
 export function getAdminAccessErrorMessage() {
-  return "Akun ini belum terdaftar sebagai admin aktif. Hubungi owner untuk akses panel."
+  return "Akun ini belum terdaftar sebagai owner, admin, atau viewer aktif. Hubungi owner untuk akses panel."
 }

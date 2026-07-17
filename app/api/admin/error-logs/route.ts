@@ -8,11 +8,12 @@ import {
   readLimitedString,
   readNumber,
   requireActiveAdmin,
+  requirePanelAccess,
   writeErrorLog,
 } from "../_lib"
 
 export async function GET(req: NextRequest) {
-  const auth = await requireActiveAdmin(req)
+  const auth = await requirePanelAccess(req)
   if (!auth.ok) return auth.response
 
   const page = Math.max(1, readNumber(req.nextUrl.searchParams.get("page"), 1))
