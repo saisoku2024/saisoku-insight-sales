@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import {
   adminSupabase,
+  enforceAdminRateLimit,
   jsonError,
   jsonRouteError,
   readNumber,
@@ -71,6 +72,12 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = await requirePanelAccess(req)
   if (!auth.ok) return auth.response
+  const rateLimited = await enforceAdminRateLimit(req, auth, {
+    scope: "admin.access_logs.write",
+    limit: 120,
+    windowSeconds: 60,
+  })
+  if (rateLimited) return rateLimited
 
   try {
     const body = (await req.json()) as Record<string, unknown>

@@ -27,6 +27,94 @@ type Reply = {
   created_at: string;
 };
 
+const legacyDirectFileProxyEnabled = false;
+
+function TicketScreenshot({ fileId }: { fileId: string }) {
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    let nextObjectUrl: string | null = null;
+
+    async function loadImage() {
+      setError(null);
+      setObjectUrl(null);
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        setError("Session panel tidak ditemukan.");
+        return;
+      }
+
+      const response = await fetch(`/api/tickets/file?fileId=${encodeURIComponent(fileId)}`, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        setError("Gagal memuat screenshot.");
+        return;
+      }
+
+      const blob = await response.blob();
+      nextObjectUrl = URL.createObjectURL(blob);
+      if (active) setObjectUrl(nextObjectUrl);
+    }
+
+    void loadImage().catch(() => {
+      if (active) setError("Gagal memuat screenshot.");
+    });
+
+    return () => {
+      active = false;
+      if (nextObjectUrl) URL.revokeObjectURL(nextObjectUrl);
+    };
+  }, [fileId]);
+
+  if (error) {
+    return (
+      <div className="border-[3px] border-red-500 bg-red-50 p-3 text-base text-red-700 shadow-[3px_3px_0_var(--insight-shadow)]">
+        {error}
+      </div>
+    );
+  }
+
+  if (!objectUrl) {
+    return (
+      <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-base text-[var(--insight-muted)] shadow-[3px_3px_0_var(--insight-shadow)]">
+        Loading screenshot...
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="border-[3px] border-[var(--insight-border)] bg-black p-1 shadow-[3px_3px_0_var(--insight-shadow)] max-w-sm">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={objectUrl}
+          alt="Screenshot Kendala"
+          className="w-full h-auto object-contain max-h-[300px] block"
+          loading="lazy"
+        />
+      </div>
+      <a
+        href={objectUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center justify-center text-center gap-1.5 px-3 py-1.5 border-[3px] border-[var(--insight-border)] bg-blue-600 text-white font-bold text-sm shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-blue-500 max-w-sm"
+      >
+        Lihat / Download Screenshot
+      </a>
+    </div>
+  );
+}
+
 export default function TicketsPage() {
   const isViewer = useIsViewer();
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -412,7 +500,7 @@ export default function TicketsPage() {
                             return (
                               <div className="flex flex-col gap-2">
                                 {cleanMsg && <p className="text-lg whitespace-pre-wrap leading-relaxed">{cleanMsg}</p>}
-                                {fileId && (
+                                {legacyDirectFileProxyEnabled && fileId && (
                                   <div className="flex flex-col gap-2 mt-2">
                                     <div className="border-[3px] border-[var(--insight-border)] bg-black p-1 shadow-[3px_3px_0_var(--insight-shadow)] max-w-sm">
                                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -431,6 +519,11 @@ export default function TicketsPage() {
                                     >
                                       🖼️ Lihat / Download Screenshot
                                     </a>
+                                  </div>
+                                )}
+                                {fileId && (
+                                  <div className="mt-2">
+                                    <TicketScreenshot fileId={fileId} />
                                   </div>
                                 )}
                               </div>

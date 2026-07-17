@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
-import { writeErrorLog } from "../../admin/_lib"
+import { requirePanelAccess, writeErrorLog } from "../../admin/_lib"
 
 export const runtime = "nodejs"
 
@@ -13,6 +13,9 @@ type TelegramFileResponse = {
 }
 
 export async function GET(req: NextRequest) {
+  const auth = await requirePanelAccess(req)
+  if (!auth.ok) return auth.response
+
   try {
     const token = process.env.TELEGRAM_BOT_TOKEN
     const fileId = req.nextUrl.searchParams.get("fileId")?.trim()
