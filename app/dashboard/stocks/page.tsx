@@ -114,8 +114,8 @@ export default function StocksPage() {
   const showSuccess = (message: string) => setNotice({ type: "success", message });
   const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
   const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50";
-  const controlClass = "h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] outline-none";
-  const actionClass = "inline-flex h-11 min-w-[120px] items-center justify-center border-[3px] border-[var(--insight-border)] px-4 text-xl leading-none shadow-[4px_4px_0_var(--insight-shadow)]";
+  const controlClass = "h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl leading-none text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] outline-none";
+  const actionClass = "inline-flex h-11 min-w-[130px] items-center justify-center border-[3px] border-[var(--insight-border)] px-4 text-xl leading-none shadow-[4px_4px_0_var(--insight-shadow)]";
 
   async function fetchProducts() {
     const { data } = await supabase
@@ -424,116 +424,120 @@ export default function StocksPage() {
       </div>
 
       {/* FILTER AREA */}
-      <div className="insight-card flex flex-wrap items-center gap-3 p-4">
-        <input
-          className={`${controlClass} w-[180px]`}
-          placeholder="Search email..."
-          value={search}
-          onChange={(e) => {
-            setPage(1);
-            setSearch(e.target.value);
-          }}
-        />
-
-        <select
-          className={`${controlClass} w-[230px]`}
-          value={filterProduct}
-          onChange={(e) => {
-            setPage(1);
-            setFilterProduct(e.target.value);
-          }}
-        >
-          <option value="">All Products</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-
-        <select
-          className={`${controlClass} w-[150px]`}
-          value={filterBrand}
-          onChange={(e) => {
-            setPage(1);
-            setFilterBrand(e.target.value);
-          }}
-        >
-          <option value="">All Brands</option>
-          {brandOptions.map((brand) => (
-            <option key={brand} value={brand}>
-              {brand}
-            </option>
-          ))}
-        </select>
-
-        <select
-          className={`${controlClass} w-[170px]`}
-          value={stockView}
-          onChange={(e) => {
-            setPage(1);
-            setStockView(e.target.value as "active" | "deleted" | "all");
-          }}
-        >
-          <option value="active">Active Stock</option>
-          <option value="deleted">Deleted Stock</option>
-          <option value="all">All Stock</option>
-        </select>
-
-        <button
-          onClick={() => {
-            if (isViewer) return;
-            setShowAddModal(true);
-          }}
-          disabled={isViewer}
-          title={isViewer ? viewerOnlyTitle : undefined}
-          className={`${actionClass} bg-emerald-600 text-white${viewerDisabledClass}`}
-        >
-          + Add Stock
-        </button>
-
-        <button
-          onClick={() => {
-            if (isViewer || selectedStockIds.length === 0) return;
-            setBulkDeleteOpen(true);
-          }}
-          disabled={isViewer || selectedStockIds.length === 0}
-          title={isViewer ? viewerOnlyTitle : selectedStockIds.length === 0 ? "Pilih stock dulu" : undefined}
-          className={`${actionClass} min-w-[140px] bg-red-600 text-white disabled:cursor-not-allowed disabled:opacity-40`}
-        >
-          Delete Bulk
-        </button>
-
-        <label
-          className={`${actionClass} min-w-[120px] bg-[var(--insight-panel)] text-[var(--insight-text)] ${isViewer ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
-          title={isViewer ? viewerOnlyTitle : undefined}
-        >
-          Pilih CSV/TXT
+      <div className="insight-card space-y-3 p-4">
+        <div className="flex flex-wrap items-center gap-3">
           <input
-            type="file"
-            accept=".csv,.txt,text/csv,text/plain"
-            disabled={isViewer}
-            className="hidden"
-            onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+            className={`${controlClass} w-[180px]`}
+            placeholder="Search email..."
+            value={search}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
           />
-        </label>
 
-        <button
-          disabled={isViewer || !filterProduct || !csvFile || uploading}
-          onClick={() => void bulkUploadCsv()}
-          className={`${actionClass} min-w-[130px] bg-[var(--insight-blue)] text-white disabled:cursor-not-allowed disabled:opacity-40`}
-          title={isViewer ? viewerOnlyTitle : !filterProduct ? "Pilih produk dulu" : ""}
-        >
-          {uploading ? `Uploading ${uploadProgress}%` : "Bulk Upload"}
-        </button>
+          <select
+            className={`${controlClass} w-[230px]`}
+            value={filterProduct}
+            onChange={(e) => {
+              setPage(1);
+              setFilterProduct(e.target.value);
+            }}
+          >
+            <option value="">All Products</option>
+            {products.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
 
-        <div className="xl:ml-auto text-lg text-[var(--insight-muted)]">
-          View: <span className="text-[var(--insight-text)]">{activeProductName}</span>
-          {filterBrand ? <span> / {filterBrand}</span> : null}
-          {selectedStockIds.length > 0 ? <span> / Selected {selectedStockIds.length}</span> : null}
+          <select
+            className={`${controlClass} w-[150px]`}
+            value={filterBrand}
+            onChange={(e) => {
+              setPage(1);
+              setFilterBrand(e.target.value);
+            }}
+          >
+            <option value="">All Brands</option>
+            {brandOptions.map((brand) => (
+              <option key={brand} value={brand}>
+                {brand}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className={`${controlClass} w-[170px]`}
+            value={stockView}
+            onChange={(e) => {
+              setPage(1);
+              setStockView(e.target.value as "active" | "deleted" | "all");
+            }}
+          >
+            <option value="active">Active Stock</option>
+            <option value="deleted">Deleted Stock</option>
+            <option value="all">All Stock</option>
+          </select>
+
+          <button
+            onClick={() => {
+              if (isViewer) return;
+              setShowAddModal(true);
+            }}
+            disabled={isViewer}
+            title={isViewer ? viewerOnlyTitle : undefined}
+            className={`${actionClass} bg-emerald-600 text-white${viewerDisabledClass}`}
+          >
+            + Add Stock
+          </button>
+
+          <button
+            onClick={() => {
+              if (isViewer || selectedStockIds.length === 0) return;
+              setBulkDeleteOpen(true);
+            }}
+            disabled={isViewer || selectedStockIds.length === 0}
+            title={isViewer ? viewerOnlyTitle : selectedStockIds.length === 0 ? "Pilih stock dulu" : undefined}
+            className={`${actionClass} min-w-[130px] bg-red-600 text-white disabled:cursor-not-allowed disabled:opacity-40`}
+          >
+            Delete Bulk
+          </button>
         </div>
 
-        <div className="w-full text-lg text-[var(--insight-muted)]">
+        <div className="flex flex-wrap items-center gap-3">
+          <label
+            className={`${actionClass} min-w-[130px] bg-[var(--insight-panel)] text-[var(--insight-text)] ${isViewer ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+            title={isViewer ? viewerOnlyTitle : undefined}
+          >
+            Pilih CSV/TXT
+            <input
+              type="file"
+              accept=".csv,.txt,text/csv,text/plain"
+              disabled={isViewer}
+              className="hidden"
+              onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+            />
+          </label>
+
+          <button
+            disabled={isViewer || !filterProduct || !csvFile || uploading}
+            onClick={() => void bulkUploadCsv()}
+            className={`${actionClass} min-w-[130px] bg-[var(--insight-blue)] text-white disabled:cursor-not-allowed disabled:opacity-40`}
+            title={isViewer ? viewerOnlyTitle : !filterProduct ? "Pilih produk dulu" : ""}
+          >
+            {uploading ? `Uploading ${uploadProgress}%` : "Bulk Upload"}
+          </button>
+
+          <div className="flex h-11 items-center xl:ml-auto text-lg text-[var(--insight-muted)]">
+            View: <span className="ml-1 text-[var(--insight-text)]">{activeProductName}</span>
+            {filterBrand ? <span> / {filterBrand}</span> : null}
+            {selectedStockIds.length > 0 ? <span> / Selected {selectedStockIds.length}</span> : null}
+          </div>
+        </div>
+
+        <div className="text-lg text-[var(--insight-muted)]">
           Format CSV/TXT:{" "}
           <code className="border-[2px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-2 py-0.5 text-red-500">
             email;password;profile;pin
@@ -541,7 +545,7 @@ export default function StocksPage() {
         </div>
 
         {uploadError && (
-          <div className="w-full text-lg font-medium text-red-600">{uploadError}</div>
+          <div className="text-lg font-medium text-red-600">{uploadError}</div>
         )}
       </div>
 
