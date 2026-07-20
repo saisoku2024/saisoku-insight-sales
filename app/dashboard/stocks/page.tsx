@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
+import { ToolbarSelect } from "@/components/dashboard/toolbar-select";
 import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context";
 import { supabase } from "@/lib/supabase/client";
 import { adminWrite } from "@/services/admin/admin-api-client";
@@ -115,7 +116,6 @@ export default function StocksPage() {
   const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
   const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50";
   const controlClass = "box-border h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-0 text-xl leading-none text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] outline-none";
-  const stockSelectClass = `${controlClass} appearance-none pr-8`;
   const actionClass = "inline-flex box-border h-11 min-w-[130px] items-center justify-center border-[3px] border-[var(--insight-border)] px-4 py-0 text-xl leading-none shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:hover:translate-y-0";
 
   async function fetchProducts() {
@@ -436,59 +436,54 @@ export default function StocksPage() {
               setSearch(e.target.value);
             }}
           />
-          <div className="relative">
-            <select
-              className={`${stockSelectClass} w-[230px]`}
-              value={filterProduct}
-              onChange={(e) => {
-                setPage(1);
-                setFilterProduct(e.target.value);
-              }}
-            >
-              <option value="">All Products</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--insight-muted)]">v</span>
-          </div>
+          <ToolbarSelect
+            value={filterProduct}
+            options={[
+              { value: "", label: "All Products" },
+              ...products.map((product) => ({
+                value: product.id,
+                label: product.name,
+              })),
+            ]}
+            onChange={(nextProduct) => {
+              setPage(1);
+              setFilterProduct(nextProduct);
+            }}
+            minWidth={230}
+            ariaLabel="Filter stocks by product"
+          />
 
-          <div className="relative">
-            <select
-              className={`${stockSelectClass} w-[150px]`}
-              value={filterBrand}
-              onChange={(e) => {
-                setPage(1);
-                setFilterBrand(e.target.value);
-              }}
-            >
-              <option value="">All Brands</option>
-              {brandOptions.map((brand) => (
-                <option key={brand} value={brand}>
-                  {brand}
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--insight-muted)]">v</span>
-          </div>
+          <ToolbarSelect
+            value={filterBrand}
+            options={[
+              { value: "", label: "All Brands" },
+              ...brandOptions.map((brand) => ({
+                value: brand,
+                label: brand,
+              })),
+            ]}
+            onChange={(nextBrand) => {
+              setPage(1);
+              setFilterBrand(nextBrand);
+            }}
+            minWidth={150}
+            ariaLabel="Filter stocks by brand"
+          />
 
-          <div className="relative">
-            <select
-              className={`${stockSelectClass} w-[170px]`}
-              value={stockView}
-              onChange={(e) => {
-                setPage(1);
-                setStockView(e.target.value as "active" | "deleted" | "all");
-              }}
-            >
-              <option value="active">Active Stock</option>
-              <option value="deleted">Deleted Stock</option>
-              <option value="all">All Stock</option>
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--insight-muted)]">v</span>
-          </div>
+          <ToolbarSelect
+            value={stockView}
+            options={[
+              { value: "active", label: "Active Stock" },
+              { value: "deleted", label: "Deleted Stock" },
+              { value: "all", label: "All Stock" },
+            ]}
+            onChange={(nextView) => {
+              setPage(1);
+              setStockView(nextView as "active" | "deleted" | "all");
+            }}
+            minWidth={170}
+            ariaLabel="Filter stock status"
+          />
 
           <button
             onClick={() => {
