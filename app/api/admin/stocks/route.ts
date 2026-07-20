@@ -22,7 +22,7 @@ type StockInput = {
   status?: string
 }
 
-const allowedStockStatuses = new Set(["available", "sold", "reserved", "inactive"])
+const allowedStockStatuses = new Set(["available", "sold", "reserved", "inactive", "deleted"])
 
 function stockPayload(body: Record<string, unknown>): StockInput {
   const product_id = readLimitedString(body.product_id, "Product ID", 80)
@@ -92,11 +92,17 @@ export async function PATCH(req: NextRequest) {
 
     const { data: before } = await adminSupabase!.from("product_accounts").select("*").eq("id", id).maybeSingle()
 
+    const nextStatus = readLimitedString(body.status, "Status", 32)
+    if (nextStatus && !allowedStockStatuses.has(nextStatus)) {
+      return jsonError("Status stock tidak valid.")
+    }
+
     const payload = {
       email: readLimitedString(body.email, "Email/no HP", 256),
       password: readLimitedNullableString(body.password, "Password", 256),
       profile: readLimitedNullableString(body.profile, "Profile", 120),
       pin: readLimitedNullableString(body.pin, "PIN", 64),
+      ...(nextStatus ? { status: nextStatus } : {}),
     }
 
     if (!payload.email) return jsonError("Email/no HP wajib diisi.")
@@ -140,14 +146,21 @@ export async function DELETE(req: NextRequest) {
 
     const { data: before } = await adminSupabase!.from("product_accounts").select("*").eq("id", id).maybeSingle()
 
-    const { error } = await adminSupabase!.from("product_accounts").delete().eq("id", id)
-    if (error) return jsonRouteError(req, auth, "DELETE /api/admin/stocks delete", error, "Gagal delete stock", 500)
+    const { data, error } = await adminSupabase!
+      .from("product_accounts")
+      .update({ status: "deleted" })
+      .eq("id", id)
+      .select()
+      .single()
+
+    if (error) return jsonRouteError(req, auth, "DELETE /api/admin/stocks soft delete", error, "Gagal delete stock", 500)
 
     await writeAdminAuditLog(auth, {
-      action: "delete",
+      action: "soft_delete",
       entity: "product_accounts",
       entityId: id,
       before,
+      after: data,
     })
 
     return NextResponse.json({ ok: true })

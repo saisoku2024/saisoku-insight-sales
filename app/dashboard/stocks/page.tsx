@@ -52,6 +52,25 @@ function getProductName(products: Stock["products"]) {
   return products?.name ?? "-";
 }
 
+function getProductCode(products: Stock["products"]) {
+  if (!products) return "";
+  if (Array.isArray(products)) return products[0]?.product_code ?? "";
+  return products?.product_code ?? "";
+}
+
+function productBrand(product: Pick<Product, "name" | "product_code">) {
+  const raw = product.product_code || product.name || "OTHER";
+  return raw.split(/[-_\s/]+/)[0]?.trim().toUpperCase() || "OTHER";
+}
+
+function statusClass(status: Stock["status"]) {
+  if (status === "available") return "bg-emerald-100 text-emerald-700";
+  if (status === "deleted") return "bg-slate-200 text-slate-700";
+  if (status === "reserved") return "bg-amber-100 text-amber-800";
+  if (status === "inactive") return "bg-zinc-100 text-zinc-700";
+  return "bg-red-100 text-red-700";
+}
+
 export default function StocksPage() {
   const isViewer = useIsViewer();
   const [products, setProducts] = useState<Product[]>([]);
@@ -59,6 +78,8 @@ export default function StocksPage() {
 
   const [search, setSearch] = useState("");
   const [filterProduct, setFilterProduct] = useState("");
+  const [filterBrand, setFilterBrand] = useState("");
+  const [stockView, setStockView] = useState<"active" | "deleted" | "all">("active");
 
   // Add stock form
   const [email, setEmail] = useState("");
@@ -69,6 +90,7 @@ export default function StocksPage() {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editStockData, setEditStockData] = useState<Stock | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<Stock | null>(null);
 
   // CSV upload
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -80,7 +102,7 @@ export default function StocksPage() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  const [stats, setStats] = useState({ available: 0, sold: 0 });
+  const [stats, setStats] = useState({ available: 0, sold: 0, deleted: 0 });
   const showError = (message: string) => setNotice({ type: "error", message });
   const showSuccess = (message: string) => setNotice({ type: "success", message });
   const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
@@ -95,14 +117,27 @@ export default function StocksPage() {
   }
 
   const fetchStocks = useCallback(async () => {
+    const brandProductIds = filterBrand
+      ? products.filter((product) => productBrand(product) === filterBrand).map((product) => product.id)
+      : [];
+
+    if (filterBrand && brandProductIds.length === 0) {
+      setStocks([]);
+      setStats({ available: 0, sold: 0, deleted: 0 });
+      return;
+    }
+
     let query = supabase
       .from("product_accounts")
-      .select(`*,products(name)`)
+      .select(`*,products(name,product_code)`)
       .order("created_at", { ascending: false })
       .range((page - 1) * pageSize, page * pageSize - 1);
 
     if (search) query = query.ilike("email", `%${search}%`);
     if (filterProduct) query = query.eq("product_id", filterProduct);
+    if (filterBrand) query = query.in("product_id", brandProductIds);
+    if (stockView === "active") query = query.neq("status", "deleted");
+    if (stockView === "deleted") query = query.eq("status", "deleted");
 
     const { data } = await query;
     const list = (data || []) as Stock[];
@@ -111,8 +146,9 @@ export default function StocksPage() {
 
     const available = list.filter((x) => x.status === "available").length;
     const sold = list.filter((x) => x.status === "sold").length;
-    setStats({ available, sold });
-  }, [page, search, filterProduct]);
+    const deleted = list.filter((x) => x.status === "deleted").length;
+    setStats({ available, sold, deleted });
+  }, [page, search, filterProduct, filterBrand, products, stockView]);
 
   async function addStock() {
     if (!productId) {
@@ -159,10 +195,10 @@ export default function StocksPage() {
         method: "PATCH",
         body: {
           id: editStockData.id,
-        email: editStockData.email,
-        password: editStockData.password,
-        profile: editStockData.profile,
-        pin: editStockData.pin,
+          email: editStockData.email,
+          password: editStockData.password,
+          profile: editStockData.profile,
+          pin: editStockData.pin,
         },
       });
     } catch (error) {
@@ -176,7 +212,6 @@ export default function StocksPage() {
   }
 
   async function deleteStock(id: string) {
-    if (!confirm("Delete stock?")) return;
     try {
       await adminWrite("/api/admin/stocks", {
         method: "DELETE",
@@ -186,7 +221,31 @@ export default function StocksPage() {
       showError(`Gagal delete stock: ${getErrorMessage(error)}`);
       return;
     }
+    setDeleteCandidate(null);
     showSuccess("Stock berhasil dihapus.");
+    void fetchStocks();
+  }
+
+  async function restoreStock(stock: Stock) {
+    if (isViewer) return;
+    try {
+      await adminWrite<Stock>("/api/admin/stocks", {
+        method: "PATCH",
+        body: {
+          id: stock.id,
+          email: stock.email,
+          password: stock.password,
+          profile: stock.profile,
+          pin: stock.pin,
+          status: "available",
+        },
+      });
+    } catch (error) {
+      showError(`Gagal restore stock: ${getErrorMessage(error)}`);
+      return;
+    }
+
+    showSuccess("Stock berhasil direstore ke available.");
     void fetchStocks();
   }
 
@@ -247,6 +306,7 @@ export default function StocksPage() {
 
   const activeProductName =
     products.find((p) => p.id === filterProduct)?.name || "All Products";
+  const brandOptions = Array.from(new Set(products.map(productBrand))).sort();
 
   useEffect(() => {
     void fetchProducts();
@@ -291,7 +351,7 @@ export default function StocksPage() {
         <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
           <div className="text-xl leading-none text-[var(--insight-muted)]">Total Stock (Page)</div>
           <div className="mt-2 text-[34px] leading-none text-[var(--insight-text)]">
-            {(stats.available + stats.sold).toLocaleString("id-ID")}
+            {stocks.length.toLocaleString("id-ID")}
           </div>
         </div>
 
@@ -310,9 +370,9 @@ export default function StocksPage() {
         </div>
 
         <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
-          <div className="text-xl leading-none text-[var(--insight-muted)]">Selected Product</div>
-          <div className="mt-2 truncate text-[28px] leading-none text-blue-600 dark:text-blue-300">
-            {activeProductName}
+          <div className="text-xl leading-none text-[var(--insight-muted)]">Deleted</div>
+          <div className="mt-2 text-[34px] leading-none text-slate-600 dark:text-slate-300">
+            {stats.deleted.toLocaleString("id-ID")}
           </div>
         </div>
       </div>
@@ -344,6 +404,46 @@ export default function StocksPage() {
             </option>
           ))}
         </select>
+
+        <select
+          className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+          value={filterBrand}
+          onChange={(e) => {
+            setPage(1);
+            setFilterBrand(e.target.value);
+          }}
+        >
+          <option value="">All Brands</option>
+          {brandOptions.map((brand) => (
+            <option key={brand} value={brand}>
+              {brand}
+            </option>
+          ))}
+        </select>
+
+        <div className="flex h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] shadow-[4px_4px_0_var(--insight-shadow)]">
+          {[
+            ["active", "Active"],
+            ["deleted", "Deleted Stock"],
+            ["all", "All"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => {
+                setPage(1);
+                setStockView(value as "active" | "deleted" | "all");
+              }}
+              className={`px-3 text-lg leading-none ${
+                stockView === value
+                  ? "bg-[var(--insight-blue)] text-white"
+                  : "text-[var(--insight-text)] hover:bg-blue-50 dark:hover:bg-slate-800"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         <button
           onClick={() => {
@@ -381,6 +481,11 @@ export default function StocksPage() {
         </button>
 
         <div className="xl:ml-auto text-lg text-[var(--insight-muted)]">
+          View: <span className="text-[var(--insight-text)]">{activeProductName}</span>
+          {filterBrand ? <span> / {filterBrand}</span> : null}
+        </div>
+
+        <div className="w-full text-lg text-[var(--insight-muted)]">
           Format CSV:{" "}
           <code className="border-[2px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-2 py-0.5 text-red-500">
             email;password;profile;pin
@@ -399,6 +504,7 @@ export default function StocksPage() {
             <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
               <tr>
                 <th className="p-4">Product</th>
+                <th className="p-4">Brand</th>
                 <th className="p-4">Email</th>
                 <th className="p-4">Profile</th>
                 <th className="p-4">PIN</th>
@@ -413,16 +519,18 @@ export default function StocksPage() {
                   key={s.id}
                   className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60"
                 >
-                  <td className="p-4 font-medium">{getProductName(s.products)}</td>
+                  <td className="p-4 font-medium">
+                    <div>{getProductName(s.products)}</div>
+                    <div className="text-base text-[var(--insight-muted)]">{getProductCode(s.products) || "-"}</div>
+                  </td>
+                  <td className="p-4">{getProductCode(s.products)?.split(/[-_\s/]+/)[0]?.toUpperCase() || "-"}</td>
                   <td className="p-4 font-mono text-base">{s.email}</td>
                   <td className="p-4">{s.profile || "—"}</td>
                   <td className="p-4 font-mono text-base">{s.pin || "—"}</td>
                   <td className="p-4">
                     <span
                       className={`inline-block border-[3px] border-[var(--insight-border)] px-3 py-1 text-lg leading-none ${
-                        s.status === "available"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-red-100 text-red-700"
+                        statusClass(s.status)
                       }`}
                     >
                       {s.status}
@@ -430,25 +538,41 @@ export default function StocksPage() {
                   </td>
                   <td className="p-4">
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          if (isViewer) return;
-                          setEditStockData(s);
-                        }}
-                        disabled={isViewer}
-                        title={isViewer ? viewerOnlyTitle : undefined}
-                        className={"border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => void deleteStock(s.id)}
-                        disabled={isViewer}
-                        title={isViewer ? viewerOnlyTitle : undefined}
-                        className={"border-[3px] border-[var(--insight-border)] bg-red-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
-                      >
-                        Delete
-                      </button>
+                      {s.status === "deleted" ? (
+                        <button
+                          onClick={() => void restoreStock(s)}
+                          disabled={isViewer}
+                          title={isViewer ? viewerOnlyTitle : undefined}
+                          className={"border-[3px] border-[var(--insight-border)] bg-emerald-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                        >
+                          Restore
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              if (isViewer) return;
+                              setEditStockData(s);
+                            }}
+                            disabled={isViewer}
+                            title={isViewer ? viewerOnlyTitle : undefined}
+                            className={"border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (isViewer) return;
+                              setDeleteCandidate(s);
+                            }}
+                            disabled={isViewer}
+                            title={isViewer ? viewerOnlyTitle : undefined}
+                            className={"border-[3px] border-[var(--insight-border)] bg-red-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -458,7 +582,7 @@ export default function StocksPage() {
                 <tr>
                   <td
                     className="p-8 text-center text-xl text-[var(--insight-muted)]"
-                    colSpan={6}
+                    colSpan={7}
                   >
                     Tidak ada data persediaan akun saat ini.
                   </td>
@@ -553,6 +677,43 @@ export default function StocksPage() {
                 className={"border-[3px] border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
               >
                 Save Stock
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DELETE STOCK */}
+      {deleteCandidate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="insight-card w-full max-w-md space-y-4 p-6">
+            <span className="inline-block border-[3px] border-[var(--insight-border)] bg-red-100 px-2.5 py-1 text-base leading-none text-red-800">
+              DELETE STOCK
+            </span>
+            <h2 className="text-[28px] leading-none text-[var(--insight-text)]">Verifikasi Hapus Stock</h2>
+            <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-lg">
+              <div>Product: {getProductName(deleteCandidate.products)}</div>
+              <div>Email: {deleteCandidate.email}</div>
+              <div>Profile: {deleteCandidate.profile || "-"}</div>
+            </div>
+            <p className="text-lg leading-tight text-[var(--insight-muted)]">
+              Stock tidak dihapus permanen. Status akan dipindahkan ke <b>deleted</b> agar tetap bisa diaudit dan direstore.
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setDeleteCandidate(null)}
+                className="insight-button px-4 py-2 text-lg leading-none"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => void deleteStock(deleteCandidate.id)}
+                disabled={isViewer}
+                title={isViewer ? viewerOnlyTitle : undefined}
+                className={"border-[3px] border-[var(--insight-border)] bg-red-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+              >
+                Ya, Pindahkan ke Deleted
               </button>
             </div>
           </div>

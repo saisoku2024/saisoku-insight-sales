@@ -34,11 +34,11 @@ export interface Stock {
   password: string | null
   profile: string | null
   pin: string | null
-  status: "available" | "sold"
+  status: "available" | "sold" | "reserved" | "inactive" | "deleted"
   created_at: string
   sold_at?: string | null
   sold_to?: string | null
-  products?: { name: string | null } | { name: string | null }[] | null
+  products?: { name: string | null; product_code?: string | null } | { name: string | null; product_code?: string | null }[] | null
 }
 
 // -------------------------------------------------------

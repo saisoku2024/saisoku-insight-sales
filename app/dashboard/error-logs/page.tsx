@@ -102,6 +102,10 @@ export default function ErrorLogsPage() {
     void loadLogs()
   }, [loadLogs])
 
+  const errorCount = logs.filter((log) => log.level === "error").length
+  const warnCount = logs.filter((log) => log.level === "warn").length
+  const infoCount = logs.filter((log) => log.level === "info").length
+
   async function testBetterStackDrain() {
     if (isViewer) return
     setTestingDrain(true)
@@ -180,6 +184,25 @@ export default function ErrorLogsPage() {
           {drainTest.drain.result.body ? <div>Response: {shortText(drainTest.drain.result.body, 140)}</div> : null}
         </div>
       ) : null}
+
+      <div className="grid gap-3 md:grid-cols-4">
+        <div className="insight-card p-3">
+          <div className="text-base text-[var(--insight-muted)]">Total Logs</div>
+          <div className="mt-1 text-3xl leading-none">{totalRows.toLocaleString("id-ID")}</div>
+        </div>
+        <div className="insight-card p-3">
+          <div className="text-base text-[var(--insight-muted)]">Error / Page</div>
+          <div className="mt-1 text-3xl leading-none text-red-600">{errorCount.toLocaleString("id-ID")}</div>
+        </div>
+        <div className="insight-card p-3">
+          <div className="text-base text-[var(--insight-muted)]">Warn / Page</div>
+          <div className="mt-1 text-3xl leading-none text-amber-600">{warnCount.toLocaleString("id-ID")}</div>
+        </div>
+        <div className="insight-card p-3">
+          <div className="text-base text-[var(--insight-muted)]">Info / Page</div>
+          <div className="mt-1 text-3xl leading-none text-blue-600">{infoCount.toLocaleString("id-ID")}</div>
+        </div>
+      </div>
 
       <div className="insight-card overflow-hidden">
         <div className="overflow-x-auto">
