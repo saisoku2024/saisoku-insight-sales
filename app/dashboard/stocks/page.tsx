@@ -91,6 +91,8 @@ export default function StocksPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editStockData, setEditStockData] = useState<Stock | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<Stock | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [selectedStockIds, setSelectedStockIds] = useState<string[]>([]);
 
   // CSV upload
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -107,6 +109,8 @@ export default function StocksPage() {
   const showSuccess = (message: string) => setNotice({ type: "success", message });
   const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
   const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50";
+  const controlClass = "h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] outline-none";
+  const actionClass = "inline-flex h-11 min-w-[120px] items-center justify-center border-[3px] border-[var(--insight-border)] px-4 text-xl leading-none shadow-[4px_4px_0_var(--insight-shadow)]";
 
   async function fetchProducts() {
     const { data } = await supabase
@@ -143,6 +147,7 @@ export default function StocksPage() {
     const list = (data || []) as Stock[];
 
     setStocks(list);
+    setSelectedStockIds((current) => current.filter((id) => list.some((stock) => stock.id === id)));
 
     const available = list.filter((x) => x.status === "available").length;
     const sold = list.filter((x) => x.status === "sold").length;
@@ -223,6 +228,25 @@ export default function StocksPage() {
     }
     setDeleteCandidate(null);
     showSuccess("Stock berhasil dihapus.");
+    void fetchStocks();
+  }
+
+  async function bulkDeleteStock() {
+    if (isViewer || selectedStockIds.length === 0) return;
+
+    try {
+      await adminWrite("/api/admin/stocks", {
+        method: "DELETE",
+        body: { ids: selectedStockIds },
+      });
+    } catch (error) {
+      showError(`Gagal bulk delete stock: ${getErrorMessage(error)}`);
+      return;
+    }
+
+    setBulkDeleteOpen(false);
+    setSelectedStockIds([]);
+    showSuccess(`${selectedStockIds.length} stock berhasil dipindahkan ke deleted.`);
     void fetchStocks();
   }
 
@@ -307,6 +331,23 @@ export default function StocksPage() {
   const activeProductName =
     products.find((p) => p.id === filterProduct)?.name || "All Products";
   const brandOptions = Array.from(new Set(products.map(productBrand))).sort();
+  const selectableStocks = stocks.filter((stock) => stock.status !== "deleted");
+  const allVisibleSelected = selectableStocks.length > 0 && selectableStocks.every((stock) => selectedStockIds.includes(stock.id));
+
+  function toggleSelectStock(id: string) {
+    setSelectedStockIds((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id]
+    );
+  }
+
+  function toggleSelectVisible() {
+    if (allVisibleSelected) {
+      setSelectedStockIds((current) => current.filter((id) => !selectableStocks.some((stock) => stock.id === id)));
+      return;
+    }
+
+    setSelectedStockIds((current) => Array.from(new Set([...current, ...selectableStocks.map((stock) => stock.id)])));
+  }
 
   useEffect(() => {
     void fetchProducts();
@@ -378,9 +419,9 @@ export default function StocksPage() {
       </div>
 
       {/* FILTER AREA */}
-      <div className="insight-card flex flex-wrap items-center gap-4 p-4">
+      <div className="insight-card flex flex-wrap items-center gap-3 p-4">
         <input
-          className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+          className={`${controlClass} w-[180px]`}
           placeholder="Search email..."
           value={search}
           onChange={(e) => {
@@ -390,7 +431,7 @@ export default function StocksPage() {
         />
 
         <select
-          className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+          className={`${controlClass} w-[230px]`}
           value={filterProduct}
           onChange={(e) => {
             setPage(1);
@@ -406,7 +447,7 @@ export default function StocksPage() {
         </select>
 
         <select
-          className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+          className={`${controlClass} w-[150px]`}
           value={filterBrand}
           onChange={(e) => {
             setPage(1);
@@ -422,7 +463,7 @@ export default function StocksPage() {
         </select>
 
         <select
-          className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] outline-none"
+          className={`${controlClass} w-[170px]`}
           value={stockView}
           onChange={(e) => {
             setPage(1);
@@ -441,13 +482,25 @@ export default function StocksPage() {
           }}
           disabled={isViewer}
           title={isViewer ? viewerOnlyTitle : undefined}
-          className={"border-[3px] border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+          className={`${actionClass} bg-emerald-600 text-white${viewerDisabledClass}`}
         >
           + Add Stock
         </button>
 
+        <button
+          onClick={() => {
+            if (isViewer || selectedStockIds.length === 0) return;
+            setBulkDeleteOpen(true);
+          }}
+          disabled={isViewer || selectedStockIds.length === 0}
+          title={isViewer ? viewerOnlyTitle : selectedStockIds.length === 0 ? "Pilih stock dulu" : undefined}
+          className={`${actionClass} min-w-[140px] bg-red-600 text-white disabled:cursor-not-allowed disabled:opacity-40`}
+        >
+          Delete Bulk
+        </button>
+
         <label
-          className={`inline-flex h-11 items-center border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-4 text-xl text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] ${isViewer ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+          className={`${actionClass} min-w-[120px] bg-[var(--insight-panel)] text-[var(--insight-text)] ${isViewer ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
           title={isViewer ? viewerOnlyTitle : undefined}
         >
           Pilih CSV
@@ -463,7 +516,7 @@ export default function StocksPage() {
         <button
           disabled={isViewer || !filterProduct || !csvFile || uploading}
           onClick={() => void bulkUploadCsv()}
-          className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] disabled:cursor-not-allowed disabled:opacity-40"
+          className={`${actionClass} min-w-[130px] bg-[var(--insight-blue)] text-white disabled:cursor-not-allowed disabled:opacity-40`}
           title={isViewer ? viewerOnlyTitle : !filterProduct ? "Pilih produk dulu" : ""}
         >
           {uploading ? `Uploading ${uploadProgress}%` : "Bulk Upload"}
@@ -472,6 +525,7 @@ export default function StocksPage() {
         <div className="xl:ml-auto text-lg text-[var(--insight-muted)]">
           View: <span className="text-[var(--insight-text)]">{activeProductName}</span>
           {filterBrand ? <span> / {filterBrand}</span> : null}
+          {selectedStockIds.length > 0 ? <span> / Selected {selectedStockIds.length}</span> : null}
         </div>
 
         <div className="w-full text-lg text-[var(--insight-muted)]">
@@ -492,6 +546,16 @@ export default function StocksPage() {
           <table className="w-full text-left">
             <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
               <tr>
+                <th className="p-4">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    disabled={isViewer || selectableStocks.length === 0}
+                    onChange={toggleSelectVisible}
+                    className="h-5 w-5 accent-[var(--insight-blue)] disabled:opacity-40"
+                    title={isViewer ? viewerOnlyTitle : "Select visible stock"}
+                  />
+                </th>
                 <th className="p-4">Product</th>
                 <th className="p-4">Brand</th>
                 <th className="p-4">Email</th>
@@ -508,6 +572,16 @@ export default function StocksPage() {
                   key={s.id}
                   className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60"
                 >
+                  <td className="p-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedStockIds.includes(s.id)}
+                      disabled={isViewer || s.status === "deleted"}
+                      onChange={() => toggleSelectStock(s.id)}
+                      className="h-5 w-5 accent-[var(--insight-blue)] disabled:opacity-40"
+                      title={s.status === "deleted" ? "Deleted stock tidak bisa dipilih" : isViewer ? viewerOnlyTitle : "Select stock"}
+                    />
+                  </td>
                   <td className="p-4 font-medium">
                     <div>{getProductName(s.products)}</div>
                     <div className="text-base text-[var(--insight-muted)]">{getProductCode(s.products) || "-"}</div>
@@ -571,7 +645,7 @@ export default function StocksPage() {
                 <tr>
                   <td
                     className="p-8 text-center text-xl text-[var(--insight-muted)]"
-                    colSpan={7}
+                    colSpan={8}
                   >
                     Tidak ada data persediaan akun saat ini.
                   </td>
@@ -703,6 +777,42 @@ export default function StocksPage() {
                 className={"border-[3px] border-[var(--insight-border)] bg-red-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
               >
                 Ya, Pindahkan ke Deleted
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL BULK DELETE STOCK */}
+      {bulkDeleteOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="insight-card w-full max-w-md space-y-4 p-6">
+            <span className="inline-block border-[3px] border-[var(--insight-border)] bg-red-100 px-2.5 py-1 text-base leading-none text-red-800">
+              BULK DELETE
+            </span>
+            <h2 className="text-[28px] leading-none text-[var(--insight-text)]">Verifikasi Bulk Delete</h2>
+            <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-lg">
+              <div>Total dipilih: {selectedStockIds.length.toLocaleString("id-ID")} stock</div>
+              <div>Mode: pindahkan ke status deleted</div>
+            </div>
+            <p className="text-lg leading-tight text-[var(--insight-muted)]">
+              Stock yang dipilih tidak dihapus permanen. Semua akan masuk ke <b>Deleted Stock</b> dan bisa direstore satu per satu.
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setBulkDeleteOpen(false)}
+                className="insight-button px-4 py-2 text-lg leading-none"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => void bulkDeleteStock()}
+                disabled={isViewer || selectedStockIds.length === 0}
+                title={isViewer ? viewerOnlyTitle : undefined}
+                className={"border-[3px] border-[var(--insight-border)] bg-red-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] disabled:cursor-not-allowed disabled:opacity-40"}
+              >
+                Ya, Delete {selectedStockIds.length}
               </button>
             </div>
           </div>

@@ -141,29 +141,33 @@ export async function DELETE(req: NextRequest) {
 
   try {
     const body = (await req.json()) as Record<string, unknown>
-    const id = readString(body.id)
-    if (!id) return jsonError("Stock ID wajib diisi.")
+    const ids = Array.isArray(body.ids)
+      ? body.ids.map((value) => readString(value)).filter(Boolean)
+      : [readString(body.id)].filter(Boolean)
 
-    const { data: before } = await adminSupabase!.from("product_accounts").select("*").eq("id", id).maybeSingle()
+    if (!ids.length) return jsonError("Stock ID wajib diisi.")
+    if (ids.length > 100) return jsonError("Bulk delete maksimal 100 stock per request.")
+
+    const { data: before } = await adminSupabase!.from("product_accounts").select("*").in("id", ids)
 
     const { data, error } = await adminSupabase!
       .from("product_accounts")
       .update({ status: "deleted" })
-      .eq("id", id)
+      .in("id", ids)
       .select()
-      .single()
 
     if (error) return jsonRouteError(req, auth, "DELETE /api/admin/stocks soft delete", error, "Gagal delete stock", 500)
 
     await writeAdminAuditLog(auth, {
-      action: "soft_delete",
+      action: ids.length > 1 ? "bulk_soft_delete" : "soft_delete",
       entity: "product_accounts",
-      entityId: id,
+      entityId: ids.length === 1 ? ids[0] : null,
       before,
       after: data,
+      metadata: { count: ids.length, ids },
     })
 
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ ok: true, data })
   } catch (error) {
     return jsonRouteError(req, auth, "DELETE /api/admin/stocks", error, "Gagal delete stock", 400)
   }
