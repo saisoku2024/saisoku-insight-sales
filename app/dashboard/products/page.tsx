@@ -300,9 +300,9 @@ export default function ProductsPage() {
 
   const thClass = "p-3 cursor-pointer select-none text-left";
   const btnPrimary =
-    "border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
+    "h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
   const btnDanger =
-    "border-[3px] border-[var(--insight-border)] bg-red-600 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
+    "h-11 border-[3px] border-[var(--insight-border)] bg-red-600 px-4 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
   const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0";
   const inputClass =
     "h-10 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none";
@@ -336,7 +336,7 @@ export default function ProductsPage() {
             setSortField(event.target.value);
             setPage(1);
           }}
-          className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none shadow-[4px_4px_0_var(--insight-shadow)]"
+          className="h-11 min-w-[170px] border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl leading-none text-[var(--insight-text)] outline-none shadow-[4px_4px_0_var(--insight-shadow)]"
           aria-label="Sort products by"
         >
           {productSortOptions.map((option) => (
@@ -352,7 +352,7 @@ export default function ProductsPage() {
             setSortAsc(event.target.value === "asc");
             setPage(1);
           }}
-          className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none shadow-[4px_4px_0_var(--insight-shadow)]"
+          className="h-11 min-w-[72px] border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl leading-none text-[var(--insight-text)] outline-none shadow-[4px_4px_0_var(--insight-shadow)]"
           aria-label="Sort products direction"
         >
           <option value="desc">Desc</option>
