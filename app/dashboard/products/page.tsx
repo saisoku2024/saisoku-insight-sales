@@ -303,6 +303,8 @@ export default function ProductsPage() {
     "h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
   const btnDanger =
     "h-11 border-[3px] border-[var(--insight-border)] bg-red-600 px-4 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
+  const toolbarSelectClass =
+    "box-border h-11 appearance-none border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-0 pr-8 text-xl leading-none text-[var(--insight-text)] outline-none shadow-[4px_4px_0_var(--insight-shadow)]";
   const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0";
   const inputClass =
     "h-10 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none";
@@ -329,35 +331,41 @@ export default function ProductsPage() {
       <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />
 
       {/* TOOLBAR */}
-      <div className="flex flex-wrap gap-3">
-        <select
-          value={sortField}
-          onChange={(event) => {
-            setSortField(event.target.value);
-            setPage(1);
-          }}
-          className="h-11 min-w-[170px] border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl leading-none text-[var(--insight-text)] outline-none shadow-[4px_4px_0_var(--insight-shadow)]"
-          aria-label="Sort products by"
-        >
-          {productSortOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              Sort: {option.label}
-            </option>
-          ))}
-        </select>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative">
+          <select
+            value={sortField}
+            onChange={(event) => {
+              setSortField(event.target.value);
+              setPage(1);
+            }}
+            className={`${toolbarSelectClass} min-w-[170px]`}
+            aria-label="Sort products by"
+          >
+            {productSortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                Sort: {option.label}
+              </option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--insight-muted)]">v</span>
+        </div>
 
-        <select
-          value={sortAsc ? "asc" : "desc"}
-          onChange={(event) => {
-            setSortAsc(event.target.value === "asc");
-            setPage(1);
-          }}
-          className="h-11 min-w-[72px] border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl leading-none text-[var(--insight-text)] outline-none shadow-[4px_4px_0_var(--insight-shadow)]"
-          aria-label="Sort products direction"
-        >
-          <option value="desc">Desc</option>
-          <option value="asc">Asc</option>
-        </select>
+        <div className="relative">
+          <select
+            value={sortAsc ? "asc" : "desc"}
+            onChange={(event) => {
+              setSortAsc(event.target.value === "asc");
+              setPage(1);
+            }}
+            className={`${toolbarSelectClass} min-w-[72px]`}
+            aria-label="Sort products direction"
+          >
+            <option value="desc">Desc</option>
+            <option value="asc">Asc</option>
+          </select>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--insight-muted)]">v</span>
+        </div>
 
         <button
           onClick={() => {
