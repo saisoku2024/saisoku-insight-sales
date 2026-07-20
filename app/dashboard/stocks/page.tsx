@@ -421,29 +421,18 @@ export default function StocksPage() {
           ))}
         </select>
 
-        <div className="flex h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] shadow-[4px_4px_0_var(--insight-shadow)]">
-          {[
-            ["active", "Active"],
-            ["deleted", "Deleted Stock"],
-            ["all", "All"],
-          ].map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => {
-                setPage(1);
-                setStockView(value as "active" | "deleted" | "all");
-              }}
-              className={`px-3 text-lg leading-none ${
-                stockView === value
-                  ? "bg-[var(--insight-blue)] text-white"
-                  : "text-[var(--insight-text)] hover:bg-blue-50 dark:hover:bg-slate-800"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <select
+          className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] outline-none"
+          value={stockView}
+          onChange={(e) => {
+            setPage(1);
+            setStockView(e.target.value as "active" | "deleted" | "all");
+          }}
+        >
+          <option value="active">Active Stock</option>
+          <option value="deleted">Deleted Stock</option>
+          <option value="all">All Stock</option>
+        </select>
 
         <button
           onClick={() => {
