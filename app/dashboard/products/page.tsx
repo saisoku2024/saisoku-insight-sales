@@ -11,6 +11,16 @@ function currencyIDR(v: number) {
   return `Rp ${Number(v || 0).toLocaleString("id-ID")}`;
 }
 
+const productSortOptions = [
+  { value: "created_at", label: "Newest" },
+  { value: "product_code", label: "Product Code" },
+  { value: "name", label: "Product Name" },
+  { value: "price_normal", label: "Price" },
+  { value: "modal", label: "Modal" },
+  { value: "reseller_discount", label: "Reseller Disc" },
+  { value: "duration_days", label: "Duration" },
+];
+
 export default function ProductsPage() {
   const isViewer = useIsViewer();
   const [products, setProducts] = useState<Product[]>([]);
@@ -110,6 +120,11 @@ export default function ProductsPage() {
       setSortAsc(true);
     }
     setPage(1);
+  }
+
+  function sortIndicator(field: string) {
+    if (sortField !== field) return "";
+    return sortAsc ? " ↑" : " ↓";
   }
 
   async function addProduct() {
@@ -315,6 +330,35 @@ export default function ProductsPage() {
 
       {/* TOOLBAR */}
       <div className="flex flex-wrap gap-3">
+        <select
+          value={sortField}
+          onChange={(event) => {
+            setSortField(event.target.value);
+            setPage(1);
+          }}
+          className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none shadow-[4px_4px_0_var(--insight-shadow)]"
+          aria-label="Sort products by"
+        >
+          {productSortOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              Sort: {option.label}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={sortAsc ? "asc" : "desc"}
+          onChange={(event) => {
+            setSortAsc(event.target.value === "asc");
+            setPage(1);
+          }}
+          className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none shadow-[4px_4px_0_var(--insight-shadow)]"
+          aria-label="Sort products direction"
+        >
+          <option value="desc">Desc</option>
+          <option value="asc">Asc</option>
+        </select>
+
         <button
           onClick={() => {
             if (isViewer) return;
@@ -356,14 +400,14 @@ export default function ProductsPage() {
                     }}
                   />
                 </th>
-                <th className={thClass} onClick={() => sortBy("product_code")}>Code</th>
-                <th className={thClass} onClick={() => sortBy("name")}>Name</th>
-                <th className={thClass} onClick={() => sortBy("price_normal")}>Price</th>
-                <th className={thClass} onClick={() => sortBy("modal")}>Modal</th>
+                <th className={thClass} onClick={() => sortBy("product_code")}>Code{sortIndicator("product_code")}</th>
+                <th className={thClass} onClick={() => sortBy("name")}>Name{sortIndicator("name")}</th>
+                <th className={thClass} onClick={() => sortBy("price_normal")}>Price{sortIndicator("price_normal")}</th>
+                <th className={thClass} onClick={() => sortBy("modal")}>Modal{sortIndicator("modal")}</th>
                 <th className="p-3 text-left">Profit</th>
-                <th className={thClass} onClick={() => sortBy("reseller_discount")}>Reseller Disc</th>
+                <th className={thClass} onClick={() => sortBy("reseller_discount")}>Reseller Disc{sortIndicator("reseller_discount")}</th>
                 <th className="p-3 text-left">Promo</th>
-                <th className={thClass} onClick={() => sortBy("duration_days")}>Duration</th>
+                <th className={thClass} onClick={() => sortBy("duration_days")}>Duration{sortIndicator("duration_days")}</th>
                 <th className="p-3 text-left">Stock</th>
                 <th className="p-3 text-left">Status</th>
                 <th className="p-3 text-left">Action</th>
