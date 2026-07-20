@@ -114,8 +114,8 @@ export default function StocksPage() {
   const showSuccess = (message: string) => setNotice({ type: "success", message });
   const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
   const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50";
-  const controlClass = "h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl leading-none text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] outline-none";
-  const actionClass = "inline-flex h-11 min-w-[130px] items-center justify-center border-[3px] border-[var(--insight-border)] px-4 text-xl leading-none shadow-[4px_4px_0_var(--insight-shadow)]";
+  const controlClass = "box-border h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-0 text-xl leading-none text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] outline-none";
+  const actionClass = "inline-flex box-border h-11 min-w-[130px] items-center justify-center border-[3px] border-[var(--insight-border)] px-4 py-0 text-xl leading-none shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:hover:translate-y-0";
 
   async function fetchProducts() {
     const { data } = await supabase
