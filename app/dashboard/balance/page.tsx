@@ -80,6 +80,8 @@ export default function BalancePage() {
   const showSuccess = (message: string) => setNotice({ type: "success", message })
   const getErrorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unknown error")
   const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50"
+  const balanceControlClass = "box-border h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-0 text-xl leading-none text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] outline-none"
+  const balanceSubmitClass = "inline-flex box-border h-11 items-center justify-center border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 py-0 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40"
 
   const loadBalanceData = useCallback(async () => {
     setLoading(true)
@@ -254,7 +256,7 @@ export default function BalancePage() {
                 setTelegramId(e.target.value)
                 setSelectedUser(null)
               }}
-              className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+              className={`mt-1 ${balanceControlClass}`}
               placeholder="123456789"
             />
           </label>
@@ -267,7 +269,7 @@ export default function BalancePage() {
               value={amount}
               disabled={action === "reset"}
               onChange={(e) => setAmount(e.target.value)}
-              className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none disabled:opacity-50"
+              className={`mt-1 ${balanceControlClass} disabled:opacity-50`}
               placeholder={action === "reset" ? "Auto" : "10000"}
             />
           </label>
@@ -277,7 +279,7 @@ export default function BalancePage() {
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+              className={`mt-1 ${balanceControlClass}`}
               placeholder="Adjustment owner"
             />
           </label>
@@ -287,7 +289,7 @@ export default function BalancePage() {
             onClick={() => void submitBalanceAction()}
             disabled={saving || isViewer}
             title={isViewer ? viewerOnlyTitle : undefined}
-            className={"h-11 border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40" + viewerDisabledClass}
+            className={balanceSubmitClass + viewerDisabledClass}
           >
             {saving ? "Saving..." : actionLabel(action)}
           </button>
