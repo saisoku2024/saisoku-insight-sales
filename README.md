@@ -108,6 +108,55 @@ Tracking ringkas dari pengembangan awal sampai versi terbaru:
 | 11 Juli 2026 | `ac9762c` | Ticket status actions ditambahkan untuk flow operasional admin. |
 | 11 Juli 2026 | `78bb462` | Loyalty tier management diaktifkan lewat API admin server-side. |
 | 16 Juli 2026 | `de0f44e` | Struktur project dirapikan ke folder standar: `config`, `features`, `services`, `schemas`, `providers`, `store`, dan `styles`. |
+| 20 Juli 2026 | `65b2ec9` | Login page ditambahkan shortcut `Login as Guest` untuk demo mode viewer. |
+
+## Ringkasan Update 20 Juli 2026
+
+Update besar yang sudah diterapkan hari ini:
+
+- Login web panel ditambah opsi `Login as Guest`, mengisi kredensial demo otomatis lalu tetap masuk lewat tombol `Sign in to dashboard`.
+- Guest/viewer mode dipertahankan sebagai akses demo yang bisa melihat dashboard tanpa akses edit/write.
+- Page stock mendukung upload stock dari file CSV/TXT headerless dengan format `email;password;profile;pin`.
+- Stock management ditambah filter product/brand/status dan flow delete bulk dengan konfirmasi.
+- Transaction history sudah memakai snapshot akun dari `sold_accounts.account_snapshot`, sehingga riwayat tetap terbaca walau stock/account asli dihapus.
+- Backup dan guarded reset history tersedia dari Settings > Backup untuk membersihkan data dummy transaksi/tiket secara lebih aman.
+- Access log, audit log, error log, dan Better Stack logging sudah disiapkan untuk observability dasar.
+- Bot Telegram diperbarui dengan promo aktif, harga promo tunggal tanpa stacking loyalty, output bulk purchase sebagai TXT, template start baru, serta style button inline.
+- Bot dan web panel sudah tersambung ke GitHub untuk version control dan deployment: web via Vercel, bot via Supabase Edge Functions.
+
+## Template Publikasi LinkedIn
+
+```text
+Sharing my latest project: SAISOKU INSIGHT
+
+Halo rekan-rekan LinkedIn,
+
+Saya baru menyelesaikan tahap pengembangan awal untuk proyek pribadi saya: SAISOKU INSIGHT
+https://lnkd.in/ggG2Qu_J
+
+SAISOKU INSIGHT adalah dashboard web yang saya bangun untuk membantu monitoring data penjualan, stok, user, tiket bantuan, voucher, loyalty, balance, backup data, audit log, dan access log dalam satu panel.
+
+Tujuan saya membagikan proyek ini adalah untuk mendokumentasikan proses belajar sekaligus menguji bagaimana sistem dashboard internal dapat membantu operasional berjalan lebih rapi dan efisien.
+
+Tech Stack yang digunakan:
+- Frontend: Next.js, React, Tailwind CSS
+- Backend/API: Next.js API Routes / Server-side logic
+- Database & Auth: Supabase PostgreSQL, Supabase Auth, RLS
+- Bot Integration: Telegram Bot via Supabase Edge Functions
+- Storage & Backup: Supabase Storage
+- Deployment: Vercel untuk web dashboard, Supabase untuk bot
+- Version Control: GitHub
+- Observability: Better Stack untuk logging
+- Security Layer: Role-based access, viewer mode, audit log, access log, rate limiting, dan security headers
+
+Saat ini project masih dalam tahap pengembangan dan pengujian pribadi. Jika teman-teman memiliki waktu luang, silakan coba akses aplikasinya. Saya sangat terbuka untuk masukan, kritik, maupun saran, terutama terkait pengalaman login, navigasi dashboard, tampilan data, atau flow penggunaan fitur.
+
+Feedback teman-teman akan sangat membantu untuk pengembangan fitur berikutnya.
+
+Terima kasih banyak!
+
+#ProjectShowcase #WebDevelopment #NextJS #ReactJS #Supabase #Vercel #TelegramBot #CodingPortfolio #SaisokuInsight #LearningJourney #BuildInPublic
+```
 
 Catatan tracking:
 
