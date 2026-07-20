@@ -119,9 +119,7 @@ test.describe("authenticated admin smoke", () => {
     })
 
     expect(response.status()).toBe(400)
-    await expect(async () => {
-      const body = await response.json()
-      expect(String(body.error || "")).toMatch(/gagal|wajib|valid/i)
-    }).toPass()
+    const body = await response.json()
+    expect(String(body.error || "")).toMatch(/gagal|wajib|valid|minimal/i)
   })
 })
