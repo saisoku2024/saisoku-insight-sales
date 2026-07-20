@@ -424,7 +424,7 @@ export default function StocksPage() {
       </div>
 
       {/* FILTER AREA */}
-      <div className="insight-card space-y-3 p-4">
+      <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           <input
             className={`${controlClass} w-[180px]`}
