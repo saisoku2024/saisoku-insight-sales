@@ -39,6 +39,17 @@ test("login page renders admin form", async ({ page }) => {
   await expect(page.getByRole("button", { name: /login as guest/i })).toBeVisible()
 })
 
+test("sensitive endpoints reject unauthenticated or unsigned requests", async ({ request }) => {
+  const adminResponse = await request.get("/api/admin/audit")
+  expect(adminResponse.status()).toBe(401)
+
+  const backupCronResponse = await request.get("/api/admin/backups?mode=critical")
+  expect(backupCronResponse.status()).toBe(401)
+
+  const ticketFileResponse = await request.get("/api/tickets/file?fileId=test-file-id")
+  expect(ticketFileResponse.status()).toBe(401)
+})
+
 test("guest viewer can login but write controls stay disabled", async ({ page }) => {
   await login(page, guestEmail, guestPassword)
 

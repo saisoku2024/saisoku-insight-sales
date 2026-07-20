@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import * as XLSX from "xlsx";
 import type { Transaction } from "@/types";
 
 type ProductAccount = {
@@ -170,11 +169,34 @@ export default function TransactionsPage() {
     return "bg-gray-100 text-gray-700";
   }
 
-  async function exportExcel() {
+  function csvValue(value: unknown) {
+    const normalized = String(value ?? "").replace(/\r?\n/g, " ");
+    return `"${normalized.replace(/"/g, '""')}"`;
+  }
+
+  function downloadCsv(filename: string, rows: Array<Record<string, unknown>>) {
+    if (!rows.length) return;
+
+    const headers = Object.keys(rows[0]);
+    const csv = [
+      headers.map(csvValue).join(","),
+      ...rows.map((row) => headers.map((header) => csvValue(row[header])).join(",")),
+    ].join("\r\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function exportCsv() {
     const { data, error } = await buildTransactionQuery(false);
 
     if (error) {
-      console.error("exportExcel error:", error);
+      console.error("exportCsv error:", error);
       return;
     }
 
@@ -200,10 +222,7 @@ export default function TransactionsPage() {
       };
     }) || [];
 
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
-    XLSX.writeFile(workbook, "transactions.xlsx");
+    downloadCsv("transactions.csv", rows);
   }
 
   useEffect(() => {
@@ -287,10 +306,10 @@ export default function TransactionsPage() {
           </button>
 
           <button
-            onClick={() => void exportExcel()}
+            onClick={() => void exportCsv()}
             className="border-[3px] border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
           >
-            Export Excel
+            Export CSV
           </button>
         </div>
       </div>

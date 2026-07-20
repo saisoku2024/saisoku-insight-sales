@@ -236,6 +236,12 @@ async function runBackup(mode: BackupMode, triggeredBy: string) {
 }
 
 export async function GET(req: NextRequest) {
+  const isCronRequest = Boolean(req.nextUrl.searchParams.get("mode"))
+
+  if (isCronRequest && !cronAuthorized(req)) {
+    return jsonError("Unauthorized cron backup request.", 401)
+  }
+
   if (cronAuthorized(req)) {
     const mode = backupMode(readString(req.nextUrl.searchParams.get("mode")))
     try {
