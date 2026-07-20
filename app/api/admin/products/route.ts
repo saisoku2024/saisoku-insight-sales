@@ -36,8 +36,9 @@ function productPayload(body: Record<string, unknown>) {
     description: readLimitedNullableString(body.description, "Deskripsi", 1000),
     tos_description: readLimitedNullableString(body.tos_description, "TOS", 2000),
     is_promo_active: readBoolean(body.is_promo_active) ?? false,
-    promo_price_reguler: readNumberRange(body.promo_price_reguler, "Harga promo reguler", { min: 0, max: 100_000_000 }),
-    promo_price_reseller: readNumberRange(body.promo_price_reseller, "Harga promo reseller", { min: 0, max: 100_000_000 }),
+    promo_price: readNumberRange(body.promo_price, "Harga promo", { min: 0, max: 100_000_000 }),
+    promo_price_reguler: readNumberRange(body.promo_price, "Harga promo", { min: 0, max: 100_000_000 }),
+    promo_price_reseller: 0,
     promo_label: readLimitedNullableString(body.promo_label, "Label promo", 120),
   }
 }
@@ -86,12 +87,19 @@ export async function PATCH(req: NextRequest) {
     const { data: before } = await adminSupabase!.from("products").select("*").eq("id", id).maybeSingle()
 
     const isActive = readBoolean(body.is_active)
+    const isPromoActive = readBoolean(body.is_promo_active)
+    const isStatusToggle = isActive !== null && body.product_code === undefined
+    const isPromoToggle = isPromoActive !== null && body.product_code === undefined && isActive === null
     const payload =
-      isActive === null
-        ? productPayload(body)
-        : {
+      isStatusToggle
+        ? {
             is_active: isActive,
           }
+        : isPromoToggle
+          ? {
+              is_promo_active: isPromoActive,
+            }
+          : productPayload(body)
 
     const { data, error } = await adminSupabase!
       .from("products")
@@ -103,7 +111,7 @@ export async function PATCH(req: NextRequest) {
     if (error) return jsonRouteError(req, auth, "PATCH /api/admin/products update", error, "Gagal update produk", 500)
 
     await writeAdminAuditLog(auth, {
-      action: isActive === null ? "update" : "toggle",
+      action: isStatusToggle ? "toggle" : isPromoToggle ? "toggle_promo" : "update",
       entity: "products",
       entityId: id,
       before,
