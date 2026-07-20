@@ -61,8 +61,12 @@ export interface Transaction {
   products?: { name: string | null; modal: number | null } | null
   users?: { username: string | null } | null
   product_accounts?:
-    | { email: string | null; password: string | null; pin: string | null; sold_at: string | null }
-    | { email: string | null; password: string | null; pin: string | null; sold_at: string | null }[]
+    | { email: string | null; password: string | null; pin: string | null; profile?: string | null; sold_at: string | null }
+    | { email: string | null; password: string | null; pin: string | null; profile?: string | null; sold_at: string | null }[]
+    | null
+  sold_accounts?:
+    | { account_snapshot: { email?: string | null; password?: string | null; pin?: string | null; profile?: string | null; sold_at?: string | null } | null }
+    | { account_snapshot: { email?: string | null; password?: string | null; pin?: string | null; profile?: string | null; sold_at?: string | null } | null }[]
     | null
 }
 

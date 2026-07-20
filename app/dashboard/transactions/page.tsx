@@ -9,6 +9,7 @@ type ProductAccount = {
   email: string | null;
   password: string | null;
   pin: string | null;
+  profile?: string | null;
   sold_at: string | null;
 };
 
@@ -62,7 +63,8 @@ export default function TransactionsPage() {
         invoice,
         products(name, modal),
         users(username),
-        product_accounts(email,password,pin,sold_at)
+        product_accounts(email,password,pin,profile,sold_at),
+        sold_accounts(account_snapshot)
       `)
       .order("created_at", { ascending: false });
 
@@ -119,8 +121,28 @@ export default function TransactionsPage() {
       : t.product_accounts;
   }
 
+  function getSnapshotAccount(t: Transaction): ProductAccount | null {
+    const soldAccount = Array.isArray(t.sold_accounts)
+      ? (t.sold_accounts[0] ?? null)
+      : t.sold_accounts;
+    const snapshot = soldAccount?.account_snapshot;
+    if (!snapshot) return null;
+
+    return {
+      email: snapshot.email ?? null,
+      password: snapshot.password ?? null,
+      pin: snapshot.pin ?? null,
+      profile: snapshot.profile ?? null,
+      sold_at: snapshot.sold_at ?? null,
+    };
+  }
+
+  function getTransactionAccount(t: Transaction): ProductAccount | null {
+    return getSnapshotAccount(t) ?? getProductAccount(t);
+  }
+
   function getStatus(t: Transaction) {
-    const pa = getProductAccount(t);
+    const pa = getTransactionAccount(t);
     const soldAt = pa?.sold_at;
     const baseDate = soldAt || t.purchased_at || t.created_at;
 
@@ -157,7 +179,7 @@ export default function TransactionsPage() {
     }
 
     const rows = (data as unknown as Transaction[])?.map((t: Transaction) => {
-      const pa = getProductAccount(t);
+      const pa = getTransactionAccount(t);
       const modal = Number(t.products?.modal || 0);
       const profit = t.status === "paid" ? (t.price || 0) - modal : 0;
       return {
@@ -310,7 +332,7 @@ export default function TransactionsPage() {
                 </tr>
               ) : (
                 transactions.map((t, i) => {
-                  const pa = getProductAccount(t);
+                  const pa = getTransactionAccount(t);
                   const status = getStatus(t);
                   const profit = t.status === "paid" ? (t.price || 0) - Number(t.products?.modal || 0) : 0;
 
