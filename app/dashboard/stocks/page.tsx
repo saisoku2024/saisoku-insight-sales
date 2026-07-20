@@ -15,7 +15,7 @@ function parseCsvSemicolon(text: string) {
     .map((l) => l.trim())
     .filter((l) => l.length > 0);
 
-  if (lines.length < 2) return [];
+  if (lines.length < 1) return [];
 
   const cleanLine = (line: string) => {
     if (line.startsWith('"') && line.endsWith('"')) {
@@ -30,16 +30,21 @@ function parseCsvSemicolon(text: string) {
     return c;
   };
 
+  const defaultHeaders = ["email", "password", "profile", "pin"];
   const headerLine = cleanLine(lines[0]);
-  const headers = headerLine.split(";").map((h) => cleanCell(h).toLowerCase());
+  const firstColumns = headerLine.split(";").map((h) => cleanCell(h).toLowerCase());
+  const hasHeader = firstColumns.some((value) => defaultHeaders.includes(value));
+  const headers = hasHeader ? firstColumns : defaultHeaders;
+  const startIndex = hasHeader ? 1 : 0;
 
   const rows: Record<string, string>[] = [];
 
-  for (let i = 1; i < lines.length; i++) {
+  for (let i = startIndex; i < lines.length; i++) {
     const rowLine = cleanLine(lines[i]);
     const cols = rowLine.split(";").map(cleanCell);
     const obj: Record<string, string> = {};
     headers.forEach((h, idx) => (obj[h] = cols[idx] ?? ""));
+    obj.__line = String(i + 1);
     rows.push(obj);
   }
 
@@ -276,8 +281,8 @@ export default function StocksPage() {
   async function bulkUploadCsv() {
     setUploadError("");
 
-    if (!filterProduct) return setUploadError("Pilih produk dulu sebelum upload CSV.");
-    if (!csvFile) return setUploadError("Pilih file CSV dulu.");
+    if (!filterProduct) return setUploadError("Pilih produk dulu sebelum upload file.");
+    if (!csvFile) return setUploadError("Pilih file CSV/TXT dulu.");
 
     setUploading(true);
     setUploadProgress(0);
@@ -289,7 +294,7 @@ export default function StocksPage() {
 
       const badIndex = rows.findIndex((r) => !(r.email || "").trim());
       if (badIndex !== -1) {
-        throw new Error(`Baris ke-${badIndex + 2} kolom Email/NoHP kosong`);
+        throw new Error(`Baris ke-${rows[badIndex].__line || badIndex + 1} kolom Email/NoHP kosong`);
       }
 
       const payload = rows.map((r) => ({
@@ -503,10 +508,10 @@ export default function StocksPage() {
           className={`${actionClass} min-w-[120px] bg-[var(--insight-panel)] text-[var(--insight-text)] ${isViewer ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
           title={isViewer ? viewerOnlyTitle : undefined}
         >
-          Pilih CSV
+          Pilih CSV/TXT
           <input
             type="file"
-            accept=".csv"
+            accept=".csv,.txt,text/csv,text/plain"
             disabled={isViewer}
             className="hidden"
             onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
@@ -529,7 +534,7 @@ export default function StocksPage() {
         </div>
 
         <div className="w-full text-lg text-[var(--insight-muted)]">
-          Format CSV:{" "}
+          Format CSV/TXT:{" "}
           <code className="border-[2px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-2 py-0.5 text-red-500">
             email;password;profile;pin
           </code>
