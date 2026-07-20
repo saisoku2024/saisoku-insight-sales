@@ -64,8 +64,8 @@ Cron backup:
 | Method | Path | Trigger |
 | --- | --- | --- |
 | `POST` | `/api/admin/backups` | Manual dari Settings > Backup |
-| `GET/POST` | `/api/cron/backups/critical` | Vercel cron critical |
-| `GET/POST` | `/api/cron/backups/full` | Vercel cron full |
+| `GET` | `/api/admin/backups?mode=critical` | Vercel cron critical, wajib `Authorization: Bearer BACKUP_CRON_SECRET` |
+| `GET` | `/api/admin/backups?mode=full` | Vercel cron full, wajib `Authorization: Bearer BACKUP_CRON_SECRET` |
 
 ## Bot integration
 
