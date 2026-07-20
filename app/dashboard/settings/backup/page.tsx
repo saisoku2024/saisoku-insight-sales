@@ -57,6 +57,25 @@ type RestoreResult = {
   errors: Array<{ table: string; error: string }>
 }
 
+type StockCleanupMode = "keep" | "return_available" | "soft_delete"
+
+type HistoryResetPreview = {
+  confirmationPhrase: string
+  tables: Array<{ table: string; rows: number }>
+  totalRows: number
+  stockCleanupCandidates: number
+  stockCleanupModes: StockCleanupMode[]
+  warnings: string[]
+}
+
+type HistoryResetResult = {
+  ok: boolean
+  backup: { id: string; storage_path?: string | null; rows_count?: number | null }
+  deletedTables: Array<{ table: string; rows: number }>
+  deletedRows: number
+  stockCleanup: { mode: StockCleanupMode; affectedRows: number; nextStatus?: string }
+}
+
 function formatDate(value?: string | null) {
   if (!value) return "-"
   return new Date(value).toLocaleString("id-ID")
@@ -98,6 +117,11 @@ export default function BackupSettingsPage() {
   const [restoreMode, setRestoreMode] = useState<"append" | "replace">("append")
   const [restoreTables, setRestoreTables] = useState("")
   const [restoreConfirmation, setRestoreConfirmation] = useState("")
+  const [historyPreview, setHistoryPreview] = useState<HistoryResetPreview | null>(null)
+  const [historyPreviewing, setHistoryPreviewing] = useState(false)
+  const [historyResetting, setHistoryResetting] = useState(false)
+  const [historyConfirmation, setHistoryConfirmation] = useState("")
+  const [stockCleanupMode, setStockCleanupMode] = useState<StockCleanupMode>("keep")
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<ActionNoticeState>(null)
 
@@ -217,6 +241,49 @@ export default function BackupSettingsPage() {
     }
 
     setRestoring(false)
+  }
+
+  async function previewHistoryReset() {
+    if (isViewer || historyPreviewing) return
+    setHistoryPreviewing(true)
+    setHistoryConfirmation("")
+
+    try {
+      const result = await adminWrite<HistoryResetPreview>("/api/admin/history-reset", {
+        body: { action: "preview" },
+      })
+      setHistoryPreview(result)
+      showSuccess(`Preview reset siap: ${result.totalRows.toLocaleString("id-ID")} rows history terdeteksi.`)
+    } catch (error) {
+      console.error("previewHistoryReset error:", error)
+      showError(`Preview reset gagal: ${getErrorMessage(error)}`)
+    }
+
+    setHistoryPreviewing(false)
+  }
+
+  async function runHistoryReset() {
+    if (isViewer || !historyPreview || historyResetting) return
+    setHistoryResetting(true)
+
+    try {
+      const result = await adminWrite<HistoryResetResult>("/api/admin/history-reset", {
+        body: {
+          action: "reset",
+          confirmation: historyConfirmation,
+          stockCleanupMode,
+        },
+      })
+      showSuccess(`Reset selesai: ${result.deletedRows.toLocaleString("id-ID")} rows dihapus. Backup: ${result.backup.id}.`)
+      setHistoryConfirmation("")
+      setHistoryPreview(null)
+      await loadRuns()
+    } catch (error) {
+      console.error("runHistoryReset error:", error)
+      showError(`Reset history gagal: ${getErrorMessage(error)}`)
+    }
+
+    setHistoryResetting(false)
   }
 
   return (
@@ -452,6 +519,117 @@ export default function BackupSettingsPage() {
           </div>
         </div>
       ) : null}
+
+      <div className="insight-card p-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <span className="inline-block border-[3px] border-[var(--insight-border)] bg-red-100 px-2.5 py-1 text-base leading-none text-red-800">
+              OWNER RESET
+            </span>
+            <h2 className="mt-2 text-[26px] leading-none">Reset History Transaksi</h2>
+            <p className="mt-1 text-lg leading-tight text-[var(--insight-muted)]">
+              Menghapus transaksi, sold accounts, pending orders, ticket dummy, dan session terkait setelah full backup sukses.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void previewHistoryReset()}
+            disabled={isViewer || historyPreviewing || historyResetting}
+            title={isViewer ? viewerOnlyTitle : undefined}
+            className={`border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3 py-1.5 text-lg leading-none shadow-[3px_3px_0_var(--insight-shadow)] disabled:cursor-not-allowed disabled:opacity-40${viewerDisabledClass}`}
+          >
+            {historyPreviewing ? "Loading..." : "Preview Reset"}
+          </button>
+        </div>
+
+        {historyPreview ? (
+          <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_0.9fr]">
+            <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3">
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div>
+                  <div className="text-base text-[var(--insight-muted)]">History Rows</div>
+                  <div className="text-2xl leading-none">{historyPreview.totalRows.toLocaleString("id-ID")}</div>
+                </div>
+                <div>
+                  <div className="text-base text-[var(--insight-muted)]">Stock Sold/Reserved</div>
+                  <div className="text-2xl leading-none">{historyPreview.stockCleanupCandidates.toLocaleString("id-ID")}</div>
+                </div>
+                <div>
+                  <div className="text-base text-[var(--insight-muted)]">Backup</div>
+                  <div className="text-lg leading-tight">Full backup wajib</div>
+                </div>
+              </div>
+              <div className="mt-3 max-h-52 overflow-auto border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)]">
+                <table className="w-full text-left">
+                  <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
+                    <tr>
+                      <th className="p-2">Table</th>
+                      <th className="p-2">Rows</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {historyPreview.tables.map((table) => (
+                      <tr key={table.table}>
+                        <td className="p-2">{table.table}</td>
+                        <td className="p-2">{table.rows.toLocaleString("id-ID")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-3 grid gap-2 text-base leading-tight text-[var(--insight-muted)]">
+                {historyPreview.warnings.map((warning) => (
+                  <div key={warning} className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] p-2">
+                    {warning}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3">
+              <label className="block text-lg">
+                Stock cleanup setelah transaksi dihapus
+                <select
+                  value={stockCleanupMode}
+                  onChange={(event) => setStockCleanupMode(event.target.value as StockCleanupMode)}
+                  disabled={isViewer || historyResetting}
+                  title={isViewer ? viewerOnlyTitle : undefined}
+                  className={`mt-1 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1.5 outline-none disabled:cursor-not-allowed disabled:opacity-60${viewerDisabledClass}`}
+                >
+                  <option value="keep">Keep stock as-is</option>
+                  <option value="return_available">Return sold/reserved to available</option>
+                  <option value="soft_delete">Soft delete sold/reserved</option>
+                </select>
+              </label>
+
+              <label className="mt-3 block text-lg">
+                Confirmation
+                <input
+                  value={historyConfirmation}
+                  onChange={(event) => setHistoryConfirmation(event.target.value)}
+                  placeholder={historyPreview.confirmationPhrase}
+                  disabled={isViewer || historyResetting}
+                  title={isViewer ? viewerOnlyTitle : undefined}
+                  className={`mt-1 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1.5 outline-none disabled:cursor-not-allowed disabled:opacity-60${viewerDisabledClass}`}
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={() => void runHistoryReset()}
+                disabled={isViewer || historyResetting || historyConfirmation !== historyPreview.confirmationPhrase}
+                title={isViewer ? viewerOnlyTitle : undefined}
+                className={`mt-3 border-[3px] border-[var(--insight-border)] bg-red-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-40${viewerDisabledClass}`}
+              >
+                {historyResetting ? "Backup + Reset..." : "Run Reset History"}
+              </button>
+              <p className="mt-2 text-base leading-tight text-[var(--insight-muted)]">
+                Saat dieksekusi, sistem menjalankan full backup dulu. Jika backup gagal, reset otomatis batal.
+              </p>
+            </div>
+          </div>
+        ) : null}
+      </div>
 
       <div className="insight-card overflow-hidden">
         <div className="border-b-[3px] border-[var(--insight-border)] p-3">
