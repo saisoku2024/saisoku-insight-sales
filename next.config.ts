@@ -36,6 +36,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["127.0.0.1", "127.0.0.1:3004", "localhost", "localhost:3004"],
   async headers() {
     return [
       {
