@@ -20,6 +20,10 @@ export interface Product {
   tos_description: string | null
   template_message: string | null
   is_active: boolean
+  is_promo_active?: boolean
+  promo_price_reguler?: number | null
+  promo_price_reseller?: number | null
+  promo_label?: string | null
   created_at: string
   updated_at?: string | null
 }

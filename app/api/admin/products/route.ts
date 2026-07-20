@@ -35,6 +35,10 @@ function productPayload(body: Record<string, unknown>) {
     duration_days,
     description: readLimitedNullableString(body.description, "Deskripsi", 1000),
     tos_description: readLimitedNullableString(body.tos_description, "TOS", 2000),
+    is_promo_active: readBoolean(body.is_promo_active) ?? false,
+    promo_price_reguler: readNumberRange(body.promo_price_reguler, "Harga promo reguler", { min: 0, max: 100_000_000 }),
+    promo_price_reseller: readNumberRange(body.promo_price_reseller, "Harga promo reseller", { min: 0, max: 100_000_000 }),
+    promo_label: readLimitedNullableString(body.promo_label, "Label promo", 120),
   }
 }
 

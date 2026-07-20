@@ -25,6 +25,10 @@ export default function ProductsPage() {
   const [duration, setDuration] = useState("");
   const [description, setDescription] = useState("");
   const [tos, setTos] = useState("");
+  const [promoActive, setPromoActive] = useState(false);
+  const [promoReguler, setPromoReguler] = useState("");
+  const [promoReseller, setPromoReseller] = useState("");
+  const [promoLabel, setPromoLabel] = useState("");
 
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -53,6 +57,10 @@ export default function ProductsPage() {
     setDuration("");
     setDescription("");
     setTos("");
+    setPromoActive(false);
+    setPromoReguler("");
+    setPromoReseller("");
+    setPromoLabel("");
     setEditingProduct(null);
   };
 
@@ -123,6 +131,10 @@ export default function ProductsPage() {
           duration_days: Number(duration),
           description,
           tos_description: tos,
+          is_promo_active: promoActive,
+          promo_price_reguler: Number(promoReguler || 0),
+          promo_price_reseller: Number(promoReseller || 0),
+          promo_label: promoLabel,
           template_message: "Email: {email}\nPassword: {password}",
         },
       });
@@ -148,6 +160,10 @@ export default function ProductsPage() {
     setDuration(String(p.duration_days ?? ""));
     setDescription(p.description || "");
     setTos(p.tos_description || "");
+    setPromoActive(Boolean(p.is_promo_active));
+    setPromoReguler(String(p.promo_price_reguler ?? ""));
+    setPromoReseller(String(p.promo_price_reseller ?? ""));
+    setPromoLabel(p.promo_label || "");
     setShowModal(true);
   }
 
@@ -167,6 +183,10 @@ export default function ProductsPage() {
         duration_days: Number(duration),
           description,
         tos_description: tos,
+        is_promo_active: promoActive,
+        promo_price_reguler: Number(promoReguler || 0),
+        promo_price_reseller: Number(promoReseller || 0),
+        promo_label: promoLabel,
         },
       });
     } catch (error) {
@@ -331,6 +351,7 @@ export default function ProductsPage() {
                 <th className={thClass} onClick={() => sortBy("modal")}>Modal</th>
                 <th className="p-3 text-left">Profit</th>
                 <th className={thClass} onClick={() => sortBy("reseller_discount")}>Reseller Disc</th>
+                <th className="p-3 text-left">Promo</th>
                 <th className={thClass} onClick={() => sortBy("duration_days")}>Duration</th>
                 <th className="p-3 text-left">Stock</th>
                 <th className="p-3 text-left">Status</th>
@@ -367,6 +388,21 @@ export default function ProductsPage() {
                     <td className="p-3">{currencyIDR(Number(p.modal || 0))}</td>
                     <td className="p-3">{currencyIDR(profit)}</td>
                     <td className="p-3">{currencyIDR(Number(p.reseller_discount || 0))}</td>
+                    <td className="p-3">
+                      {p.is_promo_active ? (
+                        <div className="space-y-1">
+                          <span className="inline-block border-[2px] border-[var(--insight-border)] bg-red-100 px-2 py-0.5 text-base leading-none text-red-700">
+                            PROMO
+                          </span>
+                          <div className="text-base leading-tight text-[var(--insight-muted)]">
+                            R: {currencyIDR(Number(p.promo_price_reguler || 0))}
+                          </div>
+                          <div className="text-base leading-tight text-[var(--insight-muted)]">
+                            S: {currencyIDR(Number(p.promo_price_reseller || 0))}
+                          </div>
+                        </div>
+                      ) : "-"}
+                    </td>
                     <td className="p-3">{p.duration_days} days</td>
                     <td className="p-3">{stock}</td>
                     <td className="p-3">
@@ -410,7 +446,7 @@ export default function ProductsPage() {
 
               {products.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                  <td colSpan={12} className="p-8 text-center text-xl text-[var(--insight-muted)]">
                     No products found
                   </td>
                 </tr>
@@ -471,6 +507,22 @@ export default function ProductsPage() {
               <label>
                 <span className={labelClass}>Duration Days</span>
                 <input type="number" className={inputClass} placeholder="Masa aktif hari" value={duration} onChange={(e) => setDuration(e.target.value)} />
+              </label>
+              <label className="flex items-end gap-2 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-2">
+                <input type="checkbox" checked={promoActive} onChange={(e) => setPromoActive(e.target.checked)} className="h-5 w-5 accent-red-600" />
+                <span className={labelClass}>Promo Active</span>
+              </label>
+              <label>
+                <span className={labelClass}>Promo Label</span>
+                <input className={inputClass} placeholder="Kosong = nama produk" value={promoLabel} onChange={(e) => setPromoLabel(e.target.value)} />
+              </label>
+              <label>
+                <span className={labelClass}>Promo Reguler</span>
+                <input type="number" className={inputClass} placeholder="Harga promo reguler" value={promoReguler} onChange={(e) => setPromoReguler(e.target.value)} />
+              </label>
+              <label>
+                <span className={labelClass}>Promo Reseller</span>
+                <input type="number" className={inputClass} placeholder="Harga promo reseller" value={promoReseller} onChange={(e) => setPromoReseller(e.target.value)} />
               </label>
             </div>
 
@@ -546,6 +598,22 @@ export default function ProductsPage() {
               <label>
                 <span className={labelClass}>Duration Days</span>
                 <input type="number" className={inputClass} value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="Masa aktif hari" />
+              </label>
+              <label className="flex items-end gap-2 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-2">
+                <input type="checkbox" checked={promoActive} onChange={(e) => setPromoActive(e.target.checked)} className="h-5 w-5 accent-red-600" />
+                <span className={labelClass}>Promo Active</span>
+              </label>
+              <label>
+                <span className={labelClass}>Promo Label</span>
+                <input className={inputClass} value={promoLabel} onChange={(e) => setPromoLabel(e.target.value)} placeholder="Kosong = nama produk" />
+              </label>
+              <label>
+                <span className={labelClass}>Promo Reguler</span>
+                <input type="number" className={inputClass} value={promoReguler} onChange={(e) => setPromoReguler(e.target.value)} placeholder="Harga promo reguler" />
+              </label>
+              <label>
+                <span className={labelClass}>Promo Reseller</span>
+                <input type="number" className={inputClass} value={promoReseller} onChange={(e) => setPromoReseller(e.target.value)} placeholder="Harga promo reseller" />
               </label>
             </div>
 
