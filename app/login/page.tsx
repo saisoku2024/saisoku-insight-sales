@@ -1,7 +1,7 @@
 "use client"
 
 import { FormEvent, useEffect, useMemo, useState } from "react"
-import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react"
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, UserRoundCheck } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { AuthLoadingScreen } from "@/components/auth/auth-loading-screen"
@@ -14,6 +14,8 @@ import { supabase } from "@/lib/supabase/client"
 const THEME_STORAGE_KEY = "saisoku-theme"
 const RESET_COOLDOWN_SECONDS = 60
 const RESET_COOLDOWN_KEY = "saisoku-reset-password-next-at"
+const GUEST_EMAIL = "guest@ssidmail.my.id"
+const GUEST_PASSWORD = "guestonly123"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -101,6 +103,13 @@ export default function LoginPage() {
       window.localStorage.setItem(THEME_STORAGE_KEY, nextValue ? "dark" : "light")
       return nextValue
     })
+  }
+
+  function fillGuestLogin() {
+    setEmail(GUEST_EMAIL)
+    setPassword(GUEST_PASSWORD)
+    setErrorMessage(null)
+    setSuccessMessage("Mode guest siap. Klik Sign in to dashboard untuk masuk.")
   }
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
@@ -290,6 +299,16 @@ export default function LoginPage() {
         >
           {isSubmitting ? "Signing in..." : "Sign in to dashboard"}
           {!isSubmitting ? <ArrowRight className="h-4 w-4" /> : null}
+        </button>
+
+        <button
+          type="button"
+          onClick={fillGuestLogin}
+          disabled={isSubmitting}
+          className="inline-flex h-11 w-full items-center justify-center gap-2 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-4 text-lg text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <UserRoundCheck className="h-4 w-4" />
+          Login as Guest
         </button>
 
       </form>
