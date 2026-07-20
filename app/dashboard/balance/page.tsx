@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice"
+import { ToolbarSelect } from "@/components/dashboard/toolbar-select"
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context"
 import { adminWrite } from "@/services/admin/admin-api-client"
@@ -230,15 +231,19 @@ export default function BalancePage() {
         <div className="mt-4 grid gap-3 lg:grid-cols-[180px_1fr_1fr_1.5fr_auto] lg:items-end">
           <label className="block">
             <span className="text-lg text-[var(--insight-muted)]">Action</span>
-            <select
-              value={action}
-              onChange={(e) => setAction(e.target.value as BalanceAction)}
-              className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
-            >
-              <option value="add">Add Balance</option>
-              <option value="deduct">Deduct Balance</option>
-              <option value="reset">Reset Balance</option>
-            </select>
+            <div className="mt-1">
+              <ToolbarSelect
+                value={action}
+                options={[
+                  { value: "add", label: "Add Balance" },
+                  { value: "deduct", label: "Deduct Balance" },
+                  { value: "reset", label: "Reset Balance" },
+                ]}
+                onChange={(nextAction) => setAction(nextAction as BalanceAction)}
+                minWidth={180}
+                ariaLabel="Balance action"
+              />
+            </div>
           </label>
 
           <label className="block">
