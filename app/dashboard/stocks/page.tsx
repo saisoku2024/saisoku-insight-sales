@@ -84,8 +84,8 @@ export default function StocksPage() {
   const [stocks, setStocks] = useState<Stock[]>([]);
 
   const [search, setSearch] = useState("");
-  const [filterProduct, setFilterProduct] = useState("");
   const [filterBrand, setFilterBrand] = useState("");
+  const [filterProductCode, setFilterProductCode] = useState("");
   const [stockView, setStockView] = useState<"active" | "deleted" | "all">("active");
 
   // Add stock form
@@ -129,10 +129,35 @@ export default function StocksPage() {
 
   const fetchStocks = useCallback(async () => {
     const brandProductIds = filterBrand
-      ? products.filter((product) => productBrand(product) === filterBrand).map((product) => product.id)
+      ? products.filter((product) => product.name === filterBrand).map((product) => product.id)
+      : [];
+
+    const codeProductIds = filterProductCode
+      ? products.filter((product) => product.product_code === filterProductCode).map((product) => product.id)
       : [];
 
     if (filterBrand && brandProductIds.length === 0) {
+      setStocks([]);
+      setStats({ available: 0, sold: 0, deleted: 0 });
+      return;
+    }
+
+    if (filterProductCode && codeProductIds.length === 0) {
+      setStocks([]);
+      setStats({ available: 0, sold: 0, deleted: 0 });
+      return;
+    }
+
+    let targetProductIds: string[] | null = null;
+    if (filterBrand && filterProductCode) {
+      targetProductIds = brandProductIds.filter((id) => codeProductIds.includes(id));
+    } else if (filterBrand) {
+      targetProductIds = brandProductIds;
+    } else if (filterProductCode) {
+      targetProductIds = codeProductIds;
+    }
+
+    if (targetProductIds !== null && targetProductIds.length === 0) {
       setStocks([]);
       setStats({ available: 0, sold: 0, deleted: 0 });
       return;
@@ -145,8 +170,7 @@ export default function StocksPage() {
       .range((page - 1) * pageSize, page * pageSize - 1);
 
     if (search) query = query.ilike("email", `%${search}%`);
-    if (filterProduct) query = query.eq("product_id", filterProduct);
-    if (filterBrand) query = query.in("product_id", brandProductIds);
+    if (targetProductIds !== null) query = query.in("product_id", targetProductIds);
     if (stockView === "active") query = query.neq("status", "deleted");
     if (stockView === "deleted") query = query.eq("status", "deleted");
 
@@ -160,7 +184,7 @@ export default function StocksPage() {
     const sold = list.filter((x) => x.status === "sold").length;
     const deleted = list.filter((x) => x.status === "deleted").length;
     setStats({ available, sold, deleted });
-  }, [page, search, filterProduct, filterBrand, products, stockView]);
+  }, [page, search, filterBrand, filterProductCode, products, stockView]);
 
   async function addStock() {
     if (!productId) {
@@ -283,7 +307,12 @@ export default function StocksPage() {
   async function bulkUploadCsv() {
     setUploadError("");
 
-    if (!filterProduct) return setUploadError("Pilih produk dulu sebelum upload file.");
+    const targetProd = products.find((p) =>
+      filterProductCode ? p.product_code === filterProductCode : filterBrand ? p.name === filterBrand : false
+    );
+    const targetProductId = targetProd?.id || "";
+
+    if (!targetProductId) return setUploadError("Pilih Product Code / Product Name yang spesifik dulu sebelum upload file.");
     if (!csvFile) return setUploadError("Pilih file CSV/TXT dulu.");
 
     setUploading(true);
@@ -300,7 +329,7 @@ export default function StocksPage() {
       }
 
       const payload = rows.map((r) => ({
-        product_id: filterProduct,
+        product_id: targetProductId,
         email: (r.email || "").trim(),
         password: (r.password || "").trim() || null,
         profile: (r.profile || "").trim() || null,
@@ -336,19 +365,33 @@ export default function StocksPage() {
   };
 
   const activeProductName =
-    products.find((p) => p.id === filterProduct)?.name || "All Product Codes";
-  const brandOptions = Array.from(new Set(products.map(productBrand))).sort();
-  const brandFilterOptions = brandOptions.map((brand) => ({
-    value: brand,
-    label: brand,
-  }));
-  const productCodeFilterOptions = products
-    .filter((p) => !filterBrand || productBrand(p) === filterBrand)
-    .map((p) => ({
-      value: p.id,
-      label: p.name,
-      sublabel: p.product_code || undefined,
+    filterBrand || "All Products";
+  const brandFilterOptions = Array.from(
+    new Set(products.map((p) => p.name).filter(Boolean))
+  )
+    .sort()
+    .map((name) => ({
+      value: name,
+      label: name,
     }));
+
+  const productCodeFilterOptions = Array.from(
+    new Set(
+      products
+        .filter((p) => !filterBrand || p.name === filterBrand)
+        .map((p) => p.product_code)
+        .filter(Boolean)
+    )
+  )
+    .sort()
+    .map((code) => {
+      const matchedProd = products.find((p) => p.product_code === code);
+      return {
+        value: code,
+        label: code,
+        sublabel: matchedProd?.name || undefined,
+      };
+    });
   const selectableStocks = stocks.filter((stock) => stock.status !== "deleted");
   const allVisibleSelected = selectableStocks.length > 0 && selectableStocks.every((stock) => selectedStockIds.includes(stock.id));
 
@@ -451,32 +494,32 @@ export default function StocksPage() {
           <SearchableFilter
             value={filterBrand}
             options={brandFilterOptions}
-            placeholder="Brand"
+            placeholder="Brand (Name)"
             minChars={3}
-            minWidth={180}
-            ariaLabel="Filter stocks by brand"
+            minWidth={200}
+            ariaLabel="Filter stocks by product name"
             onChange={(nextBrand) => {
               setPage(1);
               setFilterBrand(nextBrand);
-              if (filterProduct) {
-                const currentProd = products.find((p) => p.id === filterProduct);
-                if (currentProd && nextBrand && productBrand(currentProd) !== nextBrand) {
-                  setFilterProduct("");
+              if (filterProductCode) {
+                const currentProd = products.find((p) => p.product_code === filterProductCode);
+                if (currentProd && nextBrand && currentProd.name !== nextBrand) {
+                  setFilterProductCode("");
                 }
               }
             }}
           />
 
           <SearchableFilter
-            value={filterProduct}
+            value={filterProductCode}
             options={productCodeFilterOptions}
             placeholder="Product Code"
             minChars={3}
-            minWidth={230}
+            minWidth={200}
             ariaLabel="Filter stocks by product code"
-            onChange={(nextProduct) => {
+            onChange={(nextCode) => {
               setPage(1);
-              setFilterProduct(nextProduct);
+              setFilterProductCode(nextCode);
             }}
           />
 
@@ -536,17 +579,17 @@ export default function StocksPage() {
           </label>
 
           <button
-            disabled={isViewer || !filterProduct || !csvFile || uploading}
+            disabled={isViewer || (!filterBrand && !filterProductCode) || !csvFile || uploading}
             onClick={() => void bulkUploadCsv()}
             className={`${actionClass} min-w-[130px] bg-[var(--insight-blue)] text-white disabled:cursor-not-allowed disabled:opacity-40`}
-            title={isViewer ? viewerOnlyTitle : !filterProduct ? "Pilih produk dulu" : ""}
+            title={isViewer ? viewerOnlyTitle : !filterBrand && !filterProductCode ? "Pilih produk dulu" : ""}
           >
             {uploading ? `Uploading ${uploadProgress}%` : "Bulk Upload"}
           </button>
 
           <div className="flex h-11 items-center xl:ml-auto text-lg text-[var(--insight-muted)]">
-            View: <span className="ml-1 text-[var(--insight-text)]">{activeProductName}</span>
-            {filterBrand ? <span> / {filterBrand}</span> : null}
+            View: <span className="ml-1 text-[var(--insight-text)]">{filterBrand || "All Products"}</span>
+            {filterProductCode ? <span> / {filterProductCode}</span> : null}
             {selectedStockIds.length > 0 ? <span> / Selected {selectedStockIds.length}</span> : null}
           </div>
         </div>
