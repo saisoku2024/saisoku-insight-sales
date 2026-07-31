@@ -111,7 +111,7 @@ export default function StocksPage() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  const [stats, setStats] = useState({ available: 0, sold: 0, deleted: 0 });
+  const [stats, setStats] = useState({ total: 0, available: 0, sold: 0, deleted: 0 });
   const showError = (message: string) => setNotice({ type: "error", message });
   const showSuccess = (message: string) => setNotice({ type: "success", message });
   const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
@@ -138,13 +138,13 @@ export default function StocksPage() {
 
     if (filterBrand && brandProductIds.length === 0) {
       setStocks([]);
-      setStats({ available: 0, sold: 0, deleted: 0 });
+      setStats({ total: 0, available: 0, sold: 0, deleted: 0 });
       return;
     }
 
     if (filterProductCode && codeProductIds.length === 0) {
       setStocks([]);
-      setStats({ available: 0, sold: 0, deleted: 0 });
+      setStats({ total: 0, available: 0, sold: 0, deleted: 0 });
       return;
     }
 
@@ -159,10 +159,28 @@ export default function StocksPage() {
 
     if (targetProductIds !== null && targetProductIds.length === 0) {
       setStocks([]);
-      setStats({ available: 0, sold: 0, deleted: 0 });
+      setStats({ total: 0, available: 0, sold: 0, deleted: 0 });
       return;
     }
 
+    // Query stats across all matching stock (all statuses, all pages)
+    let statsQuery = supabase
+      .from("product_accounts")
+      .select("status");
+
+    if (search) statsQuery = statsQuery.ilike("email", `%${search}%`);
+    if (targetProductIds !== null) statsQuery = statsQuery.in("product_id", targetProductIds);
+
+    const { data: statsData } = await statsQuery;
+    const allMatching = statsData || [];
+
+    const available = allMatching.filter((x) => x.status === "available").length;
+    const sold = allMatching.filter((x) => x.status === "sold").length;
+    const deleted = allMatching.filter((x) => x.status === "deleted").length;
+    const total = allMatching.length;
+    setStats({ total, available, sold, deleted });
+
+    // Query paginated stocks for active/deleted/all stockView
     let query = supabase
       .from("product_accounts")
       .select(`*,products(name,product_code)`)
@@ -179,11 +197,6 @@ export default function StocksPage() {
 
     setStocks(list);
     setSelectedStockIds((current) => current.filter((id) => list.some((stock) => stock.id === id)));
-
-    const available = list.filter((x) => x.status === "available").length;
-    const sold = list.filter((x) => x.status === "sold").length;
-    const deleted = list.filter((x) => x.status === "deleted").length;
-    setStats({ available, sold, deleted });
   }, [page, search, filterBrand, filterProductCode, products, stockView]);
 
   async function addStock() {
@@ -451,9 +464,9 @@ export default function StocksPage() {
       {/* KPI CARDS */}
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
-          <div className="text-xl leading-none text-[var(--insight-muted)]">Total Stock (Page)</div>
+          <div className="text-xl leading-none text-[var(--insight-muted)]">Total Stock</div>
           <div className="mt-2 text-[34px] leading-none text-[var(--insight-text)]">
-            {stocks.length.toLocaleString("id-ID")}
+            {stats.total.toLocaleString("id-ID")}
           </div>
         </div>
 
@@ -501,10 +514,12 @@ export default function StocksPage() {
             onChange={(nextBrand) => {
               setPage(1);
               setFilterBrand(nextBrand);
-              if (filterProductCode) {
-                const currentProd = products.find((p) => p.product_code === filterProductCode);
-                if (currentProd && nextBrand && currentProd.name !== nextBrand) {
-                  setFilterProductCode("");
+              if (!nextBrand) {
+                setFilterProductCode("");
+              } else {
+                const matchingProds = products.filter((p) => p.name === nextBrand);
+                if (matchingProds.length > 0 && matchingProds[0].product_code) {
+                  setFilterProductCode(matchingProds[0].product_code);
                 }
               }
             }}
@@ -520,6 +535,12 @@ export default function StocksPage() {
             onChange={(nextCode) => {
               setPage(1);
               setFilterProductCode(nextCode);
+              if (nextCode) {
+                const matchedProd = products.find((p) => p.product_code === nextCode);
+                if (matchedProd?.name) {
+                  setFilterBrand(matchedProd.name);
+                }
+              }
             }}
           />
 
