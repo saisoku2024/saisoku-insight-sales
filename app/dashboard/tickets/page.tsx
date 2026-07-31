@@ -253,6 +253,31 @@ export default function TicketsPage() {
     setSending(false);
   }
 
+  const [replacingAccount, setReplacingAccount] = useState(false);
+
+  async function handleReplaceAccount() {
+    if (isViewer || !selectedTicket || replacingAccount) return;
+    if (!confirm("Apakah Anda yakin ingin mengganti akun dari stok otomatis untuk tiket ini?")) return;
+
+    setReplacingAccount(true);
+    try {
+      const result = await callTicketAction<{ ok: boolean; message: string }>("/api/tickets/replace-account", {
+        ticketId: String(selectedTicket.id),
+      });
+
+      setTickets((prev) =>
+        prev.map((t) => (t.id === selectedTicket.id ? { ...t, status: "resolved" } : t))
+      );
+      setSelectedTicket((prev) => (prev ? { ...prev, status: "resolved" } : null));
+      showSuccess(result?.message || "Akun pengganti dari stok berhasil dikirim ke pembeli!");
+      void loadReplies(selectedTicket.id);
+    } catch (e) {
+      console.error("handleReplaceAccount error:", e);
+      showError(e instanceof Error ? e.message : "Gagal melakukan replace akun.");
+    }
+    setReplacingAccount(false);
+  }
+
   async function updateTicketStatus(status: TicketStatus) {
     if (isViewer || !selectedTicket) return;
 
@@ -460,6 +485,15 @@ export default function TicketsPage() {
                     className={`border-[3px] border-[var(--insight-border)] bg-emerald-600 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none${viewerDisabledClass}`}
                   >
                     {updatingStatus ? "Updating..." : "Update Status"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleReplaceAccount}
+                    disabled={isViewer || replacingAccount || selectedTicket.status === "resolved"}
+                    title={isViewer ? viewerOnlyTitle : undefined}
+                    className={`border-[3px] border-[var(--insight-border)] bg-amber-500 px-3 py-1.5 text-lg font-bold leading-none text-black shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none${viewerDisabledClass}`}
+                  >
+                    {replacingAccount ? "Replacing..." : "🔄 Replace Akun (Ambil Stok)"}
                   </button>
                 </div>
               </div>
