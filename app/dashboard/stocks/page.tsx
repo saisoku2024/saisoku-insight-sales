@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
 import { ToolbarSelect } from "@/components/dashboard/toolbar-select";
+import { SearchableFilter } from "@/components/dashboard/searchable-filter";
 import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context";
 import { supabase } from "@/lib/supabase/client";
 import { adminWrite } from "@/services/admin/admin-api-client";
@@ -335,8 +336,19 @@ export default function StocksPage() {
   };
 
   const activeProductName =
-    products.find((p) => p.id === filterProduct)?.name || "All Products";
+    products.find((p) => p.id === filterProduct)?.name || "All Product Codes";
   const brandOptions = Array.from(new Set(products.map(productBrand))).sort();
+  const brandFilterOptions = brandOptions.map((brand) => ({
+    value: brand,
+    label: brand,
+  }));
+  const productCodeFilterOptions = products
+    .filter((p) => !filterBrand || productBrand(p) === filterBrand)
+    .map((p) => ({
+      value: p.id,
+      label: p.name,
+      sublabel: p.product_code || undefined,
+    }));
   const selectableStocks = stocks.filter((stock) => stock.status !== "deleted");
   const allVisibleSelected = selectableStocks.length > 0 && selectableStocks.every((stock) => selectedStockIds.includes(stock.id));
 
@@ -436,38 +448,36 @@ export default function StocksPage() {
               setSearch(e.target.value);
             }}
           />
-          <ToolbarSelect
+          <SearchableFilter
+            value={filterBrand}
+            options={brandFilterOptions}
+            placeholder="Brand"
+            minChars={3}
+            minWidth={180}
+            ariaLabel="Filter stocks by brand"
+            onChange={(nextBrand) => {
+              setPage(1);
+              setFilterBrand(nextBrand);
+              if (filterProduct) {
+                const currentProd = products.find((p) => p.id === filterProduct);
+                if (currentProd && nextBrand && productBrand(currentProd) !== nextBrand) {
+                  setFilterProduct("");
+                }
+              }
+            }}
+          />
+
+          <SearchableFilter
             value={filterProduct}
-            options={[
-              { value: "", label: "All Products" },
-              ...products.map((product) => ({
-                value: product.id,
-                label: product.name,
-              })),
-            ]}
+            options={productCodeFilterOptions}
+            placeholder="Product Code"
+            minChars={3}
+            minWidth={230}
+            ariaLabel="Filter stocks by product code"
             onChange={(nextProduct) => {
               setPage(1);
               setFilterProduct(nextProduct);
             }}
-            minWidth={230}
-            ariaLabel="Filter stocks by product"
-          />
-
-          <ToolbarSelect
-            value={filterBrand}
-            options={[
-              { value: "", label: "All Brands" },
-              ...brandOptions.map((brand) => ({
-                value: brand,
-                label: brand,
-              })),
-            ]}
-            onChange={(nextBrand) => {
-              setPage(1);
-              setFilterBrand(nextBrand);
-            }}
-            minWidth={150}
-            ariaLabel="Filter stocks by brand"
           />
 
           <ToolbarSelect
