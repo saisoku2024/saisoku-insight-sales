@@ -36,6 +36,7 @@ export default function LoginPage() {
   const [isDark, setIsDark] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [guestData, setGuestData] = useState<{ email: string; password: string } | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isResetLoading, setIsResetLoading] = useState(false)
@@ -44,8 +45,8 @@ export default function LoginPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const canSubmit = useMemo(
-    () => Boolean(email.trim() && password.trim()),
-    [email, password]
+    () => Boolean((email.trim() && password.trim()) || guestData),
+    [email, password, guestData]
   )
 
   useEffect(() => {
@@ -126,46 +127,19 @@ export default function LoginPage() {
     })
   }
 
-  async function handleGuestLogin() {
+  async function fillGuestLogin() {
     try {
-      setIsSubmitting(true)
       setErrorMessage(null)
       setSuccessMessage("Menghubungi server kredensial guest...")
       const res = await fetch("/api/auth/guest")
       if (!res.ok) throw new Error("Gagal mengambil kredensial guest dari server.")
       const data = await res.json()
 
-      setSuccessMessage("Masuk ke dashboard sebagai guest...")
-      const { error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      })
-
-      if (error) {
-        setErrorMessage(getCleanAuthErrorMessage(error.message))
-        setSuccessMessage(null)
-        return
-      }
-
-      const { profile, error: profileError } = await getActiveAdminProfile()
-      if (profileError || !profile) {
-        await supabase.auth.signOut()
-        setErrorMessage(getAdminAccessErrorMessage())
-        setSuccessMessage(null)
-        return
-      }
-
-      void recordPanelAccessEvent({
-        eventType: "login_success",
-        path: "/login",
-        metadata: { role: profile.role },
-      })
-      router.replace("/dashboard")
+      setGuestData(data)
+      setSuccessMessage("Mode guest aktif. Klik Sign in to dashboard untuk masuk.")
     } catch (e: any) {
       setErrorMessage(e instanceof Error ? e.message : "Gagal memproses mode guest.")
       setSuccessMessage(null)
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -176,14 +150,18 @@ export default function LoginPage() {
       setSuccessMessage(null)
       return
     }
+
+    const loginEmail = guestData ? guestData.email : email.trim()
+    const loginPassword = guestData ? guestData.password : password
+
     try {
       setIsSubmitting(true)
       setErrorMessage(null)
       setSuccessMessage(null)
       
       const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
+        email: loginEmail,
+        password: loginPassword,
       })
       
       if (error) {
@@ -294,7 +272,10 @@ export default function LoginPage() {
               type="email"
               placeholder="admin@saisoku.id"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => {
+                setEmail(event.target.value)
+                if (guestData) setGuestData(null)
+              }}
               className="h-11 w-full border-0 bg-transparent text-lg outline-none placeholder:text-[var(--insight-muted)]"
               autoComplete="email"
             />
@@ -326,7 +307,10 @@ export default function LoginPage() {
               type={showPassword ? "text" : "password"}
               placeholder="Masukkan password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={(event) => {
+                setPassword(event.target.value)
+                if (guestData) setGuestData(null)
+              }}
               className="h-11 w-full border-0 bg-transparent text-lg outline-none placeholder:text-[var(--insight-muted)]"
               autoComplete="current-password"
             />
@@ -364,7 +348,7 @@ export default function LoginPage() {
 
         <button
           type="button"
-          onClick={handleGuestLogin}
+          onClick={fillGuestLogin}
           disabled={isSubmitting}
           className="inline-flex h-11 w-full items-center justify-center gap-2 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-4 text-lg text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
         >
