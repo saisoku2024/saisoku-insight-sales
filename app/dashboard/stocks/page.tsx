@@ -127,8 +127,8 @@ export default function StocksPage() {
   const showSuccess = (message: string) => setNotice({ type: "success", message });
   const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : "Unknown error";
   const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50";
-  const controlClass = "box-border h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-0 text-xl leading-none text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] outline-none";
-  const actionClass = "inline-flex box-border h-11 min-w-[130px] items-center justify-center border-[3px] border-[var(--insight-border)] px-4 py-0 text-xl leading-none shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:hover:translate-y-0";
+  const controlClass = "box-border h-9 border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-0 text-sm leading-none text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] outline-none";
+  const actionClass = "inline-flex box-border h-9 min-w-[110px] items-center justify-center border-2 border-[var(--insight-border)] px-4 py-0 text-sm leading-none shadow-[2px_2px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:hover:translate-y-0";
 
   async function fetchProducts() {
     const { data } = await supabase
@@ -644,7 +644,7 @@ export default function StocksPage() {
           <table className="w-full text-left">
             <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
               <tr>
-                <th className="p-4">
+                <th className="px-4 py-3">
                   <input
                     type="checkbox"
                     checked={allVisibleSelected}
@@ -654,13 +654,13 @@ export default function StocksPage() {
                     title={isViewer ? viewerOnlyTitle : "Select visible stock"}
                   />
                 </th>
-                <th className="p-4">Product</th>
-                <th className="p-4">Brand</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Profile</th>
-                <th className="p-4">PIN</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">Action</th>
+                <th className="px-4 py-3 text-sm">Product</th>
+                <th className="px-4 py-3 text-sm">Brand</th>
+                <th className="px-4 py-3 text-sm">Email</th>
+                <th className="px-4 py-3 text-sm">Profile</th>
+                <th className="px-4 py-3 text-sm">PIN</th>
+                <th className="px-4 py-3 text-sm">Status</th>
+                <th className="px-4 py-3 text-sm">Action</th>
               </tr>
             </thead>
 
@@ -670,7 +670,7 @@ export default function StocksPage() {
                   key={s.id}
                   className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60"
                 >
-                  <td className="p-4">
+                  <td className="px-4 py-2.5">
                     <input
                       type="checkbox"
                       checked={selectedStockIds.includes(s.id)}
@@ -680,37 +680,37 @@ export default function StocksPage() {
                       title={s.status === "deleted" ? "Deleted stock tidak bisa dipilih" : isViewer ? viewerOnlyTitle : "Select stock"}
                     />
                   </td>
-                  <td className="p-4 font-medium">
+                  <td className="px-4 py-2.5 text-sm font-medium">
                     <div>{getProductName(s.products)}</div>
-                    <div className="text-base text-[var(--insight-muted)]">{getProductCode(s.products) || "-"}</div>
+                    <div className="text-xs text-[var(--insight-muted)]">{getProductCode(s.products) || "-"}</div>
                   </td>
-                  <td className="p-4">{getProductCode(s.products)?.split(/[-_\s/]+/)[0]?.toUpperCase() || "-"}</td>
-                  <td className="p-4 font-mono text-base">
+                  <td className="px-4 py-2.5 text-sm">{getProductCode(s.products)?.split(/[-_\s/]+/)[0]?.toUpperCase() || "-"}</td>
+                  <td className="px-4 py-2.5 font-mono text-sm">
                     {isViewer
                       ? (s.email && s.email.includes("@")
                         ? s.email.split("@")[0].slice(0, 2) + "***@" + s.email.split("@")[1]
                         : "***")
                       : s.email}
                   </td>
-                  <td className="p-4">{isViewer ? "***" : (s.profile || "—")}</td>
-                  <td className="p-4 font-mono text-base">{isViewer ? "***" : (s.pin || "—")}</td>
-                  <td className="p-4">
+                  <td className="px-4 py-2.5 text-sm">{isViewer ? "***" : (s.profile || "—")}</td>
+                  <td className="px-4 py-2.5 font-mono text-sm">{isViewer ? "***" : (s.pin || "—")}</td>
+                  <td className="px-4 py-2.5">
                     <span
-                      className={`inline-block border-[3px] border-[var(--insight-border)] px-3 py-1 text-lg leading-none ${
+                      className={`inline-block border-2 border-[var(--insight-border)] px-2 py-0.5 text-xs font-bold leading-none ${
                         statusClass(s.status)
                       }`}
                     >
                       {s.status}
                     </span>
                   </td>
-                  <td className="p-4">
+                  <td className="px-4 py-2.5">
                     <div className="flex gap-2">
                       {s.status === "deleted" ? (
                         <button
                           onClick={() => void restoreStock(s)}
                           disabled={isViewer}
                           title={isViewer ? viewerOnlyTitle : undefined}
-                          className={"border-[3px] border-[var(--insight-border)] bg-emerald-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                          className={"border-2 border-[var(--insight-border)] bg-emerald-600 px-2 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
                         >
                           Restore
                         </button>
@@ -723,7 +723,7 @@ export default function StocksPage() {
                             }}
                             disabled={isViewer}
                             title={isViewer ? viewerOnlyTitle : undefined}
-                            className={"border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                            className={"border-2 border-[var(--insight-border)] bg-[var(--insight-blue)] px-2 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
                           >
                             Edit
                           </button>
@@ -734,7 +734,7 @@ export default function StocksPage() {
                             }}
                             disabled={isViewer}
                             title={isViewer ? viewerOnlyTitle : undefined}
-                            className={"border-[3px] border-[var(--insight-border)] bg-red-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                            className={"border-2 border-[var(--insight-border)] bg-red-600 px-2 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
                           >
                             Delete
                           </button>
