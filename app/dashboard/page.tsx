@@ -27,6 +27,7 @@ type TxRow = {
   status: string | null
   products?: {
     name: string | null
+    product_code: string | null
     modal: number | null
   } | null
 }
@@ -181,7 +182,7 @@ export default function DashboardPage() {
   async function fetchTransactionsOnce(): Promise<TxRow[]> {
     const { data, error } = await supabase
       .from("transactions")
-      .select("price,created_at,purchased_at,status,products(name,modal)")
+      .select("price,created_at,purchased_at,status,products(name,product_code,modal)")
       .order("purchased_at", { ascending: false })
 
     if (error) throw error
@@ -237,12 +238,12 @@ export default function DashboardPage() {
 
       const txYear = txDate.getFullYear()
       const txMonth = txDate.getMonth()
-      const productName = t.products?.name?.trim() || "Unknown"
+      const productCode = t.products?.product_code?.trim() || t.products?.name?.trim() || "Unknown"
 
       if (txDate.toDateString() === todayStr) {
         gmvToday += price
         profitToday += profit
-        todayProductCounts[productName] = (todayProductCounts[productName] || 0) + 1
+        todayProductCounts[productCode] = (todayProductCounts[productCode] || 0) + 1
       }
 
       if (txYear === currentYear && txMonth === currentMonth) {
