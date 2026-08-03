@@ -168,6 +168,7 @@ export default function DashboardLayout({
     <PanelRoleProvider role={userRole || "viewer"}>
       <div
         className="
+          auth-page-bg
           min-h-screen
           text-[var(--insight-text)]
           transition-colors duration-300
