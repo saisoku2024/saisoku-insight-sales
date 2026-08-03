@@ -270,7 +270,7 @@ export default function LoginPage() {
         <p className="text-base leading-none text-[var(--insight-muted)]">
           Admin access
         </p>
-        <h2 className="mt-2 text-[28px] leading-none text-[var(--insight-text)]">
+        <h2 className="mt-2 text-[22px] font-semibold leading-tight text-[var(--insight-text)]">
           Sign in to your account
         </h2>
         <p className="mt-2 text-lg leading-5 text-[var(--insight-muted)]">
@@ -294,7 +294,7 @@ export default function LoginPage() {
               placeholder="admin@saisoku.id"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="h-11 w-full border-0 bg-transparent text-lg outline-none placeholder:text-[var(--insight-muted)]"
+              className="h-10 w-full border-0 bg-transparent text-[15px] outline-none placeholder:text-[var(--insight-muted)]"
               autoComplete="email"
             />
           </div>
@@ -326,7 +326,7 @@ export default function LoginPage() {
               placeholder="Masukkan password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="h-11 w-full border-0 bg-transparent text-lg outline-none placeholder:text-[var(--insight-muted)]"
+              className="h-10 w-full border-0 bg-transparent text-[15px] outline-none placeholder:text-[var(--insight-muted)]"
               autoComplete="current-password"
             />
             <button
