@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { supabase } from "@/lib/supabase/client"
+import { useIsViewer } from "@/components/dashboard/panel-access-context"
 
 type BalanceLog = {
   id: string
@@ -41,6 +42,7 @@ function formatDate(value?: string | null) {
 }
 
 export default function LogBalancePage() {
+  const isViewer = useIsViewer()
   const pageSize = 10
   const [logs, setLogs] = useState<BalanceLog[]>([])
   const [deposits, setDeposits] = useState<DepositRequest[]>([])
@@ -161,7 +163,9 @@ export default function LogBalancePage() {
               {logs.map((log) => (
                 <tr key={log.id} className="hover:bg-blue-50 dark:hover:bg-slate-800/60">
                   <td className="p-3">{formatDate(log.created_at)}</td>
-                  <td className="p-3">@{log.users?.username || log.users?.telegram_id || "-"}</td>
+                  <td className="p-3">
+                    {isViewer ? "@***" : `@${log.users?.username || log.users?.telegram_id || "-"}`}
+                  </td>
                   <td className="p-3">{log.type}</td>
                   <td className="p-3">{rupiah(log.amount)}</td>
                   <td className="p-3">{rupiah(Number(log.users?.balance || 0))}</td>
@@ -208,7 +212,7 @@ export default function LogBalancePage() {
                 <tr key={deposit.id} className="hover:bg-blue-50 dark:hover:bg-slate-800/60">
                   <td className="p-3">{deposit.id.slice(0, 8)}</td>
                   <td className="p-3">{formatDate(deposit.created_at)}</td>
-                  <td className="p-3">{deposit.telegram_id}</td>
+                  <td className="p-3">{isViewer ? "***" : deposit.telegram_id}</td>
                   <td className="p-3">{rupiah(deposit.amount)}</td>
                   <td className="p-3">{rupiah(deposit.final_amount)}</td>
                   <td className="p-3">{deposit.payment_method}</td>
