@@ -19,6 +19,8 @@ import {
   Ticket,
   Users,
   Wallet,
+  Send,
+  Percent,
 } from "lucide-react"
 
 export type DashboardNavItem = {
@@ -109,6 +111,12 @@ export const dashboardNavigation: DashboardNavEntry[] = [
         icon: Ticket,
         description: "Kode voucher, kuota, expired, dan status",
       },
+      {
+        title: "Promo Campaign",
+        href: "/dashboard/promos",
+        icon: Percent,
+        description: "Kelola campaign promo dan alokasi stok khusus",
+      },
     ],
   },
   {
@@ -160,6 +168,15 @@ export const dashboardNavigation: DashboardNavEntry[] = [
       href: "/dashboard/tickets",
       icon: Ticket,
       description: "Ticket Management",
+    },
+  },
+  {
+    type: "item",
+    item: {
+      title: "Broadcast",
+      href: "/dashboard/broadcast",
+      icon: Send,
+      description: "Kirim broadcast pesan massal ke Telegram",
     },
   },
   {
