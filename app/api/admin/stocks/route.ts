@@ -62,18 +62,68 @@ export async function POST(req: NextRequest) {
       return jsonError("Bulk upload maksimal 500 row per request.")
     }
 
-    const { data, error } = await adminSupabase!.from("product_accounts").insert(rows).select()
-    if (error) return jsonRouteError(req, auth, "POST /api/admin/stocks insert", error, "Gagal menambah stock", 500)
+    let insertedNew = 0
+    let insertedExpired = 0
+    let skippedAvailable = 0
+    let skippedActive = 0
+
+    for (const row of rows) {
+      const { data: status, error } = await adminSupabase!.rpc("insert_product_stock", {
+        p_product_id: row.product_id,
+        p_email: row.email,
+        p_password: row.password,
+        p_pin: row.pin,
+        p_profile: row.profile
+      })
+
+      if (error) {
+        return jsonRouteError(req, auth, "POST /api/admin/stocks insert", error, "Gagal menambah stock", 500)
+      }
+
+      switch (status) {
+        case "INSERTED_NEW":
+          insertedNew++
+          break
+        case "INSERTED_EXPIRED":
+          insertedExpired++
+          break
+        case "SKIPPED_AVAILABLE":
+          skippedAvailable++
+          break
+        case "SKIPPED_ACTIVE":
+          skippedActive++
+          break
+      }
+    }
+
+    // Jika upload tunggal dan duplikat, beri tahu user secara spesifik
+    if (rows.length === 1) {
+      if (skippedAvailable > 0) {
+        return jsonError("Akun/stok ini sudah terdaftar dan siap dijual (duplikat).", 400)
+      }
+      if (skippedActive > 0) {
+        return jsonError("Akun/stok ini sedang digunakan oleh pembeli aktif (duplikat).", 400)
+      }
+    }
 
     await writeAdminAuditLog(auth, {
       action: rows.length > 1 ? "bulk_create" : "create",
       entity: "product_accounts",
-      entityId: rows.length === 1 ? data?.[0]?.id : null,
-      after: data,
-      metadata: { count: rows.length },
+      entityId: null,
+      after: { insertedNew, insertedExpired, skippedAvailable, skippedActive },
+      metadata: { count: rows.length, insertedNew, insertedExpired, skippedAvailable, skippedActive },
     })
 
-    return NextResponse.json({ data })
+    return NextResponse.json({
+      data: {
+        success: true,
+        count: rows.length,
+        insertedNew,
+        insertedExpired,
+        skippedAvailable,
+        skippedActive,
+      }
+    })
   } catch (error) {
     return jsonRouteError(req, auth, "POST /api/admin/stocks", error, "Gagal menambah stock", 400)
   }
