@@ -237,3 +237,19 @@ html.dark .auth-page-bg::after {
     linear-gradient(115deg, transparent 0 30%, rgba(255, 255, 255, 0.06) 38%, transparent 45%),
     radial-gradient(circle at 50% 50%, transparent 0, rgba(0, 0, 0, 0.34) 75%);
 }
+
+/* Page Transition Animation */
+@keyframes insightPageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.insight-page-fade {
+  animation: insightPageFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

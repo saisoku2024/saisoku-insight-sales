@@ -132,35 +132,38 @@ export function HeaderBar({
               hidden h-9 items-center gap-2
               border-[3px] border-[var(--insight-border)]
               bg-[var(--insight-panel)]
-              px-2.5
+              px-2 py-0.5
               shadow-[3px_3px_0_var(--insight-shadow)]
               md:flex
             "
           >
             <div className="relative">
               <div
-                className="
-                  h-5 w-5
+                className={`
+                  flex h-6 w-6 items-center justify-center
                   border-2 border-[var(--insight-border)]
-                  bg-[var(--insight-blue)]
-                "
-              />
+                  ${userRole === "owner" ? "bg-purple-600 text-white" : userRole === "viewer" ? "bg-amber-500 text-slate-900" : "bg-[var(--insight-blue)] text-white"}
+                  text-[11px] font-bold leading-none uppercase
+                `}
+              >
+                {userRole === "owner" ? "OW" : userRole === "viewer" ? "VW" : "AD"}
+              </div>
               <span
                 className="
-                  absolute bottom-0 right-0
-                  h-3 w-3
+                  absolute -bottom-0.5 -right-0.5
+                  h-2.5 w-2.5
                   rounded-full
-                  border-2 border-white dark:border-slate-800
+                  border-2 border-[var(--insight-card)]
                   bg-emerald-500
                 "
               />
             </div>
 
-            <div className="flex min-w-0 items-center gap-1.5">
-              <span className="text-lg leading-none text-[var(--insight-text)]">
+            <div className="flex min-w-0 items-center gap-1.5 pr-1">
+              <span className="text-[13px] font-semibold leading-none text-[var(--insight-text)]">
                 {roleLabel}
               </span>
-              <span className="text-base leading-none text-emerald-600 dark:text-emerald-400">
+              <span className="text-[11px] font-medium leading-none text-emerald-600 dark:text-emerald-400">
                 Online
               </span>
             </div>

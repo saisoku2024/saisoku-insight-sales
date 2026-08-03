@@ -231,6 +231,7 @@ export default function DashboardLayout({
           <main
             className="
               insight-dashboard
+              insight-page-fade
               min-w-0
               border-[3px] border-[var(--insight-border)]
               bg-[var(--insight-card)]

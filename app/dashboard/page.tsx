@@ -1,14 +1,20 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
+import Link from "next/link"
 import {
   AlertTriangle,
   BarChart3,
+  Package,
   PiggyBank,
   Receipt,
+  ReceiptText,
+  RefreshCw,
+  ShoppingBag,
   TrendingUp,
   UserPlus,
   Users,
+  UsersIcon,
   UserX,
   Wallet,
 } from "lucide-react"
@@ -130,6 +136,18 @@ function ChartSkeleton() {
         <Skeleton className="h-3 w-24" />
       </div>
       <Skeleton className="h-52 w-full" />
+    </div>
+  )
+}
+
+function ChartEmptyState({ message = "Belum ada data transaksi" }: { message?: string }) {
+  return (
+    <div className="flex h-52 w-full flex-col items-center justify-center border-2 border-dashed border-[var(--insight-border)] bg-[var(--insight-panel)]/40 p-4 text-center">
+      <div className="flex h-10 w-10 items-center justify-center border-2 border-[var(--insight-border)] bg-[var(--insight-card)] text-[var(--insight-muted)] shadow-[2px_2px_0_var(--insight-shadow)]">
+        <ShoppingBag className="h-5 w-5" />
+      </div>
+      <p className="mt-2 text-xs font-semibold text-[var(--insight-text)]">{message}</p>
+      <p className="mt-0.5 text-[11px] text-[var(--insight-muted)]">Data akan otomatis tampil setelah ada aktivitas baru.</p>
     </div>
   )
 }
@@ -366,6 +384,45 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* QUICK ACTIONS BAR */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] p-2 shadow-[3px_3px_0_var(--insight-shadow)]">
+        <div className="flex items-center gap-1.5 pl-1 text-xs font-semibold text-[var(--insight-text)]">
+          <span>Aksi Cepat:</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/dashboard/sales"
+            className="inline-flex items-center gap-1.5 border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2.5 py-1 text-xs font-medium text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] transition-all hover:-translate-y-0.5"
+          >
+            <ReceiptText className="h-3.5 w-3.5 text-blue-500" />
+            <span>Lihat Transaksi</span>
+          </Link>
+          <Link
+            href="/dashboard/products"
+            className="inline-flex items-center gap-1.5 border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2.5 py-1 text-xs font-medium text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] transition-all hover:-translate-y-0.5"
+          >
+            <Package className="h-3.5 w-3.5 text-purple-500" />
+            <span>Kelola Produk</span>
+          </Link>
+          <Link
+            href="/dashboard/users"
+            className="inline-flex items-center gap-1.5 border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2.5 py-1 text-xs font-medium text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] transition-all hover:-translate-y-0.5"
+          >
+            <UsersIcon className="h-3.5 w-3.5 text-emerald-500" />
+            <span>Daftar User</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => void loadData()}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2.5 py-1 text-xs font-medium text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] transition-all hover:-translate-y-0.5 disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 text-amber-500 ${loading ? "animate-spin" : ""}`} />
+            <span>Refresh Data</span>
+          </button>
+        </div>
+      </div>
+
       {errorMsg ? (
         <div className="border-2 border-red-700 bg-red-50 shadow-[2px_2px_0_#7f1d1d] dark:bg-red-950/30">
           <div className="flex items-start gap-3 p-3">
@@ -450,7 +507,7 @@ export default function DashboardPage() {
           ) : todayChart && (todayChart.labels?.length ?? 0) > 0 ? (
             <Bar data={todayChart} options={chartOptionsCount} />
           ) : (
-            <div className="text-sm text-[var(--insight-muted)]">No sales today.</div>
+            <ChartEmptyState message="Belum ada transaksi terdeteksi hari ini" />
           )}
         </Panel>
 
@@ -465,7 +522,7 @@ export default function DashboardPage() {
           ) : monthlySalesChart ? (
             <Bar data={monthlySalesChart} options={chartOptionsCount} />
           ) : (
-            <div className="text-sm text-[var(--insight-muted)]">No data.</div>
+            <ChartEmptyState message="Belum ada data penjualan bulanan" />
           )}
         </Panel>
       </div>
