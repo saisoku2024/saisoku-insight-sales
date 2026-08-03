@@ -51,8 +51,8 @@ body {
     var(--insight-bg);
   background-size: 24px 24px;
   color: var(--insight-text);
-  font-family: "VT323", "Courier New", monospace;
-  font-size: 20px;
+  font-family: "Geist Mono", "Courier New", monospace;
+  font-size: 15px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -86,7 +86,7 @@ html.dark ::selection {
   border: 4px solid var(--insight-border);
   background: var(--insight-card);
   color: var(--insight-text);
-  box-shadow: 8px 8px 0 var(--insight-shadow);
+  box-shadow: 6px 6px 0 var(--insight-shadow);
 }
 
 .insight-button {
@@ -117,19 +117,19 @@ html.dark .insight-button:hover {
 }
 
 .insight-dashboard {
-  font-size: 18px;
+  font-size: 14px;
 }
 
 .insight-dashboard .insight-card {
   border-width: 3px;
-  box-shadow: 5px 5px 0 var(--insight-shadow);
+  box-shadow: 4px 4px 0 var(--insight-shadow);
 }
 
 .insight-dashboard button:not([aria-label="Close navigation"]):not([aria-label="Open navigation"]) {
   border: 3px solid var(--insight-border);
   background-color: var(--insight-panel);
   color: var(--insight-text);
-  box-shadow: 3px 3px 0 var(--insight-shadow);
+  box-shadow: 2px 2px 0 var(--insight-shadow);
 }
 
 .insight-dashboard input,
@@ -138,19 +138,19 @@ html.dark .insight-button:hover {
   border: 3px solid var(--insight-border) !important;
   background-color: var(--insight-panel) !important;
   color: var(--insight-text) !important;
-  box-shadow: 3px 3px 0 var(--insight-shadow);
+  box-shadow: 2px 2px 0 var(--insight-shadow);
 }
 
 .insight-dashboard table {
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 18px;
+  font-size: 14px;
 }
 
 .insight-dashboard th {
   border-bottom: 3px solid var(--insight-border);
   color: var(--insight-text);
-  font-weight: 400;
+  font-weight: 600;
   padding: 0.5rem !important;
 }
 
@@ -165,16 +165,16 @@ html.dark .insight-button:hover {
 }
 
 .insight-dashboard :is(input, select) {
-  height: 2.25rem !important;
-  font-size: 15px;
+  height: 2rem !important;
+  font-size: 13px;
 }
 
 .insight-dashboard :is(textarea) {
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .insight-dashboard :is(button, .insight-button) {
-  font-size: 18px;
+  font-size: 14px;
 }
 
 /* Premium Auth Background Style - Adaptif Light & Dark Mode */

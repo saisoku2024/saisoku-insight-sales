@@ -1,11 +1,11 @@
-import { VT323 } from "next/font/google"
+import { Geist_Mono } from "next/font/google"
 
 import { AppProviders } from "@/providers/app-providers"
 import "@/styles/globals.css"
 
-const vt323 = VT323({
+const geistMono = Geist_Mono({
   subsets: ["latin"],
-  weight: "400",
+  variable: "--font-geist-mono",
 })
 
 export default function RootLayout({
@@ -15,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={vt323.className}>
+      <body className={geistMono.className}>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

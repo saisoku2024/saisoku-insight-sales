@@ -117,6 +117,16 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const update = () =>
+      setIsDark(document.documentElement.classList.contains("dark"))
+    update()
+    const observer = new MutationObserver(update)
+    observer.observe(document.documentElement, { attributeFilter: ["class"] })
+    return () => observer.disconnect()
+  }, [])
 
   const [meta, setMeta] = useState({
     gmvToday: 0,
@@ -143,7 +153,7 @@ export default function DashboardPage() {
     () => ({
       responsive: true,
       maintainAspectRatio: false,
-      color: "#6b7280", 
+      color: isDark ? "#94a3b8" : "#6b7280",
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -158,24 +168,24 @@ export default function DashboardPage() {
       scales: {
         x: {
           grid: { display: false },
-          ticks: { 
-            maxRotation: 0, 
+          ticks: {
+            maxRotation: 0,
             autoSkip: true,
-            color: "#6b7280"
+            color: isDark ? "#94a3b8" : "#6b7280",
           },
         },
         y: {
           beginAtZero: true,
-          grid: { color: "rgba(0,0,0,0.06)" },
+          grid: { color: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" },
           ticks: {
             precision: 0,
-            color: "#6b7280",
+            color: isDark ? "#94a3b8" : "#6b7280",
             callback: (v: number | string) => Number(v).toLocaleString("id-ID"),
           },
         },
       },
     }),
-    []
+    [isDark]
   )
 
   // Fetching Data

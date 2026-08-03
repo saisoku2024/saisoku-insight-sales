@@ -9,6 +9,8 @@ import {
   PanelLeftOpen,
 } from "lucide-react"
 
+import { BrandMark } from "@/components/shared/brand-mark"
+
 type HeaderBarProps = {
   title: string
   description: string
@@ -65,15 +67,15 @@ export function HeaderBar({
             {sidebarCollapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
 
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center border-[3px] border-[var(--insight-border)] bg-[var(--insight-cyan)] text-base shadow-[3px_3px_0_var(--insight-shadow)]">
-            ID
-          </div>
+          <BrandMark />
 
-          <div>
-            <h1 className="truncate text-[28px] leading-none text-[var(--insight-text)]">
+          <div className="hidden h-7 w-px bg-[var(--insight-border)] opacity-30 sm:block" />
+
+          <div className="hidden sm:block">
+            <h1 className="truncate text-[15px] font-semibold leading-tight text-[var(--insight-text)]">
               {title}
             </h1>
-            <p className="-mt-0.5 hidden truncate text-base leading-none text-[var(--insight-muted)] sm:block">
+            <p className="truncate text-[11px] leading-tight text-[var(--insight-muted)]">
               {description}
             </p>
           </div>
