@@ -44,7 +44,7 @@ export function AuthShell({
   features = defaultHighlights,
 }: AuthShellProps) {
   return (
-    <div className="min-h-screen px-4 py-4 text-[var(--insight-text)] transition-colors duration-300 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+    <div className="auth-page-bg min-h-screen px-4 py-4 text-[var(--insight-text)] transition-colors duration-300 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
       <header className="mx-auto mb-5 flex h-[56px] max-w-5xl items-center justify-between border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-4 shadow-[6px_6px_0_var(--insight-shadow)]">
         <BrandMark />
         <div className="flex items-center gap-2">

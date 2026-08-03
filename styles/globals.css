@@ -176,3 +176,64 @@ html.dark .insight-button:hover {
 .insight-dashboard :is(button, .insight-button) {
   font-size: 18px;
 }
+
+/* Premium Auth Background Style - Adaptif Light & Dark Mode */
+.auth-page-bg {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 20% 12%, rgba(239, 68, 68, 0.08), transparent 28rem),
+    radial-gradient(circle at 84% 80%, rgba(37, 99, 235, 0.09), transparent 30rem),
+    linear-gradient(135deg, #f8fafc 0%, #e2e8f0 54%, #f1f5f9 100%) !important;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.auth-page-bg::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+  z-index: 0;
+}
+
+.auth-page-bg::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background:
+    linear-gradient(115deg, transparent 0 30%, rgba(15, 23, 42, 0.02) 38%, transparent 45%),
+    radial-gradient(circle at 50% 50%, transparent 0, rgba(255, 255, 255, 0.15) 75%);
+  z-index: 0;
+}
+
+.auth-page-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dark Mode Adaptation */
+html.dark .auth-page-bg {
+  background:
+    radial-gradient(circle at 20% 12%, rgba(239, 68, 68, 0.36), transparent 28rem),
+    radial-gradient(circle at 84% 80%, rgba(37, 99, 235, 0.42), transparent 30rem),
+    linear-gradient(135deg, #05070d 0%, #0a1020 54%, #060811 100%) !important;
+}
+
+html.dark .auth-page-bg::before {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+}
+
+html.dark .auth-page-bg::after {
+  background:
+    linear-gradient(115deg, transparent 0 30%, rgba(255, 255, 255, 0.06) 38%, transparent 45%),
+    radial-gradient(circle at 50% 50%, transparent 0, rgba(0, 0, 0, 0.34) 75%);
+}
