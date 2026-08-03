@@ -140,6 +140,43 @@ export async function DELETE(req: NextRequest) {
 
     const { data: before } = await adminSupabase!.from("products").select("*").in("id", ids)
 
+    // Check if any product has associated transactions or pending orders
+    const { count: trxCnt } = await adminSupabase!
+      .from("transactions")
+      .select("id", { count: "exact", head: true })
+      .in("product_id", ids)
+
+    const { count: pendingCnt } = await adminSupabase!
+      .from("pending_orders")
+      .select("id", { count: "exact", head: true })
+      .in("product_id", ids)
+
+    const hasRelations = (trxCnt || 0) > 0 || (pendingCnt || 0) > 0
+
+    if (hasRelations) {
+      // Soft delete: deactivate product to preserve historical relation integrity
+      const { error } = await adminSupabase!
+        .from("products")
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .in("id", ids)
+
+      if (error) return jsonRouteError(req, auth, "DELETE /api/admin/products soft-delete", error, "Gagal menonaktifkan produk", 500)
+
+      await writeAdminAuditLog(auth, {
+        action: "soft_delete",
+        entity: "products",
+        entityId: ids.join(","),
+        before,
+        metadata: { ids, count: ids.length, hasRelations: true },
+      })
+
+      return NextResponse.json({
+        ok: true,
+        softDeleted: true,
+        message: "Produk yang memiliki riwayat transaksi/order telah dinonaktifkan (soft-delete) untuk menjaga integritas data.",
+      })
+    }
+
     const { error } = await adminSupabase!.from("products").delete().in("id", ids)
     if (error) return jsonRouteError(req, auth, "DELETE /api/admin/products delete", error, "Gagal delete produk", 500)
 
@@ -148,7 +185,7 @@ export async function DELETE(req: NextRequest) {
       entity: "products",
       entityId: ids.join(","),
       before,
-      metadata: { ids, count: ids.length },
+      metadata: { ids, count: ids.length, hasRelations: false },
     })
 
     return NextResponse.json({ ok: true })

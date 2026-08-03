@@ -32,8 +32,9 @@ export async function POST() {
         refresh_token: data.session.refresh_token,
       },
     })
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || "Terjadi kesalahan pada server." }, { status: 500 })
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Terjadi kesalahan pada server."
+    return NextResponse.json({ error: errorMsg }, { status: 500 })
   }
 }
 

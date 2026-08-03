@@ -6,7 +6,6 @@ import {
   jsonRouteError,
   requireActiveAdmin,
   writeAdminAuditLog,
-  readString,
   readLimitedString,
   readLimitedNullableString,
 } from "../_lib"
@@ -71,7 +70,7 @@ export async function POST(req: NextRequest) {
     const priceRaw = body.price
     const allocated_qty_raw = body.allocated_qty
     const end_at_raw = body.end_at ? String(body.end_at) : null
-    const items = body.items as any[]
+    const items = body.items as Array<Record<string, unknown>>
 
     if (!name || !items || !Array.isArray(items) || items.length === 0) {
       return jsonError("Nama promo dan produk penyusun wajib diisi.")

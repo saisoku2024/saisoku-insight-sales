@@ -159,7 +159,7 @@ export default function LoginPage() {
         metadata: { role: profile.role, is_guest: true },
       })
       router.replace("/dashboard")
-    } catch (e: any) {
+    } catch (e: unknown) {
       setErrorMessage(e instanceof Error ? e.message : "Gagal memproses login mode guest.")
       setSuccessMessage(null)
     } finally {
@@ -203,7 +203,7 @@ export default function LoginPage() {
         metadata: { role: profile.role },
       })
       router.replace("/dashboard")
-    } catch (e: any) {
+    } catch (e: unknown) {
       setErrorMessage(e instanceof Error ? e.message : "Terjadi kesalahan jaringan.")
     } finally {
       setIsSubmitting(false)
@@ -243,7 +243,7 @@ export default function LoginPage() {
         String(Date.now() + RESET_COOLDOWN_SECONDS * 1000)
       )
       setResetCooldown(RESET_COOLDOWN_SECONDS)
-    } catch (e: any) {
+    } catch (e: unknown) {
       setErrorMessage(e instanceof Error ? e.message : "Gagal mengirim link reset password.")
     } finally {
       setIsResetLoading(false)

@@ -26,9 +26,10 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ pending_orders: pendingOrders || [] });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal server error"
     console.error("GET pending_orders catch error:", err);
-    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing order_id or action" }, { status: 400 });
     }
 
-    const actorId = telegram_id ? Number(telegram_id) : 72246533; // Default to owner telegram ID
+    const actorId = Number(telegram_id || 0);
 
     if (action === "approve") {
       const { data: rpcRes, error: rpcErr } = await adminSupabase.rpc("approve_pending_order", {
@@ -93,8 +94,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal server error"
     console.error("POST pending-orders catch error:", err);
-    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -28,20 +28,23 @@ export function SearchableFilter({
   ariaLabel,
 }: SearchableFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [prevValue, setPrevValue] = useState(value);
+  const [searchQuery, setSearchQuery] = useState(() => {
+    if (!value) return "";
+    return options.find((opt) => opt.value === value)?.label || "";
+  });
   const ref = useRef<HTMLDivElement>(null);
 
-  // Sync internal text with currently selected value
-  useEffect(() => {
+  // Sync internal text when selected value prop changes
+  if (prevValue !== value) {
+    setPrevValue(value);
     if (!value) {
       setSearchQuery("");
-      return;
+    } else {
+      const found = options.find((opt) => opt.value === value);
+      if (found) setSearchQuery(found.label);
     }
-    const found = options.find((opt) => opt.value === value);
-    if (found) {
-      setSearchQuery(found.label);
-    }
-  }, [value, options]);
+  }
 
   // Click outside to close dropdown
   useEffect(() => {

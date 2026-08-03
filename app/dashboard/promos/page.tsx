@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Percent, Plus, Trash2, Calendar, Loader2, ArrowRight, ShieldAlert, Boxes } from "lucide-react"
+import { Plus, Trash2, Calendar, Loader2, ShieldAlert, Boxes } from "lucide-react"
 
 import { adminWrite } from "@/services/admin/admin-api-client"
 import { supabase } from "@/lib/supabase/client"
@@ -125,7 +125,7 @@ export default function PromosPage() {
     if (isViewer) return
 
     const itemsPayload = Object.entries(selectedItems)
-      .filter(([_, item]) => item.checked)
+      .filter(([, item]) => item.checked)
       .map(([productId, item]) => ({
         product_id: productId,
         qty: item.qty,
@@ -198,7 +198,7 @@ export default function PromosPage() {
 
   // --- Kalkulasi Live Preview ---
   const activeItems = Object.entries(selectedItems)
-    .filter(([_, item]) => item.checked)
+    .filter(([, item]) => item.checked)
     .map(([id, item]) => {
       const p = products.find((x) => x.id === id)
       return {
@@ -256,7 +256,7 @@ export default function PromosPage() {
           </div>
         ) : promos.length === 0 ? (
           <div className="text-center py-10 text-[var(--insight-muted)] bg-[var(--insight-panel)] border-2 border-dashed border-[var(--insight-border)] rounded-md">
-            Belum ada promo campaign yang terdaftar. Silakan klik "Buat Promo Baru" di atas.
+            Belum ada promo campaign yang terdaftar. Silakan klik &quot;Buat Promo Baru&quot; di atas.
           </div>
         ) : (
           <div className="overflow-x-auto">

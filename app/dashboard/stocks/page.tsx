@@ -76,11 +76,6 @@ function getProductCode(products: Stock["products"]) {
   return products?.product_code ?? "";
 }
 
-function productBrand(product: Pick<Product, "name" | "product_code">) {
-  const raw = product.product_code || product.name || "OTHER";
-  return raw.split(/[-_\s/]+/)[0]?.trim().toUpperCase() || "OTHER";
-}
-
 function statusClass(status: Stock["status"]) {
   if (status === "available") return "bg-emerald-100 text-emerald-700";
   if (status === "deleted") return "bg-slate-200 text-slate-700";
@@ -388,8 +383,6 @@ export default function StocksPage() {
     if (page > 1) setPage(page - 1);
   };
 
-  const activeProductName =
-    filterBrand || "All Products";
   const brandFilterOptions = Array.from(
     new Set(products.map((p) => p.name).filter(Boolean))
   )

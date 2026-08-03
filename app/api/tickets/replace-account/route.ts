@@ -2,7 +2,6 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import {
   adminSupabase,
-  getTicketWithUser,
   requireAdminSession,
   sendTelegramMessage,
   escapeHtml,

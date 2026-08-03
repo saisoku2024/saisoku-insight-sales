@@ -28,7 +28,7 @@ const securityHeaders = [
       "img-src 'self' data: blob: https://api.telegram.org https://*.supabase.co",
       "font-src 'self' data:",
       "style-src 'self' 'unsafe-inline'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "script-src 'self' 'unsafe-inline'",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.telegram.org",
       "upgrade-insecure-requests",
     ].join("; "),
