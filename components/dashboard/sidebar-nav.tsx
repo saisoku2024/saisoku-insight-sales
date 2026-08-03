@@ -20,12 +20,10 @@ function SidebarItem({
   item,
   pathname,
   onNavigate,
-  onBeforeNavigate,
 }: {
   item: DashboardNavItem
   pathname: string
   onNavigate?: () => void
-  onBeforeNavigate?: () => void
 }) {
   const active = isActivePath(pathname, item.href)
   const Icon = item.icon
@@ -34,7 +32,6 @@ function SidebarItem({
     <Link
       href={item.href}
       onClick={() => {
-        onBeforeNavigate?.()
         onNavigate?.()
       }}
       className={cn(
@@ -74,11 +71,21 @@ export function SidebarNav({
 
     return activeEntry?.type === "group" ? activeEntry.label : null
   }, [groups, pathname])
-  const [manualOpenGroup, setManualOpenGroup] = useState<string | null>(null)
-  const openGroupLabel = manualOpenGroup ?? activeGroupLabel
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({})
+
+  const isGroupOpen = (label: string) => {
+    if (label in openGroups) {
+      return openGroups[label]
+    }
+    return label === activeGroupLabel
+  }
 
   const toggleGroup = (label: string) => {
-    setManualOpenGroup((currentLabel) => (currentLabel === label ? null : label))
+    const currentlyOpen = isGroupOpen(label)
+    setOpenGroups((prev) => ({
+      ...prev,
+      [label]: !currentlyOpen,
+    }))
   }
 
   return (
@@ -99,12 +106,11 @@ export function SidebarNav({
                 item={entry.item}
                 pathname={pathname}
                 onNavigate={onNavigate}
-                onBeforeNavigate={() => setManualOpenGroup(null)}
               />
             )
           }
 
-          const isOpen = openGroupLabel === entry.label
+          const isOpen = isGroupOpen(entry.label)
 
           return (
             <div key={entry.label} className="space-y-1.5">
@@ -125,7 +131,6 @@ export function SidebarNav({
                       item={item}
                       pathname={pathname}
                       onNavigate={onNavigate}
-                      onBeforeNavigate={() => setManualOpenGroup(null)}
                     />
                   ))}
                 </div>
