@@ -400,45 +400,51 @@ export default function PromosPage() {
                 <div className="border-2 border-[var(--insight-border)] p-3 rounded bg-[var(--insight-panel)]">
                   <label className="block text-xs font-bold mb-2 text-[var(--insight-text)]">Pilih Produk & Qty (Bisa Pilih Banyak untuk Bundling)</label>
                   <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                    {products.map((p) => {
-                      const item = selectedItems[p.id] || { checked: false, qty: 1 }
-                      return (
-                        <div key={p.id} className="flex items-center justify-between border border-[var(--insight-border)] p-2 rounded bg-[var(--insight-card)] text-xs shadow-[1px_1px_0_var(--insight-shadow)]">
-                          <label className="flex items-center gap-2 cursor-pointer font-semibold flex-1">
-                            <input
-                              type="checkbox"
-                              checked={item.checked}
-                              onChange={(e) => {
-                                setSelectedItems((prev) => ({
-                                  ...prev,
-                                  [p.id]: { checked: e.target.checked, qty: item.qty },
-                                }))
-                              }}
-                              className="rounded border-[var(--insight-border)] text-blue-600 focus:ring-blue-500 h-4 w-4"
-                            />
-                            <span>
-                              {p.name} <span className="text-[var(--insight-muted)]">({formatPrice(p.price_normal)})</span>
-                            </span>
-                          </label>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] text-[var(--insight-muted)]">Qty:</span>
-                            <input
-                              type="number"
-                              min={1}
-                              disabled={!item.checked}
-                              className="insight-input w-12 text-center py-0.5 text-xs"
-                              value={item.qty}
-                              onChange={(e) => {
-                                setSelectedItems((prev) => ({
-                                  ...prev,
-                                  [p.id]: { checked: item.checked, qty: Math.max(1, Number(e.target.value)) },
-                                }))
-                              }}
-                            />
+                    {products.filter(p => p.available_stock > 0).length === 0 ? (
+                      <div className="text-center py-6 text-xs text-red-500 font-semibold bg-red-50 dark:bg-red-950/20 border border-red-500/20 rounded">
+                        Tidak ada produk dengan stok tersedia saat ini. Silakan update stok terlebih dahulu di menu Stocks.
+                      </div>
+                    ) : (
+                      products.filter(p => p.available_stock > 0).map((p) => {
+                        const item = selectedItems[p.id] || { checked: false, qty: 1 }
+                        return (
+                          <div key={p.id} className="flex items-center justify-between border border-[var(--insight-border)] p-2 rounded bg-[var(--insight-card)] text-xs shadow-[1px_1px_0_var(--insight-shadow)]">
+                            <label className="flex items-center gap-2 cursor-pointer font-semibold flex-1">
+                              <input
+                                type="checkbox"
+                                checked={item.checked}
+                                onChange={(e) => {
+                                  setSelectedItems((prev) => ({
+                                    ...prev,
+                                    [p.id]: { checked: e.target.checked, qty: item.qty },
+                                  }))
+                                }}
+                                className="rounded border-[var(--insight-border)] text-blue-600 focus:ring-blue-500 h-4 w-4"
+                              />
+                              <span>
+                                {p.name} <span className="text-[var(--insight-muted)]">({formatPrice(p.price_normal)})</span>
+                              </span>
+                            </label>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-[var(--insight-muted)]">Qty:</span>
+                              <input
+                                type="number"
+                                min={1}
+                                disabled={!item.checked}
+                                className="insight-input w-12 text-center py-0.5 text-xs"
+                                value={item.qty}
+                                onChange={(e) => {
+                                  setSelectedItems((prev) => ({
+                                    ...prev,
+                                    [p.id]: { checked: item.checked, qty: Math.max(1, Number(e.target.value)) },
+                                  }))
+                                }}
+                              />
+                            </div>
                           </div>
-                        </div>
-                      )
-                    })}
+                        )
+                      })
+                    )}
                   </div>
                 </div>
 
