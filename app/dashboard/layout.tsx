@@ -184,9 +184,9 @@ export default function DashboardLayout({
         onToggleSidebarCollapsed={toggleSidebarCollapsed}
       />
 
-      <div className="flex min-h-[calc(100vh-60px)]">
+      <div className="flex min-h-[calc(100vh-64px)]">
         {!sidebarCollapsed ? (
-          <aside className="hidden w-[220px] shrink-0 lg:block">
+          <aside className="hidden w-[240px] shrink-0 lg:block">
             <SidebarNav
               pathname={pathname}
               groups={dashboardNavigation}
@@ -203,7 +203,7 @@ export default function DashboardLayout({
           >
             <div 
               onClick={(e) => e.stopPropagation()}
-              className="absolute bottom-0 left-0 top-0 w-[min(92vw,280px)]"
+              className="absolute bottom-0 left-0 top-0 w-[min(92vw,300px)]"
             >
               <div className="relative h-full">
                 <button

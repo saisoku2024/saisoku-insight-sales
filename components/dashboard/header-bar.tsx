@@ -40,7 +40,7 @@ export function HeaderBar({
     <header
       className="
         sticky top-0 z-30
-        flex h-[60px] items-center justify-between gap-4
+        flex h-[64px] items-center justify-between gap-4
         border-b-[3px] border-[var(--insight-border)]
         bg-[var(--insight-card)]
         px-4 sm:px-5

@@ -1,6 +1,17 @@
 "use client"
 
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
+import {
+  AlertTriangle,
+  BarChart3,
+  PiggyBank,
+  Receipt,
+  TrendingUp,
+  UserPlus,
+  Users,
+  UserX,
+  Wallet,
+} from "lucide-react"
 import { supabase } from "@/lib/supabase/client"
 import { useIsViewer } from "@/components/dashboard/panel-access-context"
 
@@ -70,16 +81,25 @@ function Panel({
 function StatCard({
   label,
   value,
+  icon: Icon,
   accentClass = "text-gray-900 dark:text-white",
 }: {
   label: string
   value: ReactNode
+  icon: React.ComponentType<{ className?: string }>
   accentClass?: string
 }) {
   return (
-    <div className="insight-card group flex min-h-[80px] flex-col justify-center p-3.5 transition-all duration-200 hover:-translate-y-0.5">
-      <div className="text-sm leading-none text-[var(--insight-muted)]">{label}</div>
-      <div className={`mt-1.5 text-2xl font-bold leading-none ${accentClass}`}>
+    <div className="insight-card group flex min-h-[88px] flex-col justify-between p-3.5 transition-all duration-200 hover:-translate-y-0.5">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-[11px] font-medium uppercase tracking-[0.08em] leading-none text-[var(--insight-muted)]">
+          {label}
+        </div>
+        <div className={`flex h-7 w-7 shrink-0 items-center justify-center border-2 border-[var(--insight-border)] opacity-60 ${accentClass}`}>
+          <Icon className="h-3.5 w-3.5" />
+        </div>
+      </div>
+      <div className={`text-[22px] font-bold leading-none ${accentClass}`}>
         {value}
       </div>
     </div>
@@ -92,9 +112,12 @@ function Skeleton({ className = "" }: { className?: string }) {
 
 function StatCardSkeleton() {
   return (
-    <div className="insight-card flex min-h-[80px] flex-col justify-center p-3.5">
-      <Skeleton className="h-3 w-28" />
-      <Skeleton className="mt-2 h-6 w-32" />
+    <div className="insight-card flex min-h-[88px] flex-col justify-between p-3.5">
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-7 w-7 shrink-0" />
+      </div>
+      <Skeleton className="h-6 w-32" />
     </div>
   )
 }
@@ -302,33 +325,27 @@ export default function DashboardPage() {
     })
   }
 
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        setLoading(true)
-        setErrorMsg(null)
-
-        const [txs, userCounts] = await Promise.all([
-          fetchTransactionsOnce(),
-          fetchUserCounts(),
-        ])
-
-        if (cancelled) return
-
-        computeAll(txs, userCounts)
-        setUpdatedAt(new Date())
-      } catch (e: unknown) {
-        if (cancelled) return
-        setErrorMsg(e instanceof Error ? e.message : "Failed to load dashboard")
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-
-    return () => { cancelled = true }
+  const loadData = useCallback(async () => {
+    setLoading(true)
+    setErrorMsg(null)
+    try {
+      const [txs, userCounts] = await Promise.all([
+        fetchTransactionsOnce(),
+        fetchUserCounts(),
+      ])
+      computeAll(txs, userCounts)
+      setUpdatedAt(new Date())
+    } catch (e: unknown) {
+      setErrorMsg(e instanceof Error ? e.message : "Failed to load dashboard")
+    } finally {
+      setLoading(false)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    void loadData()
+  }, [loadData])
 
   return (
     <div className="space-y-4 transition-colors">
@@ -350,8 +367,27 @@ export default function DashboardPage() {
       </div>
 
       {errorMsg ? (
-        <div className="border-2 border-red-700 bg-red-50 p-2.5 text-sm leading-none text-red-700 shadow-[2px_2px_0_#7f1d1d] dark:bg-red-950/30 dark:text-red-300">
-          {errorMsg}
+        <div className="border-2 border-red-700 bg-red-50 shadow-[2px_2px_0_#7f1d1d] dark:bg-red-950/30">
+          <div className="flex items-start gap-3 p-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center border-2 border-red-700 bg-red-100 dark:bg-red-900/40">
+              <AlertTriangle className="h-4 w-4 text-red-700 dark:text-red-400" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-semibold leading-none text-red-700 dark:text-red-300">
+                Gagal memuat data
+              </p>
+              <p className="mt-1 text-[12px] leading-snug text-red-600 dark:text-red-400">
+                {errorMsg}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void loadData()}
+              className="shrink-0 border-2 border-red-700 bg-red-100 px-3 py-1.5 text-[12px] font-semibold leading-none text-red-700 shadow-[2px_2px_0_#7f1d1d] transition hover:-translate-y-0.5 dark:bg-red-900/40 dark:text-red-300"
+            >
+              Coba Lagi
+            </button>
+          </div>
         </div>
       ) : null}
 
@@ -370,26 +406,31 @@ export default function DashboardPage() {
             <StatCard
               label="GMV Hari Ini"
               value={currencyIDR(meta.gmvToday)}
+              icon={TrendingUp}
               accentClass="text-blue-600 dark:text-blue-400"
             />
             <StatCard
               label="GMV Bulan Ini"
               value={currencyIDR(meta.gmvMonth)}
+              icon={BarChart3}
               accentClass="text-green-600 dark:text-green-400"
             />
             <StatCard
               label="Profit Bulan Ini"
               value={isViewer ? "***" : currencyIDR(meta.profitMonth)}
+              icon={Wallet}
               accentClass="text-purple-600 dark:text-purple-400"
             />
             <StatCard
               label="Profit Tahun Ini"
               value={isViewer ? "***" : currencyIDR(meta.profitYear)}
+              icon={PiggyBank}
               accentClass="text-fuchsia-600 dark:text-fuchsia-400"
             />
             <StatCard
               label="Transaction"
               value={meta.transactions.toLocaleString("id-ID")}
+              icon={Receipt}
               accentClass="text-gray-900 dark:text-gray-100"
             />
           </>
@@ -442,16 +483,19 @@ export default function DashboardPage() {
             <StatCard
               label="New User"
               value={meta.newUsers.toLocaleString("id-ID")}
+              icon={UserPlus}
               accentClass="text-indigo-600 dark:text-indigo-400"
             />
             <StatCard
               label="Active User"
               value={meta.activeUsers.toLocaleString("id-ID")}
+              icon={Users}
               accentClass="text-emerald-600 dark:text-emerald-400"
             />
             <StatCard
               label="Banned User"
               value={meta.bannedUsers.toLocaleString("id-ID")}
+              icon={UserX}
               accentClass="text-red-600 dark:text-red-400"
             />
           </>
