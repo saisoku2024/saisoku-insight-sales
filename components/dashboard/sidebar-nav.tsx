@@ -72,26 +72,25 @@ export function SidebarNav({
     return activeEntry?.type === "group" ? activeEntry.label : null
   }, [groups, pathname])
 
-  const [openGroupMap, setOpenGroupMap] = useState<Record<string, boolean>>({})
+  // Single open accordion state (undefined = follow active route, string = manual override, null = all collapsed)
+  const [userSelectedGroup, setUserSelectedGroup] = useState<string | null | undefined>(undefined)
 
-  // Reset manual overrides on pathname change so auto-expand & auto-hide work seamlessly
+  // Reset manual override on route change so only the active route's group is open and all others auto-hide
   useEffect(() => {
-    setOpenGroupMap({})
+    setUserSelectedGroup(undefined)
   }, [pathname])
 
-  const isGroupOpen = (label: string) => {
-    if (label in openGroupMap) {
-      return openGroupMap[label]
-    }
-    return label === activeGroupLabel
-  }
+  const currentOpenGroup = userSelectedGroup !== undefined ? userSelectedGroup : activeGroupLabel
 
   const toggleGroup = (label: string) => {
-    const currentlyOpen = isGroupOpen(label)
-    setOpenGroupMap((prev) => ({
-      ...prev,
-      [label]: !currentlyOpen,
-    }))
+    setUserSelectedGroup((current) => {
+      const active = current !== undefined ? current : activeGroupLabel
+      return active === label ? null : label
+    })
+  }
+
+  const isGroupOpen = (label: string) => {
+    return currentOpenGroup === label
   }
 
   return (
