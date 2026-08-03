@@ -195,6 +195,7 @@ export default function TransactionsPage() {
   }
 
   async function exportCsv() {
+    if (isViewer) return;
     const { data, error } = await buildTransactionQuery(false);
 
     if (error) {
@@ -308,8 +309,10 @@ export default function TransactionsPage() {
           </button>
 
           <button
-            onClick={() => void exportCsv()}
-            className="border-[3px] border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+            onClick={() => { if (isViewer) return; void exportCsv(); }}
+            disabled={isViewer}
+            title={isViewer ? "Viewer mode: read-only" : undefined}
+            className="border-[3px] border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Export CSV
           </button>
