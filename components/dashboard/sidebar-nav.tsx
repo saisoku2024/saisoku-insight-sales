@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { ChevronDown, LogOut } from "lucide-react"
 
@@ -71,18 +71,24 @@ export function SidebarNav({
 
     return activeEntry?.type === "group" ? activeEntry.label : null
   }, [groups, pathname])
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({})
+
+  const [openGroupMap, setOpenGroupMap] = useState<Record<string, boolean>>({})
+
+  // Reset manual overrides on pathname change so auto-expand & auto-hide work seamlessly
+  useEffect(() => {
+    setOpenGroupMap({})
+  }, [pathname])
 
   const isGroupOpen = (label: string) => {
-    if (label in openGroups) {
-      return openGroups[label]
+    if (label in openGroupMap) {
+      return openGroupMap[label]
     }
     return label === activeGroupLabel
   }
 
   const toggleGroup = (label: string) => {
     const currentlyOpen = isGroupOpen(label)
-    setOpenGroups((prev) => ({
+    setOpenGroupMap((prev) => ({
       ...prev,
       [label]: !currentlyOpen,
     }))
