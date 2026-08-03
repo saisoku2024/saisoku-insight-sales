@@ -19,12 +19,15 @@ export async function GET(req: NextRequest) {
     // 1. Jalankan pembersihan promo yang kedaluwarsa secara otomatis
     await adminSupabase!.rpc("expire_and_restore_promos")
 
-    // 2. Ambil seluruh data promo beserta relasi produk
+    // 2. Ambil seluruh data promo beserta relasi produk penyusun
     const { data: promos, error } = await adminSupabase!
       .from("promos")
       .select(`
         *,
-        product:products (id, name, product_code)
+        promo_items (
+          qty,
+          product:products (id, name, product_code)
+        )
       `)
       .order("created_at", { ascending: false })
 
@@ -66,12 +69,12 @@ export async function POST(req: NextRequest) {
     const name = readLimitedString(body.name, "Nama Promo", 120)
     const description = readLimitedNullableString(body.description, "Deskripsi", 500)
     const priceRaw = body.price
-    const product_id = readString(body.product_id)
     const allocated_qty_raw = body.allocated_qty
     const end_at_raw = body.end_at ? String(body.end_at) : null
+    const items = body.items as any[]
 
-    if (!name || !product_id) {
-      return jsonError("Nama promo dan produk wajib diisi.")
+    if (!name || !items || !Array.isArray(items) || items.length === 0) {
+      return jsonError("Nama promo dan produk penyusun wajib diisi.")
     }
 
     const price = Number(priceRaw)
@@ -84,19 +87,25 @@ export async function POST(req: NextRequest) {
       return jsonError("Jumlah alokasi stok harus berupa angka positif.")
     }
 
+    // Validasi produk penyusun
+    for (const item of items) {
+      if (!item.product_id || !item.qty || Number(item.qty) <= 0) {
+        return jsonError("Produk penyusun atau quantity tidak valid.")
+      }
+    }
+
     // Call create_promo_campaign RPC in database
     const { data: promoId, error } = await adminSupabase!.rpc("create_promo_campaign", {
       p_name: name,
       p_description: description,
       p_price: price,
-      p_product_id: product_id,
       p_allocated_qty: allocated_qty,
+      p_items: items, // Passing array directly (PostgREST handles it as JSONB)
       p_end_at: end_at_raw ? new Date(end_at_raw).toISOString() : null,
     })
 
     if (error) {
-      // Periksa jika error karena stok kurang
-      if (error.message.includes("Stok tidak mencukupi")) {
+      if (error.message.includes("Stok untuk produk")) {
         return jsonError(error.message, 400)
       }
       throw error
@@ -106,7 +115,7 @@ export async function POST(req: NextRequest) {
       action: "create",
       entity: "promos",
       entityId: promoId,
-      after: { id: promoId, name, price, product_id, allocated_qty, end_at: end_at_raw },
+      after: { id: promoId, name, price, items, allocated_qty, end_at: end_at_raw },
     })
 
     return NextResponse.json({ success: true, promoId })

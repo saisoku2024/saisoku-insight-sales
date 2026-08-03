@@ -1,28 +1,32 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Percent, Plus, Trash2, Calendar, Loader2, ArrowRight, ShieldAlert } from "lucide-react"
+import { Percent, Plus, Trash2, Calendar, Loader2, ArrowRight, ShieldAlert, Boxes } from "lucide-react"
 
 import { adminWrite } from "@/services/admin/admin-api-client"
 import { supabase } from "@/lib/supabase/client"
 import { ActionNotice } from "@/components/dashboard/action-notice"
+
+type PromoItem = {
+  qty: number
+  product?: {
+    id: string
+    name: string
+    product_code: string
+  }
+}
 
 type Promo = {
   id: string
   name: string
   description: string | null
   price: number
-  product_id: string
   allocated_qty: number
   current_stock: number
   start_at: string
   end_at: string | null
   is_active: boolean
-  product?: {
-    id: string
-    name: string
-    product_code: string
-  }
+  promo_items?: PromoItem[]
 }
 
 type Product = {
@@ -43,9 +47,9 @@ export default function PromosPage() {
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [price, setPrice] = useState("")
-  const [productId, setProductId] = useState("")
   const [allocatedQty, setAllocatedQty] = useState("")
   const [endDate, setEndDate] = useState("")
+  const [selectedItems, setSelectedItems] = useState<Record<string, { checked: boolean; qty: number }>>({})
 
   const showSuccess = (message: string) => setNotice({ type: "success", message })
   const showError = (message: string) => setNotice({ type: "error", message })
@@ -73,6 +77,13 @@ export default function PromosPage() {
 
       if (error) throw error
       setProducts(data || [])
+
+      // Inisialisasi selectedItems map
+      const initialMap: Record<string, { checked: boolean; qty: number }> = {}
+      ;(data || []).forEach((p) => {
+        initialMap[p.id] = { checked: false, qty: 1 }
+      })
+      setSelectedItems(initialMap)
     } catch (e: unknown) {
       console.error("Gagal load products:", e)
     }
@@ -85,20 +96,28 @@ export default function PromosPage() {
 
   const handleCreatePromo = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const itemsPayload = Object.entries(selectedItems)
+      .filter(([_, item]) => item.checked)
+      .map(([productId, item]) => ({
+        product_id: productId,
+        qty: item.qty,
+      }))
+
     if (!name.trim()) return showError("Nama promo wajib diisi.")
-    if (!productId) return showError("Produk wajib dipilih.")
+    if (itemsPayload.length === 0) return showError("Pilih minimal satu produk penyusun untuk promo.")
     if (!price || Number(price) < 0) return showError("Harga promo tidak valid.")
     if (!allocatedQty || Number(allocatedQty) <= 0) return showError("Alokasi qty harus berupa angka positif.")
 
     setCreating(true)
     try {
-      const res = await adminWrite<{ success: boolean; promoId: string }>("/api/admin/promos", {
+      await adminWrite<{ success: boolean; promoId: string }>("/api/admin/promos", {
         body: {
           name: name.trim(),
           description: description.trim() || null,
           price: Number(price),
-          product_id: productId,
           allocated_qty: Number(allocatedQty),
+          items: itemsPayload,
           end_at: endDate ? new Date(endDate).toISOString() : null,
         },
       })
@@ -107,9 +126,16 @@ export default function PromosPage() {
       setName("")
       setDescription("")
       setPrice("")
-      setProductId("")
       setAllocatedQty("")
       setEndDate("")
+      
+      // Reset checklist
+      const resetMap: Record<string, { checked: boolean; qty: number }> = {}
+      products.forEach((p) => {
+        resetMap[p.id] = { checked: false, qty: 1 }
+      })
+      setSelectedItems(resetMap)
+
       setShowAddModal(false)
       void fetchPromos()
     } catch (err: unknown) {
@@ -146,9 +172,9 @@ export default function PromosPage() {
 
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Promo Campaigns</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Promo Campaigns & Bundling</h1>
           <p className="text-[var(--insight-muted)]">
-            Kelola diskon khusus, batasan waktu promo, dan sistem isolasi serta pemulihan stok otomatis.
+            Kelola bundling paket pembelian, diskon harga, dan alokasi isolasi serta pemulihan stok otomatis.
           </p>
         </div>
         <button
@@ -182,7 +208,7 @@ export default function PromosPage() {
               <thead>
                 <tr>
                   <th>Nama Promo</th>
-                  <th>Produk Satuan</th>
+                  <th>Produk Satuan / Bundling</th>
                   <th>Harga Promo</th>
                   <th className="text-center">Sisa Stok / Alokasi</th>
                   <th>Masa Berlaku</th>
@@ -197,7 +223,7 @@ export default function PromosPage() {
 
                   return (
                     <tr key={p.id} className={!isActive ? "opacity-70 bg-slate-50/50 dark:bg-slate-900/10" : ""}>
-                      <td className="font-semibold">
+                      <td className="font-semibold text-base">
                         {p.name}
                         {p.description && (
                           <div className="text-xs font-normal text-[var(--insight-muted)] max-w-xs truncate">
@@ -206,10 +232,19 @@ export default function PromosPage() {
                         )}
                       </td>
                       <td>
-                        {p.product ? (
-                          <div>
-                            <span className="font-medium">{p.product.name}</span>
-                            <span className="block text-xs text-[var(--insight-muted)]">Code: {p.product.product_code}</span>
+                        {p.promo_items && p.promo_items.length > 0 ? (
+                          <div className="space-y-1.5 my-1">
+                            {p.promo_items.map((item, idx) => (
+                              <div key={idx} className="text-sm">
+                                <span className="font-medium text-[var(--insight-text)]">{item.product?.name}</span>
+                                {item.qty > 1 && (
+                                  <span className="ml-1.5 px-1 py-0.5 text-[10px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-bold rounded">
+                                    x{item.qty}
+                                  </span>
+                                )}
+                                <span className="block text-xs text-[var(--insight-muted)]">Code: {item.product?.product_code}</span>
+                              </div>
+                            ))}
                           </div>
                         ) : (
                           "-"
@@ -277,17 +312,20 @@ export default function PromosPage() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
           <form
             onSubmit={handleCreatePromo}
-            className="insight-card bg-[var(--insight-panel)] p-6 max-w-lg w-full border-2 border-[var(--insight-border)] shadow-[4px_4px_0_var(--insight-shadow)] space-y-4"
+            className="insight-card bg-[var(--insight-panel)] p-6 max-w-xl w-full border-2 border-[var(--insight-border)] shadow-[4px_4px_0_var(--insight-shadow)] space-y-4 max-h-[90vh] overflow-y-auto"
           >
-            <h3 className="text-xl font-bold border-b-2 border-[var(--insight-border)] pb-2">Buat Promo Campaign Baru</h3>
+            <h3 className="text-xl font-bold border-b-2 border-[var(--insight-border)] pb-2 flex items-center gap-1.5">
+              <Boxes className="h-5 w-5 text-blue-500" />
+              Buat Promo / Paket Bundling Baru
+            </h3>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Nama Promo</label>
+                <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Nama Promo / Bundling</label>
                 <input
                   type="text"
                   required
-                  placeholder="Contoh: Netflix Special Merdeka"
+                  placeholder="Contoh: Netflix + Spotify Hemat Merdeka"
                   className="insight-input w-full"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -297,7 +335,7 @@ export default function PromosPage() {
               <div>
                 <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Deskripsi Promo</label>
                 <textarea
-                  placeholder="Detail promo yang ditawarkan..."
+                  placeholder="Detail promo/bundling..."
                   className="insight-input w-full text-sm"
                   rows={2}
                   value={description}
@@ -305,41 +343,67 @@ export default function PromosPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Pilih Produk</label>
-                  <select
-                    required
-                    className="insight-input w-full text-sm"
-                    value={productId}
-                    onChange={(e) => setProductId(e.target.value)}
-                  >
-                    <option value="">-- Pilih Produk --</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} ({p.product_code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Harga Promo (Rp)</label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    placeholder="Contoh: 15000"
-                    className="insight-input w-full"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                  />
+              <div className="border-2 border-[var(--insight-border)] p-3 rounded bg-[var(--insight-panel)]">
+                <label className="block text-sm font-bold mb-2 text-[var(--insight-text)]">Pilih Produk & Qty (Bisa Pilih Banyak untuk Bundling)</label>
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {products.map((p) => {
+                    const item = selectedItems[p.id] || { checked: false, qty: 1 }
+                    return (
+                      <div key={p.id} className="flex items-center justify-between border border-[var(--insight-border)] p-2 rounded bg-[var(--insight-card)] text-sm shadow-[1px_1px_0_var(--insight-shadow)]">
+                        <label className="flex items-center gap-2 cursor-pointer font-semibold flex-1">
+                          <input
+                            type="checkbox"
+                            checked={item.checked}
+                            onChange={(e) => {
+                              setSelectedItems((prev) => ({
+                                ...prev,
+                                [p.id]: { checked: e.target.checked, qty: item.qty },
+                              }))
+                            }}
+                            className="rounded border-[var(--insight-border)] text-blue-600 focus:ring-blue-500 h-4 w-4"
+                          />
+                          <span>
+                            {p.name} <span className="text-xs font-normal text-[var(--insight-muted)]">({p.product_code})</span>
+                          </span>
+                        </label>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-[var(--insight-muted)]">Qty:</span>
+                          <input
+                            type="number"
+                            min={1}
+                            disabled={!item.checked}
+                            className="insight-input w-14 text-center py-0.5 text-xs"
+                            value={item.qty}
+                            onChange={(e) => {
+                              setSelectedItems((prev) => ({
+                                ...prev,
+                                [p.id]: { checked: item.checked, qty: Math.max(1, Number(e.target.value)) },
+                              }))
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Alokasi Qty Stok</label>
+                  <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Harga Promo Paket (Rp)</label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    placeholder="Contoh: 35000"
+                    className="insight-input w-full"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Alokasi Qty Paket</label>
                   <input
                     type="number"
                     required
@@ -349,25 +413,25 @@ export default function PromosPage() {
                     value={allocatedQty}
                     onChange={(e) => setAllocatedQty(e.target.value)}
                   />
-                  <span className="text-[10px] text-[var(--insight-muted)]">Stok normal akan dipindahkan ke promo.</span>
+                  <span className="text-[10px] text-[var(--insight-muted)]">Jumlah paket yang ingin dirakit & diisolasi.</span>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Tanggal Berakhir (Opsional)</label>
-                  <input
-                    type="datetime-local"
-                    className="insight-input w-full text-sm"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Tanggal Berakhir (Opsional)</label>
+                <input
+                  type="datetime-local"
+                  className="insight-input w-full text-sm"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
               </div>
             </div>
 
             <div className="bg-red-50 dark:bg-red-950/20 border border-red-500/30 p-3 rounded text-xs text-red-700 dark:text-red-300 flex items-start gap-2">
               <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
               <div>
-                <strong>PENTING:</strong> Stok yang dialokasikan ke promo akan <strong>diisolasi</strong> (tidak bisa terjual lewat pembelian normal). Jika promo berakhir/dibatalkan, sisa stok otomatis dikembalikan ke stok normal.
+                <strong>PENTING:</strong> Stok produk satuan yang dipilih akan <strong>diisolasi</strong> (tidak bisa terjual eceran biasa). Sisa stok paket otomatis dikembalikan/restore ke stok eceran biasa jika promo dibatalkan/kedaluwarsa.
               </div>
             </div>
 
