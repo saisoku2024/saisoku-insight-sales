@@ -192,13 +192,13 @@ export default function LoyaltyPage() {
   }
 
   return (
-    <div className="space-y-6 text-[var(--insight-text)]">
-      <div className="insight-card p-4">
-        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-violet-100 px-3 py-1 text-lg leading-none text-violet-800">
+    <div className="space-y-4 text-[var(--insight-text)]">
+      <div className="insight-card p-3 px-4">
+        <span className="inline-block border-2 border-[var(--insight-border)] bg-violet-100 px-2.5 py-0.5 text-xs font-bold leading-none text-violet-800">
           LOYALTY SYSTEM
         </span>
-        <h1 className="mt-3 text-[34px] leading-none">Loyalty Tier</h1>
-        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+        <h1 className="mt-2 text-2xl font-bold leading-none">Loyalty Tier</h1>
+        <p className="mt-1 text-sm leading-none text-[var(--insight-muted)]">
           Atur tier loyalty, batas order, diskon, dan status aktif pelanggan.
         </p>
       </div>
@@ -206,35 +206,35 @@ export default function LoyaltyPage() {
       <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />
 
       {error ? (
-        <div className="insight-card border-red-500 bg-red-50 p-4 text-xl text-red-700">
+        <div className="insight-card border-red-500 bg-red-50 p-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
-      <div className="grid gap-5 md:grid-cols-3">
-        <div className="insight-card p-4">
-          <div className="text-xl text-[var(--insight-muted)]">Tiers</div>
-          <div className="mt-2 text-[34px] leading-none">{totalRows}</div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="insight-card p-3.5">
+          <div className="text-sm text-[var(--insight-muted)]">Tiers</div>
+          <div className="mt-1 text-2xl font-bold leading-none">{totalRows}</div>
         </div>
-        <div className="insight-card p-4">
-          <div className="text-xl text-[var(--insight-muted)]">Active Tiers</div>
-          <div className="mt-2 text-[34px] leading-none">{activeTotal}</div>
+        <div className="insight-card p-3.5">
+          <div className="text-sm text-[var(--insight-muted)]">Active Tiers</div>
+          <div className="mt-1 text-2xl font-bold leading-none">{activeTotal}</div>
         </div>
-        <div className="insight-card p-4">
-          <div className="text-xl text-[var(--insight-muted)]">Reward Source</div>
-          <div className="mt-2 text-[34px] leading-none">Orders</div>
+        <div className="insight-card p-3.5">
+          <div className="text-sm text-[var(--insight-muted)]">Reward Source</div>
+          <div className="mt-1 text-2xl font-bold leading-none">Orders</div>
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
-        <div className="insight-card p-4">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-2xl leading-none">{editingTier ? "Edit Tier" : "Add Tier"}</h2>
+      <div className="grid gap-6 xl:grid-cols-[320px_1fr]">
+        <div className="insight-card p-3.5 h-fit">
+          <div className="flex items-center justify-between gap-3 border-b-2 border-[var(--insight-border)] pb-2">
+            <h2 className="text-sm font-bold leading-none">{editingTier ? "Edit Tier" : "Add Tier"}</h2>
             {editingTier ? (
               <button
                 type="button"
                 onClick={resetForm}
-                className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3 py-1.5 text-lg leading-none"
+                className="border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2 py-1 text-xs leading-none"
               >
                 Cancel
               </button>
@@ -243,65 +243,65 @@ export default function LoyaltyPage() {
 
           <div className="mt-4 space-y-3">
             <label className="block">
-              <span className="text-lg text-[var(--insight-muted)]">Nama Tier</span>
+              <span className="text-xs font-semibold text-[var(--insight-muted)]">Nama Tier</span>
               <input
                 value={form.tier_name}
                 onChange={(e) => setForm((current) => ({ ...current, tier_name: e.target.value }))}
-                className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+                className="mt-1 h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm outline-none"
                 placeholder="Gold"
               />
             </label>
 
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
-                <span className="text-lg text-[var(--insight-muted)]">Min Order</span>
+                <span className="text-xs font-semibold text-[var(--insight-muted)]">Min Order</span>
                 <input
                   type="number"
                   min="0"
                   value={form.min_order}
                   onChange={(e) => setForm((current) => ({ ...current, min_order: e.target.value }))}
-                  className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+                  className="mt-1 h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm outline-none"
                 />
               </label>
               <label className="block">
-                <span className="text-lg text-[var(--insight-muted)]">Max Order</span>
+                <span className="text-xs font-semibold text-[var(--insight-muted)]">Max Order</span>
                 <input
                   type="number"
                   min="0"
                   value={form.max_order}
                   onChange={(e) => setForm((current) => ({ ...current, max_order: e.target.value }))}
-                  className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+                  className="mt-1 h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm outline-none"
                 />
               </label>
             </div>
 
             <label className="block">
-              <span className="text-lg text-[var(--insight-muted)]">Diskon Loyalty</span>
+              <span className="text-xs font-semibold text-[var(--insight-muted)]">Diskon Loyalty</span>
               <input
                 type="number"
                 min="0"
                 value={form.discount_amount}
                 onChange={(e) => setForm((current) => ({ ...current, discount_amount: e.target.value }))}
-                className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+                className="mt-1 h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm outline-none"
               />
             </label>
 
             <label className="block">
-              <span className="text-lg text-[var(--insight-muted)]">Description</span>
+              <span className="text-xs font-semibold text-[var(--insight-muted)]">Description</span>
               <textarea
                 value={form.description}
                 onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))}
-                className="mt-1 min-h-24 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-2 text-lg outline-none"
+                className="mt-1 min-h-20 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-2 text-sm outline-none"
                 placeholder="Keterangan tier untuk admin"
               />
             </label>
 
-            <label className="inline-flex items-center gap-3 text-lg">
+            <label className="inline-flex items-center gap-2 text-xs font-semibold">
               <input
                 type="checkbox"
                 checked={form.is_active}
                 onChange={(e) => setForm((current) => ({ ...current, is_active: e.target.checked }))}
-                className="h-5 w-5"
+                className="h-4 w-4"
               />
               Aktif
             </label>
@@ -311,7 +311,7 @@ export default function LoyaltyPage() {
               onClick={() => void saveTier()}
               disabled={saving || isViewer}
               title={isViewer ? viewerOnlyTitle : undefined}
-              className={"w-full border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40" + viewerDisabledClass}
+              className={"w-full border-2 border-[var(--insight-border)] bg-violet-700 px-3.5 py-1.5 text-sm leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40" + viewerDisabledClass}
             >
               {saving ? "Saving..." : editingTier ? "Update Tier" : "Add Tier"}
             </button>
@@ -323,41 +323,41 @@ export default function LoyaltyPage() {
             <table className="w-full text-left">
               <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
                 <tr>
-                  <th className="p-3">Tier</th>
-                  <th className="p-3">Min Order</th>
-                  <th className="p-3">Max Order</th>
-                  <th className="p-3">Discount</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Description</th>
-                  <th className="p-3 text-right">Action</th>
+                  <th className="px-4 py-3 text-sm">Tier</th>
+                  <th className="px-4 py-3 text-sm">Min Order</th>
+                  <th className="px-4 py-3 text-sm">Max Order</th>
+                  <th className="px-4 py-3 text-sm">Discount</th>
+                  <th className="px-4 py-3 text-sm">Status</th>
+                  <th className="px-4 py-3 text-sm">Description</th>
+                  <th className="px-4 py-3 text-sm text-right">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                    <td colSpan={7} className="px-4 py-6 text-center text-sm text-[var(--insight-muted)]">
                       Loading loyalty tier...
                     </td>
                   </tr>
                 ) : null}
 
                 {!loading && tiers.map((tier) => (
-                  <tr key={tier.id} className="hover:bg-blue-50 dark:hover:bg-slate-800/60">
-                    <td className="p-3 font-bold">{tier.tier_name}</td>
-                    <td className="p-3">{tier.min_order}</td>
-                    <td className="p-3">{tier.max_order}</td>
-                    <td className="p-3">{rupiah(tier.discount_amount)}</td>
-                    <td className="p-3">
+                  <tr key={tier.id} className="hover:bg-blue-50 dark:hover:bg-slate-800/60 border-b border-[var(--insight-border)]/10">
+                    <td className="px-4 py-2.5 text-sm font-bold">{tier.tier_name}</td>
+                    <td className="px-4 py-2.5 text-sm">{tier.min_order}</td>
+                    <td className="px-4 py-2.5 text-sm">{tier.max_order}</td>
+                    <td className="px-4 py-2.5 text-sm">{rupiah(tier.discount_amount)}</td>
+                    <td className="px-4 py-2.5 text-sm">
                       <span
-                        className={`inline-block border-[2px] border-[var(--insight-border)] px-2 py-0.5 text-base leading-none ${
+                        className={`inline-block border-2 border-[var(--insight-border)] px-2 py-0.5 text-xs font-bold leading-none ${
                           tier.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
                         }`}
                       >
                         {tier.is_active ? "Active" : "Disabled"}
                       </span>
                     </td>
-                    <td className="max-w-xs p-3">{tier.description || "-"}</td>
-                    <td className="p-3">
+                    <td className="max-w-xs px-4 py-2.5 text-sm truncate">{tier.description || "-"}</td>
+                    <td className="px-4 py-2.5 text-sm">
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
@@ -367,7 +367,7 @@ export default function LoyaltyPage() {
                           }}
                           disabled={isViewer}
                           title={isViewer ? viewerOnlyTitle : undefined}
-                          className={"border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3 py-1.5 text-lg leading-none" + viewerDisabledClass}
+                          className={"border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2.5 py-1 text-xs leading-none" + viewerDisabledClass}
                         >
                           Edit
                         </button>
@@ -376,7 +376,7 @@ export default function LoyaltyPage() {
                           onClick={() => void toggleTier(tier)}
                           disabled={isViewer}
                           title={isViewer ? viewerOnlyTitle : undefined}
-                          className={`border-[3px] border-[var(--insight-border)] px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] ${
+                          className={`border-2 border-[var(--insight-border)] px-2.5 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] ${
                             tier.is_active ? "bg-slate-700 hover:bg-slate-600" : "bg-emerald-700 hover:bg-emerald-600"
                           }${viewerDisabledClass}`}
                         >
@@ -389,7 +389,7 @@ export default function LoyaltyPage() {
 
                 {!loading && tiers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                    <td colSpan={7} className="px-4 py-6 text-center text-sm text-[var(--insight-muted)]">
                       Belum ada loyalty tier.
                     </td>
                   </tr>

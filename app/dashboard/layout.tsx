@@ -197,8 +197,14 @@ export default function DashboardLayout({
         ) : null}
 
         {sidebarOpen ? (
-          <div className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm lg:hidden">
-            <div className="absolute bottom-0 left-0 top-0 w-[min(92vw,280px)]">
+          <div 
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 z-40 bg-slate-950/40 backdrop-blur-sm lg:hidden"
+          >
+            <div 
+              onClick={(e) => e.stopPropagation()}
+              className="absolute bottom-0 left-0 top-0 w-[min(92vw,280px)]"
+            >
               <div className="relative h-full">
                 <button
                   type="button"
