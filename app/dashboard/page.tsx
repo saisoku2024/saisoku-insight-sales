@@ -5,6 +5,7 @@ import Link from "next/link"
 import {
   AlertTriangle,
   BarChart3,
+  CheckCircle2,
   Package,
   PiggyBank,
   Receipt,
@@ -343,6 +344,8 @@ export default function DashboardPage() {
     })
   }
 
+  const [toastMsg, setToastMsg] = useState<string | null>(null)
+
   const loadData = useCallback(async () => {
     setLoading(true)
     setErrorMsg(null)
@@ -360,6 +363,12 @@ export default function DashboardPage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleRefresh = async () => {
+    await loadData()
+    setToastMsg("Data analytics berhasil diperbarui!")
+    setTimeout(() => setToastMsg(null), 3000)
+  }
 
   useEffect(() => {
     void loadData()
@@ -413,7 +422,7 @@ export default function DashboardPage() {
           </Link>
           <button
             type="button"
-            onClick={() => void loadData()}
+            onClick={() => void handleRefresh()}
             disabled={loading}
             className="inline-flex items-center gap-1.5 border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2.5 py-1 text-xs font-medium text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] transition-all hover:-translate-y-0.5 disabled:opacity-50"
           >
@@ -422,6 +431,13 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
+
+      {toastMsg ? (
+        <div className="flex items-center gap-2 border-2 border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 p-2.5 text-xs font-semibold text-emerald-800 dark:text-emerald-200 shadow-[2px_2px_0_#15803d] animate-in fade-in slide-in-from-top-1 duration-200">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <span>{toastMsg}</span>
+        </div>
+      ) : null}
 
       {errorMsg ? (
         <div className="border-2 border-red-700 bg-red-50 shadow-[2px_2px_0_#7f1d1d] dark:bg-red-950/30">

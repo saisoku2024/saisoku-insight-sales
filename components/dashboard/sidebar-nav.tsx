@@ -38,7 +38,7 @@ function SidebarItem({
         onNavigate?.()
       }}
       className={cn(
-        "group flex h-10 items-center gap-2 border-[3px] px-2.5 text-lg leading-none transition-all",
+        "group flex h-9 items-center gap-2.5 border-[3px] px-2.5 text-[14px] font-medium leading-none transition-all",
         active
           ? "border-blue-700 bg-[var(--insight-blue)] text-white shadow-[2px_2px_0_var(--insight-shadow)]"
           : "border-[var(--insight-border)] bg-[var(--insight-panel)] text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] hover:-translate-y-0.5 hover:bg-blue-100 dark:hover:bg-slate-700"
@@ -46,13 +46,13 @@ function SidebarItem({
     >
       <span
         className={cn(
-          "flex h-6 w-6 shrink-0 items-center justify-center border-2",
+          "flex h-5 w-5 shrink-0 items-center justify-center border-2",
           active
             ? "border-white/30 bg-white/10 text-white"
             : "border-[var(--insight-border)] bg-[var(--insight-card)] text-[var(--insight-text)]"
         )}
       >
-        <Icon className="h-4 w-4" />
+        <Icon className="h-3.5 w-3.5" />
       </span>
 
       <span className="min-w-0 flex-1 truncate">{item.title}</span>
@@ -111,7 +111,7 @@ export function SidebarNav({
               <button
                 type="button"
                 onClick={() => toggleGroup(entry.label)}
-                className="insight-button flex h-10 w-full items-center justify-between px-2.5 text-lg leading-none text-left"
+                className="insight-button flex h-9 w-full items-center justify-between px-2.5 text-[14px] font-semibold uppercase tracking-[0.05em] leading-none text-left"
               >
                 <span>{entry.label}</span>
                 <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", isOpen && "rotate-180")} />
@@ -140,16 +140,16 @@ export function SidebarNav({
           type="button"
           onClick={onLogout}
           disabled={isLoggingOut}
-          className="insight-button inline-flex w-full items-center justify-center gap-2 px-3 py-1.5 text-lg disabled:cursor-not-allowed disabled:opacity-70"
+          className="insight-button inline-flex w-full items-center justify-center gap-2 px-3 py-1.5 text-[14px] font-semibold leading-none disabled:cursor-not-allowed disabled:opacity-70"
         >
           <LogOut className="h-4 w-4" />
           {isLoggingOut ? "Signing out..." : "Logout"}
         </button>
 
-        <div className="mt-2 text-center text-xs leading-tight text-[var(--insight-muted)]">
-          INSIGHT PANEL
-          <br />
-          Version 3.0
+        <div className="mt-3 flex items-center justify-center">
+          <span className="border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-2 py-0.5 text-[10px] font-bold uppercase leading-none tracking-widest text-[var(--insight-muted)] shadow-[2px_2px_0_var(--insight-shadow)]">
+            INSIGHT PANEL v3.0.0
+          </span>
         </div>
       </div>
     </div>

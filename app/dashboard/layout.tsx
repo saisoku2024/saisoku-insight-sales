@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { X } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 
+import { BreadcrumbNav } from "@/components/dashboard/breadcrumb"
 import { AuthLoadingScreen } from "@/components/auth/auth-loading-screen"
 import { HeaderBar } from "@/components/dashboard/header-bar"
 import { PanelRoleProvider } from "@/components/dashboard/panel-access-context"
@@ -239,6 +240,7 @@ export default function DashboardLayout({
               shadow-[5px_5px_0_var(--insight-shadow)]
             "
           >
+            <BreadcrumbNav />
             {children}
           </main>
         </div>
