@@ -45,7 +45,8 @@ export function AuthShell({
 }: AuthShellProps) {
   return (
     <div className="auth-page-bg min-h-screen px-4 py-4 text-[var(--insight-text)] transition-colors duration-300 sm:px-6 sm:py-6 lg:px-8">
-      <header className="mx-auto mb-4 flex h-[52px] max-w-4xl items-center justify-between border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-4 shadow-[4px_4px_0_var(--insight-shadow)]">
+      <header className="relative mx-auto mb-4 flex h-[52px] max-w-4xl items-center justify-between overflow-hidden border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-4 shadow-[4px_4px_0_var(--insight-shadow)]">
+        <div className="google-top-bar absolute left-0 right-0 top-0" />
         <BrandMark />
         <div className="flex items-center gap-3">
           <span className="hidden border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--insight-muted)] shadow-[2px_2px_0_var(--insight-shadow)] sm:inline-block">

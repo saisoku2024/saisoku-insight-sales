@@ -40,6 +40,7 @@ export function HeaderBar({
     <header
       className="
         sticky top-0 z-30
+        relative
         flex h-[64px] items-center justify-between gap-4
         border-b-[3px] border-[var(--insight-border)]
         bg-[var(--insight-card)]
@@ -47,6 +48,7 @@ export function HeaderBar({
         transition-colors duration-300
       "
     >
+      <div className="google-top-bar absolute left-0 right-0 top-0" />
       <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"

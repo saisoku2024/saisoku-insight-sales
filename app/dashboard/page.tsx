@@ -90,19 +90,22 @@ function StatCard({
   value,
   icon: Icon,
   accentClass = "text-gray-900 dark:text-white",
+  topBarClass,
 }: {
   label: string
   value: ReactNode
   icon: React.ComponentType<{ className?: string }>
   accentClass?: string
+  topBarClass?: string
 }) {
   return (
-    <div className="insight-card group flex min-h-[88px] flex-col justify-between p-3.5 transition-all duration-200 hover:-translate-y-0.5">
+    <div className="insight-card group relative flex min-h-[88px] flex-col justify-between overflow-hidden p-3.5 transition-all duration-200 hover:-translate-y-0.5">
+      {topBarClass ? <div className={`absolute left-0 right-0 top-0 h-1 ${topBarClass}`} /> : null}
       <div className="flex items-center justify-between gap-2">
         <div className="text-[11px] font-medium uppercase tracking-[0.08em] leading-none text-[var(--insight-muted)]">
           {label}
         </div>
-        <div className={`flex h-7 w-7 shrink-0 items-center justify-center border-2 border-[var(--insight-border)] opacity-60 ${accentClass}`}>
+        <div className={`flex h-7 w-7 shrink-0 items-center justify-center border-2 border-[var(--insight-border)] ${accentClass}`}>
           <Icon className="h-3.5 w-3.5" />
         </div>
       </div>
@@ -403,21 +406,21 @@ export default function DashboardPage() {
             href="/dashboard/sales"
             className="inline-flex items-center gap-1.5 border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2.5 py-1 text-xs font-medium text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] transition-all hover:-translate-y-0.5"
           >
-            <ReceiptText className="h-3.5 w-3.5 text-blue-500" />
+            <ReceiptText className="h-3.5 w-3.5 text-[#4285F4]" />
             <span>Lihat Transaksi</span>
           </Link>
           <Link
             href="/dashboard/products"
             className="inline-flex items-center gap-1.5 border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2.5 py-1 text-xs font-medium text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] transition-all hover:-translate-y-0.5"
           >
-            <Package className="h-3.5 w-3.5 text-purple-500" />
+            <Package className="h-3.5 w-3.5 text-[#d97706] dark:text-[#FBBC05]" />
             <span>Kelola Produk</span>
           </Link>
           <Link
             href="/dashboard/users"
             className="inline-flex items-center gap-1.5 border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2.5 py-1 text-xs font-medium text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] transition-all hover:-translate-y-0.5"
           >
-            <UsersIcon className="h-3.5 w-3.5 text-emerald-500" />
+            <UsersIcon className="h-3.5 w-3.5 text-[#34A853]" />
             <span>Daftar User</span>
           </Link>
           <button
@@ -426,7 +429,7 @@ export default function DashboardPage() {
             disabled={loading}
             className="inline-flex items-center gap-1.5 border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2.5 py-1 text-xs font-medium text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] transition-all hover:-translate-y-0.5 disabled:opacity-50"
           >
-            <RefreshCw className={`h-3.5 w-3.5 text-amber-500 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 text-[#EA4335] ${loading ? "animate-spin" : ""}`} />
             <span>Refresh Data</span>
           </button>
         </div>
@@ -480,31 +483,36 @@ export default function DashboardPage() {
               label="GMV Hari Ini"
               value={currencyIDR(meta.gmvToday)}
               icon={TrendingUp}
-              accentClass="text-blue-600 dark:text-blue-400"
+              topBarClass="bg-[#4285F4]"
+              accentClass="text-[#4285F4] dark:text-[#60a5fa]"
             />
             <StatCard
               label="GMV Bulan Ini"
               value={currencyIDR(meta.gmvMonth)}
               icon={BarChart3}
-              accentClass="text-green-600 dark:text-green-400"
+              topBarClass="bg-[#34A853]"
+              accentClass="text-[#34A853] dark:text-[#4ade80]"
             />
             <StatCard
               label="Profit Bulan Ini"
               value={isViewer ? "***" : currencyIDR(meta.profitMonth)}
               icon={Wallet}
-              accentClass="text-purple-600 dark:text-purple-400"
+              topBarClass="bg-[#FBBC05]"
+              accentClass="text-[#d97706] dark:text-[#facc15]"
             />
             <StatCard
               label="Profit Tahun Ini"
               value={isViewer ? "***" : currencyIDR(meta.profitYear)}
               icon={PiggyBank}
-              accentClass="text-fuchsia-600 dark:text-fuchsia-400"
+              topBarClass="bg-[#EA4335]"
+              accentClass="text-[#EA4335] dark:text-[#f87171]"
             />
             <StatCard
               label="Transaction"
               value={meta.transactions.toLocaleString("id-ID")}
               icon={Receipt}
-              accentClass="text-gray-900 dark:text-gray-100"
+              topBarClass="bg-[#4285F4]"
+              accentClass="text-[#4285F4] dark:text-[#60a5fa]"
             />
           </>
         )}
@@ -557,19 +565,22 @@ export default function DashboardPage() {
               label="New User"
               value={meta.newUsers.toLocaleString("id-ID")}
               icon={UserPlus}
-              accentClass="text-indigo-600 dark:text-indigo-400"
+              topBarClass="bg-[#4285F4]"
+              accentClass="text-[#4285F4] dark:text-[#60a5fa]"
             />
             <StatCard
               label="Active User"
               value={meta.activeUsers.toLocaleString("id-ID")}
               icon={Users}
-              accentClass="text-emerald-600 dark:text-emerald-400"
+              topBarClass="bg-[#34A853]"
+              accentClass="text-[#34A853] dark:text-[#4ade80]"
             />
             <StatCard
               label="Banned User"
               value={meta.bannedUsers.toLocaleString("id-ID")}
               icon={UserX}
-              accentClass="text-red-600 dark:text-red-400"
+              topBarClass="bg-[#EA4335]"
+              accentClass="text-[#EA4335] dark:text-[#f87171]"
             />
           </>
         )}
