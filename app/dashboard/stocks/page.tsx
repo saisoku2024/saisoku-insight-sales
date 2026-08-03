@@ -32,9 +32,20 @@ function parseCsvSemicolon(text: string) {
     return c;
   };
 
+  // Deteksi separator secara dinamis berdasarkan baris pertama
+  const firstLine = lines[0];
+  let separator = ";";
+  if (firstLine.includes("|")) {
+    separator = "|";
+  } else if (firstLine.includes(";")) {
+    separator = ";";
+  } else if (firstLine.includes(":")) {
+    separator = ":";
+  }
+
   const defaultHeaders = ["email", "password", "profile", "pin"];
   const headerLine = cleanLine(lines[0]);
-  const firstColumns = headerLine.split(";").map((h) => cleanCell(h).toLowerCase());
+  const firstColumns = headerLine.split(separator).map((h) => cleanCell(h).toLowerCase());
   const hasHeader = firstColumns.some((value) => defaultHeaders.includes(value));
   const headers = hasHeader ? firstColumns : defaultHeaders;
   const startIndex = hasHeader ? 1 : 0;
@@ -43,7 +54,7 @@ function parseCsvSemicolon(text: string) {
 
   for (let i = startIndex; i < lines.length; i++) {
     const rowLine = cleanLine(lines[i]);
-    const cols = rowLine.split(";").map(cleanCell);
+    const cols = rowLine.split(separator).map(cleanCell);
     const obj: Record<string, string> = {};
     headers.forEach((h, idx) => (obj[h] = cols[idx] ?? ""));
     obj.__line = String(i + 1);
