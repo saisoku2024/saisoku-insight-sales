@@ -458,14 +458,14 @@ export default function StocksPage() {
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
       {/* HEADER */}
-      <div className="insight-card p-4">
-        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-emerald-100 px-3 py-1 text-lg leading-none text-emerald-800">
+      <div className="insight-card p-3 px-4">
+        <span className="inline-block border-2 border-[var(--insight-border)] bg-emerald-100 px-2.5 py-0.5 text-xs font-bold leading-none text-emerald-800">
           STOCK MANAGEMENT
         </span>
-        <h1 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">
+        <h1 className="mt-2 text-2xl font-bold leading-none text-[var(--insight-text)]">
           Stock Management
         </h1>
-        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+        <p className="mt-1 text-sm leading-none text-[var(--insight-muted)]">
           Manage account inventory, stock availability and bulk uploads
         </p>
       </div>
@@ -473,31 +473,31 @@ export default function StocksPage() {
       <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />
 
       {/* KPI CARDS */}
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
-          <div className="text-xl leading-none text-[var(--insight-muted)]">Total Stock</div>
-          <div className="mt-2 text-[34px] leading-none text-[var(--insight-text)]">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="insight-card flex min-h-[90px] flex-col justify-center p-3.5 transition-all duration-200 hover:-translate-y-1">
+          <div className="text-sm leading-none text-[var(--insight-muted)]">Total Stock</div>
+          <div className="mt-2 text-2xl font-bold leading-none text-[var(--insight-text)]">
             {stats.total.toLocaleString("id-ID")}
           </div>
         </div>
 
-        <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
-          <div className="text-xl leading-none text-[var(--insight-muted)]">Available</div>
-          <div className="mt-2 text-[34px] leading-none text-emerald-600 dark:text-emerald-300">
+        <div className="insight-card flex min-h-[90px] flex-col justify-center p-3.5 transition-all duration-200 hover:-translate-y-1">
+          <div className="text-sm leading-none text-[var(--insight-muted)]">Available</div>
+          <div className="mt-2 text-2xl font-bold leading-none text-emerald-600 dark:text-emerald-300">
             {stats.available.toLocaleString("id-ID")}
           </div>
         </div>
 
-        <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
-          <div className="text-xl leading-none text-[var(--insight-muted)]">Sold</div>
-          <div className="mt-2 text-[34px] leading-none text-red-600 dark:text-red-300">
+        <div className="insight-card flex min-h-[90px] flex-col justify-center p-3.5 transition-all duration-200 hover:-translate-y-1">
+          <div className="text-sm leading-none text-[var(--insight-muted)]">Sold</div>
+          <div className="mt-2 text-2xl font-bold leading-none text-red-600 dark:text-red-300">
             {stats.sold.toLocaleString("id-ID")}
           </div>
         </div>
 
-        <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
-          <div className="text-xl leading-none text-[var(--insight-muted)]">Deleted</div>
-          <div className="mt-2 text-[34px] leading-none text-slate-600 dark:text-slate-300">
+        <div className="insight-card flex min-h-[90px] flex-col justify-center p-3.5 transition-all duration-200 hover:-translate-y-1">
+          <div className="text-sm leading-none text-[var(--insight-muted)]">Deleted</div>
+          <div className="mt-2 text-2xl font-bold leading-none text-slate-600 dark:text-slate-300">
             {stats.deleted.toLocaleString("id-ID")}
           </div>
         </div>
