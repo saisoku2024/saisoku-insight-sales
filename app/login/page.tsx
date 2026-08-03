@@ -126,19 +126,46 @@ export default function LoginPage() {
     })
   }
 
-  async function fillGuestLogin() {
+  async function handleGuestLogin() {
     try {
+      setIsSubmitting(true)
       setErrorMessage(null)
       setSuccessMessage("Menghubungi server kredensial guest...")
       const res = await fetch("/api/auth/guest")
       if (!res.ok) throw new Error("Gagal mengambil kredensial guest dari server.")
       const data = await res.json()
-      setEmail(data.email)
-      setPassword(data.password)
-      setSuccessMessage("Mode guest siap. Klik Sign in to dashboard untuk masuk.")
+
+      setSuccessMessage("Masuk ke dashboard sebagai guest...")
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      })
+
+      if (error) {
+        setErrorMessage(getCleanAuthErrorMessage(error.message))
+        setSuccessMessage(null)
+        return
+      }
+
+      const { profile, error: profileError } = await getActiveAdminProfile()
+      if (profileError || !profile) {
+        await supabase.auth.signOut()
+        setErrorMessage(getAdminAccessErrorMessage())
+        setSuccessMessage(null)
+        return
+      }
+
+      void recordPanelAccessEvent({
+        eventType: "login_success",
+        path: "/login",
+        metadata: { role: profile.role },
+      })
+      router.replace("/dashboard")
     } catch (e: any) {
       setErrorMessage(e instanceof Error ? e.message : "Gagal memproses mode guest.")
       setSuccessMessage(null)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -337,7 +364,7 @@ export default function LoginPage() {
 
         <button
           type="button"
-          onClick={fillGuestLogin}
+          onClick={handleGuestLogin}
           disabled={isSubmitting}
           className="inline-flex h-11 w-full items-center justify-center gap-2 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-4 text-lg text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
         >
