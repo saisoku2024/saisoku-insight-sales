@@ -6,6 +6,7 @@ import { Send, Copy, Check, MessageSquare, Loader2 } from "lucide-react"
 import { adminWrite } from "@/services/admin/admin-api-client"
 import { supabase } from "@/lib/supabase/client"
 import { ActionNotice } from "@/components/dashboard/action-notice"
+import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context"
 
 type PopularProduct = {
   id: string
@@ -21,6 +22,7 @@ type BroadcastResult = {
 }
 
 export default function BroadcastPage() {
+  const isViewer = useIsViewer()
   const [greeting, setGreeting] = useState("Selamat Pagi, Saisoku Family! 🌤️")
   const [customText, setCustomText] = useState(
     "Restok produk\n✅ Capcut 30 Day member tim harga  22.500\n✅ Capcut 7 Day individual harga 4.000\n\nWeb capcut join : capcuto.my.id diskon 17% \nJadi 49.000/month\n\nWeb payment gateaway : vitopediapay.com\n\nYang nak beli gsuite ready banyak ya , start bot aja nanti ada button beli gsuite"
@@ -197,6 +199,7 @@ ${footer}`
   }
 
   const handleSendBroadcast = async () => {
+    if (isViewer) return
     setSending(true)
     setShowConfirm(false)
     setResult(null)
@@ -315,14 +318,15 @@ ${footer}`
               {copiedTelegram ? "Tersalin!" : "Copy HTML Telegram"}
             </button>
 
-            <button
-              onClick={() => setShowConfirm(true)}
-              disabled={sending}
-              className="insight-button bg-red-600 hover:bg-red-700 text-white flex items-center gap-1.5 px-4 py-2 ml-auto text-sm"
-            >
-              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              {sending ? "Mengirim..." : "Kirim Telegram"}
-            </button>
+             <button
+               onClick={() => setShowConfirm(true)}
+               disabled={sending || isViewer}
+               title={isViewer ? viewerOnlyTitle : undefined}
+               className="insight-button bg-red-600 hover:bg-red-700 text-white flex items-center gap-1.5 px-4 py-2 ml-auto text-sm disabled:cursor-not-allowed disabled:opacity-50"
+             >
+               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+               {sending ? "Mengirim..." : "Kirim Telegram"}
+             </button>
           </div>
         </div>
 

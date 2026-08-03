@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { supabase } from "@/lib/supabase/client"
+import { useIsViewer } from "@/components/dashboard/panel-access-context"
 
 import {
   Chart as ChartJS,
@@ -111,6 +112,7 @@ function ChartSkeleton() {
 
 // --- MAIN PAGE ---
 export default function DashboardPage() {
+  const isViewer = useIsViewer()
   const [loading, setLoading] = useState(true)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
@@ -366,12 +368,12 @@ export default function DashboardPage() {
             />
             <StatCard
               label="Profit Bulan Ini"
-              value={currencyIDR(meta.profitMonth)}
+              value={isViewer ? "***" : currencyIDR(meta.profitMonth)}
               accentClass="text-purple-600 dark:text-purple-400"
             />
             <StatCard
               label="Profit Tahun Ini"
-              value={currencyIDR(meta.profitYear)}
+              value={isViewer ? "***" : currencyIDR(meta.profitYear)}
               accentClass="text-fuchsia-600 dark:text-fuchsia-400"
             />
             <StatCard

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { supabase } from "@/lib/supabase/client"
+import { useIsViewer } from "@/components/dashboard/panel-access-context"
 
 type PricingProduct = {
   id: string
@@ -25,6 +26,7 @@ function rupiah(value: number | null | undefined) {
 }
 
 export default function PricingPage() {
+  const isViewer = useIsViewer()
   const pageSize = 10
   const [products, setProducts] = useState<PricingProduct[]>([])
   const [page, setPage] = useState(1)
@@ -128,11 +130,11 @@ export default function PricingPage() {
                   <tr key={product.id} className="hover:bg-blue-50 dark:hover:bg-slate-800/60">
                     <td className="p-3">{product.name}</td>
                     <td className="p-3">{product.product_code || "-"}</td>
-                    <td className="p-3">{rupiah(cost)}</td>
+                    <td className="p-3">{isViewer ? "***" : rupiah(cost)}</td>
                     <td className="p-3">{rupiah(product.price_normal)}</td>
                     <td className="p-3">{rupiah(resellerPrice)}</td>
                     <td className="p-3">
-                      R: {rupiah(product.price_normal - cost)} / RS: {rupiah(resellerPrice - cost)}
+                      {isViewer ? "R: *** / RS: ***" : `R: ${rupiah(product.price_normal - cost)} / RS: ${rupiah(resellerPrice - cost)}`}
                     </td>
                     <td className="p-3">{product.is_active ? "Active" : "Disabled"}</td>
                   </tr>

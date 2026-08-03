@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { useIsViewer } from "@/components/dashboard/panel-access-context";
 import type { Transaction } from "@/types";
 
 type ProductAccount = {
@@ -13,6 +14,7 @@ type ProductAccount = {
 };
 
 export default function TransactionsPage() {
+  const isViewer = useIsViewer();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
 
@@ -363,13 +365,19 @@ export default function TransactionsPage() {
                       <td className="p-3">{(page - 1) * limit + i + 1}</td>
                       <td className="p-3">{t.invoice || "-"}</td>
                       <td className="p-3">{t.products?.name || "-"}</td>
-                      <td className="p-3">{pa?.email || "-"}</td>
-                      <td className="p-3">{pa?.password || "-"}</td>
-                      <td className="p-3">{pa?.pin || "-"}</td>
-                      <td className="p-3">Rp {Number(t.price || 0).toLocaleString("id-ID")}</td>
-                      <td className="p-3 text-green-600 dark:text-green-400">
-                        {t.status === "paid" ? `Rp ${profit.toLocaleString("id-ID")}` : "-"}
-                      </td>
+                      <td className="p-3">
+                         {isViewer
+                           ? (pa?.email && pa.email.includes("@")
+                             ? pa.email.split("@")[0].slice(0, 2) + "***@" + pa.email.split("@")[1]
+                             : "***")
+                           : (pa?.email || "-")}
+                       </td>
+                       <td className="p-3">{isViewer ? "***" : (pa?.password || "-")}</td>
+                       <td className="p-3">{isViewer ? "***" : (pa?.pin || "-")}</td>
+                       <td className="p-3">Rp {Number(t.price || 0).toLocaleString("id-ID")}</td>
+                       <td className="p-3 text-green-600 dark:text-green-400">
+                         {t.status === "paid" ? (isViewer ? "***" : `Rp ${profit.toLocaleString("id-ID")}`) : "-"}
+                       </td>
                       <td className="p-3">{t.users?.username ? `@${t.users.username}` : "-"}</td>
                       <td className="p-3">{t.payment_method || "-"}</td>
                       <td className="p-3">

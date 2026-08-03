@@ -440,8 +440,8 @@ export default function ProductsPage() {
                     <td className="p-3">{p.product_code}</td>
                     <td className="p-3">{p.name}</td>
                     <td className="p-3">{currencyIDR(Number(p.price_normal || 0))}</td>
-                    <td className="p-3">{currencyIDR(Number(p.modal || 0))}</td>
-                    <td className="p-3">{currencyIDR(profit)}</td>
+                    <td className="p-3">{isViewer ? "***" : currencyIDR(Number(p.modal || 0))}</td>
+                    <td className="p-3">{isViewer ? "***" : currencyIDR(profit)}</td>
                     <td className="p-3">{currencyIDR(Number(p.reseller_discount || 0))}</td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
@@ -562,7 +562,7 @@ export default function ProductsPage() {
               </label>
               <label>
                 <span className={labelClass}>Modal / Harga Beli</span>
-                <input type="number" className={inputClass} placeholder="Harga modal" value={modal} onChange={(e) => setModal(e.target.value)} />
+                <input type={isViewer ? "text" : "number"} className={inputClass} placeholder="Harga modal" value={isViewer ? "***" : modal} disabled={isViewer} onChange={(e) => setModal(e.target.value)} />
               </label>
               <label>
                 <span className={labelClass}>Duration Days</span>
@@ -645,7 +645,7 @@ export default function ProductsPage() {
               </label>
               <label>
                 <span className={labelClass}>Modal / Harga Beli</span>
-                <input type="number" className={inputClass} value={modal} onChange={(e) => setModal(e.target.value)} placeholder="Harga modal" />
+                <input type={isViewer ? "text" : "number"} className={inputClass} value={isViewer ? "***" : modal} disabled={isViewer} onChange={(e) => setModal(e.target.value)} placeholder="Harga modal" />
               </label>
               <label>
                 <span className={labelClass}>Duration Days</span>

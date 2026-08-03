@@ -6,6 +6,7 @@ import { Percent, Plus, Trash2, Calendar, Loader2, ArrowRight, ShieldAlert, Boxe
 import { adminWrite } from "@/services/admin/admin-api-client"
 import { supabase } from "@/lib/supabase/client"
 import { ActionNotice } from "@/components/dashboard/action-notice"
+import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context"
 
 type PromoItem = {
   qty: number
@@ -38,6 +39,7 @@ type Product = {
 }
 
 export default function PromosPage() {
+  const isViewer = useIsViewer()
   const [promos, setPromos] = useState<Promo[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -120,6 +122,7 @@ export default function PromosPage() {
 
   const handleCreatePromo = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isViewer) return
 
     const itemsPayload = Object.entries(selectedItems)
       .filter(([_, item]) => item.checked)
@@ -171,6 +174,7 @@ export default function PromosPage() {
   }
 
   const handleCancelPromo = async (id: string, promoName: string) => {
+    if (isViewer) return
     if (!confirm(`Apakah Anda yakin ingin membatalkan promo "${promoName}"?\nSemua sisa stok yang dialokasikan akan segera dikembalikan ke stok normal.`)) {
       return
     }
@@ -231,7 +235,9 @@ export default function PromosPage() {
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="insight-button bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 px-4 py-2"
+          disabled={isViewer}
+          title={isViewer ? viewerOnlyTitle : undefined}
+          className="insight-button bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Plus className="h-5 w-5" />
           Buat Promo Baru
@@ -340,8 +346,9 @@ export default function PromosPage() {
                         {isActive ? (
                           <button
                             onClick={() => handleCancelPromo(p.id, p.name)}
-                            className="insight-button bg-red-600 hover:bg-red-700 text-white p-1.5 flex items-center justify-center mx-auto text-xs gap-1"
-                            title="Batalkan & Kembalikan Sisa Stok"
+                            disabled={isViewer}
+                            title={isViewer ? viewerOnlyTitle : "Batalkan & Kembalikan Sisa Stok"}
+                            className="insight-button bg-red-600 hover:bg-red-700 text-white p-1.5 flex items-center justify-center mx-auto text-xs gap-1 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                             Batalkan

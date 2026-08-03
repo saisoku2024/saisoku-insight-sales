@@ -685,9 +685,15 @@ export default function StocksPage() {
                     <div className="text-base text-[var(--insight-muted)]">{getProductCode(s.products) || "-"}</div>
                   </td>
                   <td className="p-4">{getProductCode(s.products)?.split(/[-_\s/]+/)[0]?.toUpperCase() || "-"}</td>
-                  <td className="p-4 font-mono text-base">{s.email}</td>
-                  <td className="p-4">{s.profile || "—"}</td>
-                  <td className="p-4 font-mono text-base">{s.pin || "—"}</td>
+                  <td className="p-4 font-mono text-base">
+                    {isViewer
+                      ? (s.email && s.email.includes("@")
+                        ? s.email.split("@")[0].slice(0, 2) + "***@" + s.email.split("@")[1]
+                        : "***")
+                      : s.email}
+                  </td>
+                  <td className="p-4">{isViewer ? "***" : (s.profile || "—")}</td>
+                  <td className="p-4 font-mono text-base">{isViewer ? "***" : (s.pin || "—")}</td>
                   <td className="p-4">
                     <span
                       className={`inline-block border-[3px] border-[var(--insight-border)] px-3 py-1 text-lg leading-none ${
