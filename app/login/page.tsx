@@ -14,8 +14,21 @@ import { supabase } from "@/lib/supabase/client"
 const THEME_STORAGE_KEY = "saisoku-theme"
 const RESET_COOLDOWN_SECONDS = 60
 const RESET_COOLDOWN_KEY = "saisoku-reset-password-next-at"
-const GUEST_EMAIL = "guest@ssidmail.my.id"
-const GUEST_PASSWORD = "guestonly123"
+
+function getCleanAuthErrorMessage(msg: string): string {
+  const lowercase = msg.toLowerCase()
+  if (
+    lowercase.includes("invalid login credentials") ||
+    lowercase.includes("user not found") ||
+    lowercase.includes("invalid claim")
+  ) {
+    return "Email atau password salah."
+  }
+  if (lowercase.includes("rate limit") || lowercase.includes("too many requests")) {
+    return "Terlalu banyak permintaan. Silakan coba beberapa saat lagi."
+  }
+  return msg
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -65,28 +78,36 @@ export default function LoginPage() {
   useEffect(() => {
     let mounted = true
     const hydrateSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      
-      if (!mounted) return
-      
-      if (session) {
-        const { profile } = await getActiveAdminProfile()
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        
         if (!mounted) return
+        
+        if (session) {
+          const { profile } = await getActiveAdminProfile()
+          if (!mounted) return
 
-        if (profile) {
-          router.replace("/dashboard")
+          if (profile) {
+            router.replace("/dashboard")
+            return
+          }
+
+          await supabase.auth.signOut()
+          if (!mounted) return
+          setErrorMessage(getAdminAccessErrorMessage())
+          setIsBooting(false)
           return
         }
-
-        await supabase.auth.signOut()
-        if (!mounted) return
-        setErrorMessage(getAdminAccessErrorMessage())
         setIsBooting(false)
-        return
+      } catch (err) {
+        console.error("hydrateSession error:", err)
+        if (mounted) {
+          setErrorMessage("Gagal memverifikasi sesi login.")
+          setIsBooting(false)
+        }
       }
-      setIsBooting(false)
     }
     
     void hydrateSession()
@@ -105,11 +126,20 @@ export default function LoginPage() {
     })
   }
 
-  function fillGuestLogin() {
-    setEmail(GUEST_EMAIL)
-    setPassword(GUEST_PASSWORD)
-    setErrorMessage(null)
-    setSuccessMessage("Mode guest siap. Klik Sign in to dashboard untuk masuk.")
+  async function fillGuestLogin() {
+    try {
+      setErrorMessage(null)
+      setSuccessMessage("Menghubungi server kredensial guest...")
+      const res = await fetch("/api/auth/guest")
+      if (!res.ok) throw new Error("Gagal mengambil kredensial guest dari server.")
+      const data = await res.json()
+      setEmail(data.email)
+      setPassword(data.password)
+      setSuccessMessage("Mode guest siap. Klik Sign in to dashboard untuk masuk.")
+    } catch (e: any) {
+      setErrorMessage(e instanceof Error ? e.message : "Gagal memproses mode guest.")
+      setSuccessMessage(null)
+    }
   }
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
@@ -130,7 +160,7 @@ export default function LoginPage() {
       })
       
       if (error) {
-        setErrorMessage(error.message)
+        setErrorMessage(getCleanAuthErrorMessage(error.message))
         return
       }
 
@@ -147,6 +177,8 @@ export default function LoginPage() {
         metadata: { role: profile.role },
       })
       router.replace("/dashboard")
+    } catch (e: any) {
+      setErrorMessage(e instanceof Error ? e.message : "Terjadi kesalahan jaringan.")
     } finally {
       setIsSubmitting(false)
     }
@@ -175,7 +207,7 @@ export default function LoginPage() {
       })
 
       if (error) {
-        setErrorMessage(error.message)
+        setErrorMessage(getCleanAuthErrorMessage(error.message))
         return
       }
 
@@ -185,6 +217,8 @@ export default function LoginPage() {
         String(Date.now() + RESET_COOLDOWN_SECONDS * 1000)
       )
       setResetCooldown(RESET_COOLDOWN_SECONDS)
+    } catch (e: any) {
+      setErrorMessage(e instanceof Error ? e.message : "Gagal mengirim link reset password.")
     } finally {
       setIsResetLoading(false)
     }
