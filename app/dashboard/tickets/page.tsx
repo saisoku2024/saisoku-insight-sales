@@ -331,13 +331,13 @@ export default function TicketsPage() {
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
       {/* HEADER */}
-      <div className="insight-card p-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+      <div className="insight-card p-3 px-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <span className="inline-block border-[3px] border-[var(--insight-border)] bg-indigo-100 px-3 py-1 text-lg leading-none text-indigo-800">
+          <span className="inline-block border-2 border-[var(--insight-border)] bg-indigo-100 px-2.5 py-0.5 text-xs font-bold leading-none text-indigo-800">
             TICKET MANAGEMENT
           </span>
-          <h1 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">Support Tickets</h1>
-          <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+          <h1 className="mt-2 text-2xl font-bold leading-none text-[var(--insight-text)]">Support Tickets</h1>
+          <p className="mt-1 text-sm leading-none text-[var(--insight-muted)]">
             Kelola laporan kendala dan pertanyaan pelanggan dari Telegram
           </p>
         </div>
@@ -349,10 +349,10 @@ export default function TicketsPage() {
                 void loadReplies(selectedTicket.id);
               }
             }}
-            className="border-[3px] border-[var(--insight-border)] bg-indigo-600 px-4 py-2 text-lg font-bold leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-indigo-500 transition-all flex items-center gap-2"
+            className="border-2 border-[var(--insight-border)] bg-indigo-600 px-3 py-1.5 text-sm font-bold leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] hover:bg-indigo-500 transition-all flex items-center gap-2"
           >
             <svg
-              className="w-5 h-5"
+              className="w-4 h-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -375,15 +375,15 @@ export default function TicketsPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* LEFT COLUMN: TICKET LIST */}
         <div className="insight-card flex flex-col h-[600px] overflow-hidden lg:col-span-1">
-          <div className="border-b-[3px] border-[var(--insight-border)] p-4 flex items-center justify-between bg-[var(--insight-panel)]">
-            <span className="text-xl font-bold">List Tiket</span>
+          <div className="border-b-2 border-[var(--insight-border)] p-3 px-4 flex items-center justify-between bg-[var(--insight-panel)]">
+            <span className="text-sm font-bold">List Tiket</span>
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setPage(1);
               }}
-              className="h-9 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 text-lg text-[var(--insight-text)] outline-none"
+              className="h-8 border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2 text-xs text-[var(--insight-text)] outline-none"
             >
               <option value="all">Semua Status</option>
               <option value="open">Open</option>
@@ -395,13 +395,13 @@ export default function TicketsPage() {
 
           <div className="flex-1 overflow-y-auto divide-y-[3px] divide-[var(--insight-border)]">
             {loadingTickets ? (
-              <div className="p-8 text-center text-xl text-[var(--insight-muted)]">Loading...</div>
+              <div className="p-6 text-center text-sm text-[var(--insight-muted)]">Loading...</div>
             ) : ticketError ? (
-              <div className="m-4 border-[3px] border-red-600 bg-red-50 p-4 text-lg text-red-700 shadow-[3px_3px_0_var(--insight-shadow)]">
+              <div className="m-3 border-2 border-red-600 bg-red-50 p-3 text-sm text-red-700 shadow-[2px_2px_0_var(--insight-shadow)]">
                 Gagal memuat tiket: {ticketError}
               </div>
             ) : tickets.length === 0 ? (
-              <div className="p-8 text-center text-xl text-[var(--insight-muted)]">Tidak ada tiket.</div>
+              <div className="p-6 text-center text-sm text-[var(--insight-muted)]">Tidak ada tiket.</div>
             ) : (
               tickets.map((t) => {
                 const isActive = selectedTicket?.id === t.id;
@@ -411,42 +411,42 @@ export default function TicketsPage() {
                   <button
                     key={t.id}
                     onClick={() => setSelectedTicket(t)}
-                    className={`w-full text-left p-4 transition-all hover:bg-blue-50 dark:hover:bg-slate-800/40 flex flex-col gap-1 ${
+                    className={`w-full text-left p-3 transition-all hover:bg-blue-50 dark:hover:bg-slate-800/40 flex flex-col gap-1 ${
                       isActive ? "bg-blue-50/80 dark:bg-slate-800/60 font-bold" : ""
                     }`}
                   >
                     <div className="flex justify-between items-center w-full">
-                      <span className="text-xl">Tiket #{t.id}</span>
+                      <span className="text-sm">Tiket #{t.id}</span>
                       <span
-                        className={`inline-block border-[2px] border-[var(--insight-border)] px-2 py-0.5 text-base leading-none ${
+                        className={`inline-block border-2 border-[var(--insight-border)] px-2 py-0.5 text-xs font-bold leading-none ${
                           statusClasses[t.status] || "bg-slate-100 text-slate-700"
                         }`}
                       >
                         {statusLabels[t.status] || t.status}
                       </span>
                     </div>
-                    <div className="text-lg text-[var(--insight-muted)] flex justify-between w-full">
+                    <div className="text-xs text-[var(--insight-muted)] flex justify-between w-full">
                       <span>{username}</span>
-                      <span className="text-base">{new Date(t.created_at).toLocaleDateString("id-ID")}</span>
+                      <span>{new Date(t.created_at).toLocaleDateString("id-ID")}</span>
                     </div>
                   </button>
                 );
               })
             )}
           </div>
-          <div className="border-t-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 flex items-center justify-between">
+          <div className="border-t-2 border-[var(--insight-border)] bg-[var(--insight-panel)] p-2.5 flex items-center justify-between">
             <button
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               disabled={page === 1}
-              className="insight-button px-3 py-1.5 text-lg leading-none disabled:opacity-40"
+              className="insight-button px-2.5 py-1 text-xs leading-none disabled:opacity-40"
             >
               Prev
             </button>
-            <span className="text-lg">Page {page}</span>
+            <span className="text-xs">Page {page}</span>
             <button
               onClick={() => setPage((current) => current + 1)}
               disabled={!hasMore}
-              className="insight-button px-3 py-1.5 text-lg leading-none disabled:opacity-40"
+              className="insight-button px-2.5 py-1 text-xs leading-none disabled:opacity-40"
             >
               Next
             </button>
@@ -458,21 +458,21 @@ export default function TicketsPage() {
           {selectedTicket ? (
             <>
               {/* Active Ticket Header */}
-              <div className="border-b-[3px] border-[var(--insight-border)] p-4 flex items-center justify-between bg-[var(--insight-panel)] shrink-0">
+              <div className="border-b-2 border-[var(--insight-border)] p-3 px-4 flex flex-wrap items-center justify-between bg-[var(--insight-panel)] shrink-0 gap-3">
                 <div>
-                  <h3 className="text-2xl leading-none font-bold">Tiket #{selectedTicket.id}</h3>
-                  <p className="text-base text-[var(--insight-muted)] mt-1">
+                  <h3 className="text-sm leading-none font-bold">Tiket #{selectedTicket.id}</h3>
+                  <p className="text-xs text-[var(--insight-muted)] mt-1">
                     Pengguna: {selectedTicket.users?.username ? `@${selectedTicket.users.username}` : `ID ${selectedTicket.telegram_id}`}
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <div className="flex flex-wrap gap-2 items-center">
                   <select
                     value={nextStatus}
                     onChange={(e) => setNextStatus(e.target.value as TicketStatus)}
                     disabled={updatingStatus || isViewer}
                     title={isViewer ? viewerOnlyTitle : undefined}
-                    className={`h-10 border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-2 text-lg text-[var(--insight-text)] outline-none disabled:cursor-not-allowed disabled:opacity-60${viewerDisabledClass}`}
+                    className={`h-8 border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2 text-xs text-[var(--insight-text)] outline-none disabled:cursor-not-allowed disabled:opacity-60${viewerDisabledClass}`}
                   >
                     <option value="on_progress">On Progress</option>
                     <option value="assigned">Assigned</option>
@@ -482,7 +482,7 @@ export default function TicketsPage() {
                     onClick={() => void updateTicketStatus(nextStatus)}
                     disabled={isViewer || updatingStatus || nextStatus === selectedTicket.status}
                     title={isViewer ? viewerOnlyTitle : undefined}
-                    className={`border-[3px] border-[var(--insight-border)] bg-emerald-600 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none${viewerDisabledClass}`}
+                    className={`border-2 border-[var(--insight-border)] bg-emerald-600 px-2.5 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none${viewerDisabledClass}`}
                   >
                     {updatingStatus ? "Updating..." : "Update Status"}
                   </button>
@@ -491,23 +491,23 @@ export default function TicketsPage() {
                     onClick={handleReplaceAccount}
                     disabled={isViewer || replacingAccount || selectedTicket.status === "resolved"}
                     title={isViewer ? viewerOnlyTitle : undefined}
-                    className={`border-[3px] border-[var(--insight-border)] bg-amber-500 px-3 py-1.5 text-lg font-bold leading-none text-black shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none${viewerDisabledClass}`}
+                    className={`border-2 border-[var(--insight-border)] bg-amber-500 px-2.5 py-1 text-xs font-bold leading-none text-black shadow-[2px_2px_0_var(--insight-shadow)] hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none${viewerDisabledClass}`}
                   >
-                    {replacingAccount ? "Replacing..." : "🔄 Replace Akun (Ambil Stok)"}
+                    {replacingAccount ? "Replacing..." : "🔄 Replace Akun (Stok)"}
                   </button>
                 </div>
               </div>
 
               {/* Chat Messages Area */}
-              <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-slate-900/20">
+              <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50 dark:bg-slate-900/20">
                 {loadingReplies ? (
-                  <div className="text-center text-xl text-[var(--insight-muted)] py-8">Loading chat...</div>
+                  <div className="text-center text-sm text-[var(--insight-muted)] py-6">Loading chat...</div>
                 ) : replyError ? (
-                  <div className="border-[3px] border-red-600 bg-red-50 p-4 text-lg text-red-700 shadow-[3px_3px_0_var(--insight-shadow)]">
+                  <div className="border-2 border-red-600 bg-red-50 p-3 text-sm text-red-700 shadow-[2px_2px_0_var(--insight-shadow)]">
                     Gagal memuat chat: {replyError}
                   </div>
                 ) : replies.length === 0 ? (
-                  <div className="text-center text-xl text-[var(--insight-muted)] py-8">Belum ada chat.</div>
+                  <div className="text-center text-sm text-[var(--insight-muted)] py-6">Belum ada chat.</div>
                 ) : (
                   replies.map((r) => {
                     const isAdmin = r.sender_type === "admin";
@@ -517,13 +517,13 @@ export default function TicketsPage() {
                         className={`flex w-full ${isAdmin ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`max-w-[80%] border-[3px] border-[var(--insight-border)] p-3 shadow-[3px_3px_0_var(--insight-shadow)] flex flex-col gap-1 ${
+                          className={`max-w-[80%] border-2 border-[var(--insight-border)] p-2.5 shadow-[2px_2px_0_var(--insight-shadow)] flex flex-col gap-1 ${
                             isAdmin
                               ? "bg-blue-100 text-blue-900 dark:bg-blue-900/40 dark:text-blue-100"
                               : "bg-[var(--insight-card)] text-[var(--insight-text)]"
                           }`}
                         >
-                          <span className="text-xs text-[var(--insight-muted)] uppercase">
+                          <span className="text-[10px] text-[var(--insight-muted)] uppercase">
                             {isAdmin ? "Admin" : "Pengguna"}
                           </span>
                           {r.message.match(/\[Screenshot Kendala:\s*Telegram File ID\s*=\s*([\s\S]+?)\]/) ? (() => {
@@ -533,10 +533,10 @@ export default function TicketsPage() {
                             const fileUrl = `/api/tickets/file?fileId=${encodeURIComponent(fileId)}`;
                             return (
                               <div className="flex flex-col gap-2">
-                                {cleanMsg && <p className="text-lg whitespace-pre-wrap leading-relaxed">{cleanMsg}</p>}
+                                {cleanMsg && <p className="text-sm whitespace-pre-wrap leading-relaxed">{cleanMsg}</p>}
                                 {legacyDirectFileProxyEnabled && fileId && (
                                   <div className="flex flex-col gap-2 mt-2">
-                                    <div className="border-[3px] border-[var(--insight-border)] bg-black p-1 shadow-[3px_3px_0_var(--insight-shadow)] max-w-sm">
+                                    <div className="border-2 border-[var(--insight-border)] bg-black p-1 shadow-[2px_2px_0_var(--insight-shadow)] max-w-sm">
                                       {/* eslint-disable-next-line @next/next/no-img-element */}
                                       <img
                                         src={fileUrl}
@@ -549,7 +549,7 @@ export default function TicketsPage() {
                                       href={fileUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="inline-flex items-center justify-center text-center gap-1.5 px-3 py-1.5 border-[3px] border-[var(--insight-border)] bg-blue-600 text-white font-bold text-sm shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-blue-500 max-w-sm"
+                                      className="inline-flex items-center justify-center text-center gap-1.5 px-2.5 py-1 border-2 border-[var(--insight-border)] bg-blue-600 text-white font-bold text-xs shadow-[2px_2px_0_var(--insight-shadow)] hover:bg-blue-500 max-w-sm"
                                     >
                                       🖼️ Lihat / Download Screenshot
                                     </a>
@@ -563,9 +563,9 @@ export default function TicketsPage() {
                               </div>
                             );
                           })() : (
-                            <p className="text-lg whitespace-pre-wrap leading-relaxed">{r.message}</p>
+                            <p className="text-sm whitespace-pre-wrap leading-relaxed">{r.message}</p>
                           )}
-                          <span className="text-xs text-[var(--insight-muted)] text-right mt-1">
+                          <span className="text-[10px] text-[var(--insight-muted)] text-right mt-1">
                             {new Date(r.created_at).toLocaleTimeString("id-ID", {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -581,11 +581,11 @@ export default function TicketsPage() {
 
               {/* Input Area */}
               {selectedTicket.status === "resolved" ? (
-                <div className="border-t-[3px] border-[var(--insight-border)] p-4 text-center text-lg text-[var(--insight-muted)] shrink-0 bg-[var(--insight-panel)]">
+                <div className="border-t-2 border-[var(--insight-border)] p-3 text-center text-sm text-[var(--insight-muted)] shrink-0 bg-[var(--insight-panel)]">
                   Tiket ini telah diselesaikan. Buka kembali atau buat tiket baru di Telegram untuk memulai percakapan baru.
                 </div>
               ) : (
-                <div className="border-t-[3px] border-[var(--insight-border)] p-4 flex gap-3 bg-[var(--insight-card)] shrink-0">
+                <div className="border-t-2 border-[var(--insight-border)] p-3 flex gap-3 bg-[var(--insight-card)] shrink-0">
                   <input
                     value={newReply}
                     onChange={(e) => setNewReply(e.target.value)}
@@ -598,13 +598,13 @@ export default function TicketsPage() {
                     placeholder="Tulis balasan Anda ke pembeli..."
                     disabled={isViewer || sending}
                     title={isViewer ? viewerOnlyTitle : undefined}
-                    className={`flex-1 h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg text-[var(--insight-text)] outline-none disabled:cursor-not-allowed disabled:opacity-60${viewerDisabledClass}`}
+                    className={`flex-1 h-9 border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm text-[var(--insight-text)] outline-none disabled:cursor-not-allowed disabled:opacity-60${viewerDisabledClass}`}
                   />
                   <button
                     onClick={() => void sendReply()}
                     disabled={isViewer || sending || !newReply.trim()}
                     title={isViewer ? viewerOnlyTitle : undefined}
-                    className={`border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-5 py-2 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none${viewerDisabledClass}`}
+                    className={`border-2 border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-1.5 text-sm leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:pointer-events-none${viewerDisabledClass}`}
                   >
                     {sending ? "Sending..." : "Kirim"}
                   </button>
@@ -613,8 +613,8 @@ export default function TicketsPage() {
             </>
           ) : (
             <div className="flex-grow flex flex-col items-center justify-center text-[var(--insight-muted)] p-8">
-              <span className="text-6xl">🎫</span>
-              <p className="text-xl mt-4">Pilih tiket di sebelah kiri untuk melihat percakapan.</p>
+              <span className="text-4xl">🎫</span>
+              <p className="text-sm mt-2">Pilih tiket di sebelah kiri untuk melihat percakapan.</p>
             </div>
           )}
         </div>

@@ -237,25 +237,25 @@ export default function TransactionsPage() {
   }, [loadTransactions]);
 
   return (
-    <div className="space-y-6 text-[var(--insight-text)]">
+    <div className="space-y-4 text-[var(--insight-text)]">
       {/* HEADER */}
-      <div className="insight-card p-4">
-        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-cyan-100 px-3 py-1 text-lg leading-none text-cyan-800">
+      <div className="insight-card p-3 px-4">
+        <span className="inline-block border-2 border-[var(--insight-border)] bg-cyan-100 px-2.5 py-0.5 text-xs font-bold leading-none text-cyan-800">
           TRANSACTIONS
         </span>
-        <h1 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">Transactions</h1>
-        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+        <h1 className="mt-2 text-2xl font-bold leading-none text-[var(--insight-text)]">Transactions</h1>
+        <p className="mt-1 text-sm leading-none text-[var(--insight-muted)]">
           Filter, ekspor, dan audit seluruh transaksi
         </p>
       </div>
 
       {/* FILTER PANEL */}
-      <div className="insight-card p-4">
+      <div className="insight-card p-3">
         <div className="flex flex-wrap gap-3">
           <select
             value={filterBy}
             onChange={(e) => setFilterBy(e.target.value)}
-            className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+            className="h-9 border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm text-[var(--insight-text)] outline-none"
           >
             <option value="invoice">Invoice</option>
             <option value="buyer">User ID</option>
@@ -266,7 +266,7 @@ export default function TransactionsPage() {
             <select
               value={productFilter}
               onChange={(e) => setProductFilter(e.target.value)}
-              className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+              className="h-9 border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm text-[var(--insight-text)] outline-none"
             >
               <option value="">Select Product</option>
               {products.map((p) => (
@@ -280,7 +280,7 @@ export default function TransactionsPage() {
               placeholder={filterBy === "invoice" ? "Search invoice..." : "Search user_id..."}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+              className="h-9 border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm text-[var(--insight-text)] outline-none"
             />
           )}
 
@@ -288,14 +288,14 @@ export default function TransactionsPage() {
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+            className="h-9 border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm text-[var(--insight-text)] outline-none"
           />
 
           <input
             type="date"
             value={dateTo}
             onChange={(e) => setDateTo(e.target.value)}
-            className="h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+            className="h-9 border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm text-[var(--insight-text)] outline-none"
           />
 
           <button
@@ -303,7 +303,7 @@ export default function TransactionsPage() {
               setPage(1);
               void loadTransactions();
             }}
-            className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]"
+            className="h-9 border-2 border-[var(--insight-border)] bg-[var(--insight-blue)] px-3.5 py-1.5 text-sm leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]"
           >
             Search
           </button>
@@ -312,7 +312,7 @@ export default function TransactionsPage() {
             onClick={() => { if (isViewer) return; void exportCsv(); }}
             disabled={isViewer}
             title={isViewer ? "Viewer mode: read-only" : undefined}
-            className="border-[3px] border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-9 border-2 border-[var(--insight-border)] bg-emerald-600 px-3.5 py-1.5 text-sm leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Export CSV
           </button>
@@ -325,26 +325,26 @@ export default function TransactionsPage() {
           <table className="w-full text-left">
             <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
               <tr>
-                <th className="p-3">No</th>
-                <th className="p-3">Invoice</th>
-                <th className="p-3">Produk</th>
-                <th className="p-3">Email</th>
-                <th className="p-3">Pass</th>
-                <th className="p-3">PIN</th>
-                <th className="p-3">Harga</th>
-                <th className="p-3">Profit</th>
-                <th className="p-3">User</th>
-                <th className="p-3">Payment</th>
-                <th className="p-3">Status Bayar</th>
-                <th className="p-3">Masa Aktif</th>
-                <th className="p-3">Tanggal</th>
+                <th className="px-4 py-3 text-sm">No</th>
+                <th className="px-4 py-3 text-sm">Invoice</th>
+                <th className="px-4 py-3 text-sm">Produk</th>
+                <th className="px-4 py-3 text-sm">Email</th>
+                <th className="px-4 py-3 text-sm">Pass</th>
+                <th className="px-4 py-3 text-sm">PIN</th>
+                <th className="px-4 py-3 text-sm">Harga</th>
+                <th className="px-4 py-3 text-sm">Profit</th>
+                <th className="px-4 py-3 text-sm">User</th>
+                <th className="px-4 py-3 text-sm">Payment</th>
+                <th className="px-4 py-3 text-sm">Status Bayar</th>
+                <th className="px-4 py-3 text-sm">Masa Aktif</th>
+                <th className="px-4 py-3 text-sm">Tanggal</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={13} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                  <td colSpan={13} className="px-4 py-6 text-center text-sm text-[var(--insight-muted)]">
                     Loading...
                   </td>
                 </tr>
@@ -365,27 +365,27 @@ export default function TransactionsPage() {
                       key={t.id}
                       className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60"
                     >
-                      <td className="p-3">{(page - 1) * limit + i + 1}</td>
-                      <td className="p-3">{t.invoice || "-"}</td>
-                      <td className="p-3">{t.products?.name || "-"}</td>
-                      <td className="p-3">
+                      <td className="px-4 py-2.5 text-sm">{(page - 1) * limit + i + 1}</td>
+                      <td className="px-4 py-2.5 text-sm">{t.invoice || "-"}</td>
+                      <td className="px-4 py-2.5 text-sm">{t.products?.name || "-"}</td>
+                      <td className="px-4 py-2.5 text-sm">
                          {isViewer
                            ? (pa?.email && pa.email.includes("@")
                              ? pa.email.split("@")[0].slice(0, 2) + "***@" + pa.email.split("@")[1]
                              : "***")
                            : (pa?.email || "-")}
                        </td>
-                       <td className="p-3">{isViewer ? "***" : (pa?.password || "-")}</td>
-                       <td className="p-3">{isViewer ? "***" : (pa?.pin || "-")}</td>
-                       <td className="p-3">Rp {Number(t.price || 0).toLocaleString("id-ID")}</td>
-                       <td className="p-3 text-green-600 dark:text-green-400">
+                       <td className="px-4 py-2.5 text-sm">{isViewer ? "***" : (pa?.password || "-")}</td>
+                       <td className="px-4 py-2.5 text-sm">{isViewer ? "***" : (pa?.pin || "-")}</td>
+                       <td className="px-4 py-2.5 text-sm">Rp {Number(t.price || 0).toLocaleString("id-ID")}</td>
+                       <td className="px-4 py-2.5 text-sm text-green-600 dark:text-green-400">
                          {t.status === "paid" ? (isViewer ? "***" : `Rp ${profit.toLocaleString("id-ID")}`) : "-"}
                        </td>
-                      <td className="p-3">{t.users?.username ? `@${t.users.username}` : "-"}</td>
-                      <td className="p-3">{t.payment_method || "-"}</td>
-                      <td className="p-3">
+                      <td className="px-4 py-2.5 text-sm">{t.users?.username ? `@${t.users.username}` : "-"}</td>
+                      <td className="px-4 py-2.5 text-sm">{t.payment_method || "-"}</td>
+                      <td className="px-4 py-2.5 text-sm">
                         <span
-                          className={`inline-block border-[3px] border-[var(--insight-border)] px-2 py-1 text-lg leading-none ${
+                          className={`inline-block border-2 border-[var(--insight-border)] px-2.5 py-0.5 text-xs font-bold leading-none ${
                             t.status === "paid"
                               ? "bg-green-100 text-green-700"
                               : t.status === "pending"
@@ -396,14 +396,14 @@ export default function TransactionsPage() {
                           {t.status || "-"}
                         </span>
                       </td>
-                      <td className="p-3">
+                      <td className="px-4 py-2.5 text-sm">
                         <span
-                          className={`inline-block border-[3px] border-[var(--insight-border)] px-2 py-1 text-lg leading-none ${getStatusBadgeClass(status)}`}
+                          className={`inline-block border-2 border-[var(--insight-border)] px-2.5 py-0.5 text-xs font-bold leading-none ${getStatusBadgeClass(status)}`}
                         >
                           {status}
                         </span>
                       </td>
-                      <td className="p-3">
+                      <td className="px-4 py-2.5 text-sm">
                         {t.created_at ? new Date(t.created_at).toLocaleString("id-ID") : "-"}
                       </td>
                     </tr>
@@ -420,15 +420,15 @@ export default function TransactionsPage() {
         <button
           onClick={() => setPage(page - 1)}
           disabled={page === 1}
-          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
+          className="insight-button px-3.5 py-1.5 text-sm leading-none disabled:opacity-40"
         >
           Prev
         </button>
-        <span className="text-lg">Page {page}</span>
+        <span className="text-sm">Page {page}</span>
         <button
           onClick={() => setPage(page + 1)}
           disabled={!hasMore}
-          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
+          className="insight-button px-3.5 py-1.5 text-sm leading-none disabled:opacity-40"
         >
           Next
         </button>

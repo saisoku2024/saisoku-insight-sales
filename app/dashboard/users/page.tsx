@@ -103,15 +103,15 @@ export default function UsersPage() {
   }, [loadUsers]);
 
   return (
-    <div className="space-y-6">
-      <div className="insight-card p-4">
-        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-blue-100 px-3 py-1 text-lg leading-none text-blue-800">
+    <div className="space-y-4 text-[var(--insight-text)]">
+      <div className="insight-card p-3 px-4">
+        <span className="inline-block border-2 border-[var(--insight-border)] bg-blue-100 px-2.5 py-0.5 text-xs font-bold leading-none text-blue-800">
           USER MANAGEMENT
         </span>
-        <h1 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">
+        <h1 className="mt-2 text-2xl font-bold leading-none text-[var(--insight-text)]">
           User Management
         </h1>
-        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+        <p className="mt-1 text-sm leading-none text-[var(--insight-muted)]">
           Kelola status, role, dan akses pengguna Telegram bot
         </p>
       </div>
@@ -123,27 +123,27 @@ export default function UsersPage() {
           <table className="w-full text-left">
             <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
               <tr>
-                <th className="p-3">No</th>
-                <th className="p-3">ID Telegram</th>
-                <th className="p-3">Username</th>
-                <th className="p-3">Role</th>
-                <th className="p-3">Last Login</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">View</th>
-                <th className="p-3">Edit</th>
-                <th className="p-3">Delete</th>
+                <th className="px-4 py-3 text-sm">No</th>
+                <th className="px-4 py-3 text-sm">ID Telegram</th>
+                <th className="px-4 py-3 text-sm">Username</th>
+                <th className="px-4 py-3 text-sm">Role</th>
+                <th className="px-4 py-3 text-sm">Last Login</th>
+                <th className="px-4 py-3 text-sm">Status</th>
+                <th className="px-4 py-3 text-sm">View</th>
+                <th className="px-4 py-3 text-sm">Edit</th>
+                <th className="px-4 py-3 text-sm">Delete</th>
               </tr>
             </thead>
 
             <tbody>
               {users.map((u, i) => (
                 <tr key={u.id} className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60">
-                  <td className="p-3">{(page - 1) * limit + i + 1}</td>
-                  <td className="p-3">{u.telegram_id || "-"}</td>
-                  <td className="p-3">{u.username || "-"}</td>
-                  <td className="p-3">
+                  <td className="px-4 py-2.5 text-sm">{(page - 1) * limit + i + 1}</td>
+                  <td className="px-4 py-2.5 text-sm">{u.telegram_id || "-"}</td>
+                  <td className="px-4 py-2.5 text-sm">{u.username || "-"}</td>
+                  <td className="px-4 py-2.5 text-sm">
                     <span
-                      className={`inline-block border-[3px] border-[var(--insight-border)] px-2 py-1 text-lg leading-none ${
+                      className={`inline-block border-2 border-[var(--insight-border)] px-2.5 py-0.5 text-xs font-bold leading-none ${
                         u.role === "owner"
                           ? "bg-red-100 text-red-700"
                           : u.role === "admin"
@@ -156,12 +156,12 @@ export default function UsersPage() {
                       {u.role || "reguler"}
                     </span>
                   </td>
-                  <td className="p-3">
+                  <td className="px-4 py-2.5 text-sm">
                     {u.last_checkin_at ? new Date(u.last_checkin_at).toLocaleString("id-ID") : "-"}
                   </td>
-                  <td className="p-3">
+                  <td className="px-4 py-2.5 text-sm">
                     <span
-                      className={`inline-block border-[3px] border-[var(--insight-border)] px-2 py-1 text-lg leading-none ${
+                      className={`inline-block border-2 border-[var(--insight-border)] px-2.5 py-0.5 text-xs font-bold leading-none ${
                         u.is_active
                           ? "bg-green-100 text-green-700"
                           : "bg-yellow-100 text-yellow-700"
@@ -170,15 +170,15 @@ export default function UsersPage() {
                       {u.is_active ? "Active" : "Suspend"}
                     </span>
                   </td>
-                  <td className="p-3">
+                  <td className="px-4 py-2.5 text-sm">
                     <button
                       onClick={() => setSelectedUser(u)}
-                      className="insight-button px-3 py-1 text-lg leading-none"
+                      className="insight-button px-2.5 py-1 text-xs leading-none"
                     >
                       View
                     </button>
                   </td>
-                  <td className="p-3">
+                  <td className="px-4 py-2.5 text-sm">
                     <button
                       onClick={() => {
                         if (isViewer) return;
@@ -186,17 +186,17 @@ export default function UsersPage() {
                       }}
                       disabled={isViewer}
                       title={isViewer ? viewerOnlyTitle : undefined}
-                      className={"insight-button px-3 py-1 text-lg leading-none" + viewerDisabledClass}
+                      className={"insight-button px-2.5 py-1 text-xs leading-none" + viewerDisabledClass}
                     >
                       Edit
                     </button>
                   </td>
-                  <td className="p-3">
+                  <td className="px-4 py-2.5 text-sm">
                     <button
                       onClick={() => void deleteUser(u.id)}
                       disabled={isViewer}
                       title={isViewer ? viewerOnlyTitle : undefined}
-                      className={"border-[3px] border-[var(--insight-border)] bg-red-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                      className={"border-2 border-[var(--insight-border)] bg-red-600 px-2.5 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
                     >
                       Delete
                     </button>
@@ -213,15 +213,15 @@ export default function UsersPage() {
         <button
           onClick={() => setPage(page - 1)}
           disabled={page === 1}
-          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
+          className="insight-button px-3.5 py-1.5 text-sm leading-none disabled:opacity-40"
         >
           Prev
         </button>
-        <span className="px-4 py-2 text-lg">Page {page}</span>
+        <span className="px-3 py-1.5 text-sm">Page {page}</span>
         <button
           onClick={() => setPage(page + 1)}
           disabled={!hasMore}
-          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
+          className="insight-button px-3.5 py-1.5 text-sm leading-none disabled:opacity-40"
         >
           Next
         </button>
@@ -231,11 +231,11 @@ export default function UsersPage() {
       {selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="insight-card w-[440px] max-w-[95vw] p-6">
-            <h2 className="mb-5 text-[28px] leading-none text-[var(--insight-text)]">
+            <h2 className="mb-4 text-xl font-bold leading-none text-[var(--insight-text)]">
               User Details
             </h2>
 
-            <div className="grid grid-cols-2 gap-y-3 text-xl">
+            <div className="grid grid-cols-2 gap-y-3 text-sm">
               <div className="text-[var(--insight-muted)]">User ID</div>
               <div className="truncate">{selectedUser.id}</div>
               <div className="text-[var(--insight-muted)]">Telegram ID</div>
@@ -255,7 +255,7 @@ export default function UsersPage() {
               <div className="text-[var(--insight-muted)]">Status</div>
               <div>
                 <span
-                  className={`inline-block border-[3px] border-[var(--insight-border)] px-2 py-1 text-lg leading-none ${
+                  className={`inline-block border-2 border-[var(--insight-border)] px-2.5 py-0.5 text-xs font-bold leading-none ${
                     selectedUser.is_active
                       ? "bg-green-100 text-green-700"
                       : "bg-yellow-100 text-yellow-700"
@@ -271,7 +271,7 @@ export default function UsersPage() {
                 onClick={() => void toggleUserStatus(selectedUser)}
                 disabled={isViewer}
                 title={isViewer ? viewerOnlyTitle : undefined}
-                className={`border-[3px] border-[var(--insight-border)] px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] ${
+                className={`border-2 border-[var(--insight-border)] px-3.5 py-1.5 text-sm leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] ${
                   selectedUser.is_active ? "bg-yellow-500" : "bg-green-600"
                 }${viewerDisabledClass}`}
               >
@@ -280,7 +280,7 @@ export default function UsersPage() {
 
               <button
                 onClick={() => setSelectedUser(null)}
-                className="insight-button px-4 py-2 text-lg leading-none"
+                className="insight-button px-3.5 py-1.5 text-sm leading-none"
               >
                 Close
               </button>
@@ -293,33 +293,33 @@ export default function UsersPage() {
       {editUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="insight-card w-[440px] max-w-[95vw] space-y-4 p-6">
-            <h2 className="text-[28px] leading-none text-[var(--insight-text)]">Edit User</h2>
+            <h2 className="text-xl font-bold mb-4 text-[var(--insight-text)]">Edit User</h2>
 
             <input
               value={editUser.email || ""}
               onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
               placeholder="Email"
-              className="h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+              className="h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm text-[var(--insight-text)] outline-none"
             />
 
             <input
               value={editUser.name || ""}
               onChange={(e) => setEditUser({ ...editUser, name: e.target.value })}
               placeholder="Name"
-              className="h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+              className="h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm text-[var(--insight-text)] outline-none"
             />
 
             <input
               value={editUser.whatsapp || ""}
               onChange={(e) => setEditUser({ ...editUser, whatsapp: e.target.value })}
               placeholder="WhatsApp"
-              className="h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+              className="h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm text-[var(--insight-text)] outline-none"
             />
 
             <select
               value={editUser.role || "reguler"}
               onChange={(e) => setEditUser({ ...editUser, role: e.target.value as User["role"] })}
-              className="h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none"
+              className="h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm text-[var(--insight-text)] outline-none"
             >
               <option value="admin">Admin</option>
               <option value="reseller">Reseller</option>
@@ -329,7 +329,7 @@ export default function UsersPage() {
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setEditUser(null)}
-                className="insight-button px-4 py-2 text-lg leading-none"
+                className="insight-button px-3.5 py-1.5 text-sm leading-none"
               >
                 Cancel
               </button>
@@ -338,7 +338,7 @@ export default function UsersPage() {
                 onClick={() => void updateUser()}
                 disabled={isViewer}
                 title={isViewer ? viewerOnlyTitle : undefined}
-                className={"border-[3px] border-[var(--insight-border)] bg-green-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                className={"border-2 border-[var(--insight-border)] bg-green-600 px-3.5 py-1.5 text-sm leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
               >
                 Save
               </button>

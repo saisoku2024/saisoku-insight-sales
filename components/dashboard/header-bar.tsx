@@ -97,6 +97,25 @@ export function HeaderBar({
             </span>
           </div>
 
+          {userRole === "viewer" ? (
+            <div
+              className="
+                flex
+                h-9
+                items-center gap-1.5
+                border-[3px] border-[var(--insight-border)]
+                bg-amber-100 dark:bg-amber-950/40
+                px-2.5
+                shadow-[3px_3px_0_var(--insight-shadow)]
+                text-amber-800 dark:text-amber-200
+                font-bold text-xs leading-none uppercase
+              "
+            >
+              <span className="inline-block w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse border border-amber-600" />
+              Guest Mode
+            </div>
+          ) : null}
+
           <button
             type="button"
             onClick={onToggleTheme}

@@ -299,30 +299,30 @@ export default function ProductsPage() {
     void fetchStockCount();
   }, [fetchProducts]);
 
-  const thClass = "p-3 cursor-pointer select-none text-left";
+  const thClass = "px-4 py-3 cursor-pointer select-none text-left text-sm";
   const btnPrimary =
-    "h-11 border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
+    "h-9 border-2 border-[var(--insight-border)] bg-[var(--insight-blue)] px-3.5 text-sm leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
   const btnDanger =
-    "h-11 border-[3px] border-[var(--insight-border)] bg-red-600 px-4 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
+    "h-9 border-2 border-[var(--insight-border)] bg-red-600 px-3.5 text-sm leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] transition hover:-translate-y-0.5";
   const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0";
   const inputClass =
-    "h-10 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-xl text-[var(--insight-text)] outline-none";
+    "h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm text-[var(--insight-text)] outline-none";
   const labelClass =
-    "mb-1 block text-base leading-none tracking-wide text-[var(--insight-muted)]";
+    "mb-1 block text-xs leading-none tracking-wide text-[var(--insight-muted)]";
   const textareaClass =
-    "h-24 w-full resize-none border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-xl text-[var(--insight-text)] outline-none";
+    "h-24 w-full resize-none border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] p-2 text-sm text-[var(--insight-text)] outline-none";
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
       {/* HEADER */}
-      <div className="insight-card p-4">
-        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-violet-100 px-3 py-1 text-lg leading-none text-violet-800">
+      <div className="insight-card p-3 px-4">
+        <span className="inline-block border-2 border-[var(--insight-border)] bg-violet-100 px-2.5 py-0.5 text-xs font-bold leading-none text-violet-800">
           PRODUCT MANAGEMENT
         </span>
-        <h1 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">
+        <h1 className="mt-2 text-2xl font-bold leading-none text-[var(--insight-text)]">
           Product List
         </h1>
-        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+        <p className="mt-1 text-sm leading-none text-[var(--insight-muted)]">
           Manage all products available in the system.
         </p>
       </div>
@@ -388,7 +388,7 @@ export default function ProductsPage() {
           <table className="w-full text-left">
             <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
               <tr>
-                <th className="p-3">
+                <th className="px-4 py-3">
                   <input
                     type="checkbox"
                     onChange={(e) => {
@@ -404,13 +404,13 @@ export default function ProductsPage() {
                 <th className={thClass} onClick={() => sortBy("name")}>Name{sortIndicator("name")}</th>
                 <th className={thClass} onClick={() => sortBy("price_normal")}>Price{sortIndicator("price_normal")}</th>
                 <th className={thClass} onClick={() => sortBy("modal")}>Modal{sortIndicator("modal")}</th>
-                <th className="p-3 text-left">Profit</th>
+                <th className="px-4 py-3 text-sm text-left">Profit</th>
                 <th className={thClass} onClick={() => sortBy("reseller_discount")}>Reseller Disc{sortIndicator("reseller_discount")}</th>
-                <th className="p-3 text-left">Promo</th>
+                <th className="px-4 py-3 text-sm text-left">Promo</th>
                 <th className={thClass} onClick={() => sortBy("duration_days")}>Duration{sortIndicator("duration_days")}</th>
-                <th className="p-3 text-left">Stock</th>
-                <th className="p-3 text-left">Status</th>
-                <th className="p-3 text-left">Action</th>
+                <th className="px-4 py-3 text-sm text-left">Stock</th>
+                <th className="px-4 py-3 text-sm text-left">Status</th>
+                <th className="px-4 py-3 text-sm text-left">Action</th>
               </tr>
             </thead>
 
@@ -424,7 +424,7 @@ export default function ProductsPage() {
                     key={p.id}
                     className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60"
                   >
-                    <td className="p-3">
+                    <td className="px-4 py-2.5">
                       <input
                         type="checkbox"
                         checked={selected.includes(p.id)}
@@ -437,13 +437,13 @@ export default function ProductsPage() {
                         }}
                       />
                     </td>
-                    <td className="p-3">{p.product_code}</td>
-                    <td className="p-3">{p.name}</td>
-                    <td className="p-3">{currencyIDR(Number(p.price_normal || 0))}</td>
-                    <td className="p-3">{isViewer ? "***" : currencyIDR(Number(p.modal || 0))}</td>
-                    <td className="p-3">{isViewer ? "***" : currencyIDR(profit)}</td>
-                    <td className="p-3">{currencyIDR(Number(p.reseller_discount || 0))}</td>
-                    <td className="p-3">
+                    <td className="px-4 py-2.5 text-sm">{p.product_code}</td>
+                    <td className="px-4 py-2.5 text-sm">{p.name}</td>
+                    <td className="px-4 py-2.5 text-sm">{currencyIDR(Number(p.price_normal || 0))}</td>
+                    <td className="px-4 py-2.5 text-sm">{isViewer ? "***" : currencyIDR(Number(p.modal || 0))}</td>
+                    <td className="px-4 py-2.5 text-sm">{isViewer ? "***" : currencyIDR(profit)}</td>
+                    <td className="px-4 py-2.5 text-sm">{currencyIDR(Number(p.reseller_discount || 0))}</td>
+                    <td className="px-4 py-2.5 text-sm">
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
@@ -454,30 +454,30 @@ export default function ProductsPage() {
                           className="h-5 w-5 accent-red-600 disabled:cursor-not-allowed disabled:opacity-40"
                         />
                         <div className="min-w-[120px]">
-                          <div className={p.is_promo_active ? "text-red-600" : "text-[var(--insight-muted)]"}>
+                          <div className={p.is_promo_active ? "text-red-600 font-bold" : "text-[var(--insight-muted)]"}>
                             {p.is_promo_active ? "Active" : "Off"}
                           </div>
-                          <div className="text-base leading-tight text-[var(--insight-muted)]">
+                          <div className="text-xs leading-tight text-[var(--insight-muted)]">
                             {currencyIDR(Number(p.promo_price ?? p.promo_price_reguler ?? 0))}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="p-3">{p.duration_days} days</td>
-                    <td className="p-3">{stock}</td>
-                    <td className="p-3">
+                    <td className="px-4 py-2.5 text-sm">{p.duration_days} days</td>
+                    <td className="px-4 py-2.5 text-sm">{stock}</td>
+                    <td className="px-4 py-2.5 text-sm">
                       <button
                         onClick={() => void toggleProduct(p.id, p.is_active)}
                         disabled={isViewer}
                         title={isViewer ? viewerOnlyTitle : undefined}
-                        className={`border-[3px] border-[var(--insight-border)] px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] ${
+                        className={`border-2 border-[var(--insight-border)] px-2.5 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] ${
                           p.is_active ? "bg-green-600" : "bg-gray-500"
                         }${viewerDisabledClass}`}
                       >
                         {p.is_active ? "Active" : "Inactive"}
                       </button>
                     </td>
-                    <td className="p-3">
+                    <td className="px-4 py-2.5 text-sm">
                       <div className="flex gap-2">
                         <button
                           onClick={() => {
@@ -486,7 +486,7 @@ export default function ProductsPage() {
                           }}
                           disabled={isViewer}
                           title={isViewer ? viewerOnlyTitle : undefined}
-                          className={"border-[3px] border-[var(--insight-border)] bg-amber-400 px-3 py-1 text-lg leading-none text-black shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                          className={"border-2 border-[var(--insight-border)] bg-amber-400 px-2.5 py-1 text-xs leading-none text-black shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
                         >
                           Edit
                         </button>
@@ -494,7 +494,7 @@ export default function ProductsPage() {
                           onClick={() => void deleteProduct(p.id)}
                           disabled={isViewer}
                           title={isViewer ? viewerOnlyTitle : undefined}
-                          className={"border-[3px] border-[var(--insight-border)] bg-red-600 px-3 py-1 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                          className={"border-2 border-[var(--insight-border)] bg-red-600 px-2.5 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
                         >
                           Del
                         </button>
@@ -506,7 +506,7 @@ export default function ProductsPage() {
 
               {products.length === 0 && (
                 <tr>
-                  <td colSpan={12} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                  <td colSpan={12} className="px-4 py-6 text-center text-sm text-[var(--insight-muted)]">
                     No products found
                   </td>
                 </tr>
@@ -521,15 +521,15 @@ export default function ProductsPage() {
         <button
           onClick={prevPage}
           disabled={page === 1}
-          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
+          className="insight-button px-3.5 py-1.5 text-sm leading-none disabled:opacity-40"
         >
           Prev
         </button>
-        <div className="px-4 py-2 text-lg">Page {page}</div>
+        <div className="px-3 py-1.5 text-sm">Page {page}</div>
         <button
           onClick={nextPage}
           disabled={!hasMore}
-          className="insight-button px-4 py-2 text-lg leading-none disabled:opacity-40"
+          className="insight-button px-3.5 py-1.5 text-sm leading-none disabled:opacity-40"
         >
           Next
         </button>
@@ -539,7 +539,7 @@ export default function ProductsPage() {
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="insight-card w-[540px] max-w-[95vw] max-h-[90vh] overflow-y-auto p-6">
-            <h2 className="mb-4 text-[28px] leading-none text-[var(--insight-text)]">
+            <h2 className="mb-4 text-xl font-bold leading-none text-[var(--insight-text)]">
               Add Product
             </h2>
 
@@ -601,7 +601,7 @@ export default function ProductsPage() {
             <div className="mt-5 flex justify-end gap-3">
               <button
                 onClick={() => { setShowAddModal(false); resetForm(); }}
-                className="insight-button px-4 py-2 text-lg leading-none"
+                className="insight-button px-3.5 py-1.5 text-sm leading-none"
               >
                 Cancel
               </button>
@@ -609,7 +609,7 @@ export default function ProductsPage() {
                 onClick={async () => { const ok = await addProduct(); if (ok) setShowAddModal(false); }}
                 disabled={isViewer}
                 title={isViewer ? viewerOnlyTitle : undefined}
-                className={"border-[3px] border-[var(--insight-border)] bg-green-600 px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                className={"border-2 border-[var(--insight-border)] bg-green-600 px-3.5 py-1.5 text-sm leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
               >
                 Create Product
               </button>
@@ -622,7 +622,7 @@ export default function ProductsPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="insight-card w-[540px] max-w-[95vw] max-h-[90vh] overflow-y-auto p-6">
-            <h2 className="mb-4 text-[28px] leading-none text-[var(--insight-text)]">
+            <h2 className="mb-4 text-xl font-bold leading-none text-[var(--insight-text)]">
               Edit Product
             </h2>
 
@@ -684,7 +684,7 @@ export default function ProductsPage() {
             <div className="mt-5 flex justify-end gap-3">
               <button
                 onClick={() => { setShowModal(false); resetForm(); }}
-                className="insight-button px-4 py-2 text-lg leading-none"
+                className="insight-button px-3.5 py-1.5 text-sm leading-none"
               >
                 Cancel
               </button>
@@ -692,7 +692,7 @@ export default function ProductsPage() {
                 onClick={() => void updateProduct()}
                 disabled={isViewer}
                 title={isViewer ? viewerOnlyTitle : undefined}
-                className={"border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                className={"border-2 border-[var(--insight-border)] bg-[var(--insight-blue)] px-3.5 py-1.5 text-sm leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
               >
                 Update Product
               </button>

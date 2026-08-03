@@ -232,11 +232,6 @@ export default function DashboardLayout({
               shadow-[5px_5px_0_var(--insight-shadow)]
             "
           >
-            {userRole === "viewer" ? (
-              <div className="mb-4 border-[3px] border-[var(--insight-border)] bg-amber-50 px-3 py-2 text-lg leading-5 text-amber-800 shadow-[4px_4px_0_var(--insight-shadow)] dark:bg-amber-950/30 dark:text-amber-200">
-                Read-only mode: akun viewer hanya bisa melihat data. Semua aksi tambah, edit, delete, reply, restore, dan backup tetap dikunci.
-              </div>
-            ) : null}
             {children}
           </main>
         </div>

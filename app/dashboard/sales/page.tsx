@@ -110,46 +110,46 @@ export default function SalesPage() {
   }, [fetchRecent]);
 
   return (
-    <div className="space-y-6 text-[var(--insight-text)]">
+    <div className="space-y-4 text-[var(--insight-text)]">
       {/* HEADER */}
-      <div className="insight-card p-4">
-        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-blue-100 px-3 py-1 text-lg leading-none text-blue-800">
+      <div className="insight-card p-3 px-4">
+        <span className="inline-block border-2 border-[var(--insight-border)] bg-blue-100 px-2.5 py-0.5 text-xs font-bold leading-none text-blue-800">
           SALES REPORT
         </span>
-        <h1 className="mt-3 text-[34px] leading-none text-[var(--insight-text)]">
+        <h1 className="mt-2 text-2xl font-bold leading-none text-[var(--insight-text)]">
           Sales Dashboard
         </h1>
-        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+        <p className="mt-1 text-sm leading-none text-[var(--insight-muted)]">
           Ringkasan penjualan dan transaksi terkonfirmasi
         </p>
       </div>
 
       {/* STAT CARDS */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
-          <div className="text-xl leading-none text-[var(--insight-muted)]">Sales Today</div>
-          <div className="mt-2 text-[34px] leading-none text-blue-600 dark:text-blue-300">
+        <div className="insight-card flex min-h-[90px] flex-col justify-center p-3.5 transition-all duration-200 hover:-translate-y-1">
+          <div className="text-sm leading-none text-[var(--insight-muted)]">Sales Today</div>
+          <div className="mt-1.5 text-2xl font-bold leading-none text-blue-600 dark:text-blue-300">
             {stats.today}
           </div>
         </div>
 
-        <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
-          <div className="text-xl leading-none text-[var(--insight-muted)]">Sales Month</div>
-          <div className="mt-2 text-[34px] leading-none text-emerald-600 dark:text-emerald-300">
+        <div className="insight-card flex min-h-[90px] flex-col justify-center p-3.5 transition-all duration-200 hover:-translate-y-1">
+          <div className="text-sm leading-none text-[var(--insight-muted)]">Sales Month</div>
+          <div className="mt-1.5 text-2xl font-bold leading-none text-emerald-600 dark:text-emerald-300">
             {stats.month}
           </div>
         </div>
 
-        <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
-          <div className="text-xl leading-none text-[var(--insight-muted)]">Sales Year</div>
-          <div className="mt-2 text-[34px] leading-none text-violet-600 dark:text-violet-300">
+        <div className="insight-card flex min-h-[90px] flex-col justify-center p-3.5 transition-all duration-200 hover:-translate-y-1">
+          <div className="text-sm leading-none text-[var(--insight-muted)]">Sales Year</div>
+          <div className="mt-1.5 text-2xl font-bold leading-none text-violet-600 dark:text-violet-300">
             {stats.year}
           </div>
         </div>
 
-        <div className="insight-card flex min-h-[120px] flex-col justify-center p-4 transition-all duration-200 hover:-translate-y-1">
-          <div className="text-xl leading-none text-[var(--insight-muted)]">Revenue</div>
-          <div className="mt-2 text-[28px] leading-none text-amber-600 dark:text-amber-300">
+        <div className="insight-card flex min-h-[90px] flex-col justify-center p-3.5 transition-all duration-200 hover:-translate-y-1">
+          <div className="text-sm leading-none text-[var(--insight-muted)]">Revenue</div>
+          <div className="mt-1.5 text-2xl font-bold leading-none text-amber-600 dark:text-amber-300">
             Rp {stats.revenue.toLocaleString("id-ID")}
           </div>
         </div>
@@ -157,11 +157,11 @@ export default function SalesPage() {
 
       {/* RECENT TRANSACTIONS */}
       <div className="insight-card overflow-hidden">
-        <div className="border-b-[3px] border-[var(--insight-border)] p-4">
-          <span className="inline-block border-[3px] border-[var(--insight-border)] bg-green-100 px-3 py-1 text-lg leading-none text-green-800">
+        <div className="border-b-2 border-[var(--insight-border)] p-3 px-4 bg-[var(--insight-panel)]">
+          <span className="inline-block border-2 border-[var(--insight-border)] bg-green-100 px-2.5 py-0.5 text-xs font-bold leading-none text-green-800">
             LATEST
           </span>
-          <h2 className="mt-3 text-[30px] leading-none text-[var(--insight-text)]">
+          <h2 className="mt-1 text-lg font-bold leading-none text-[var(--insight-text)]">
             Recent Transactions
           </h2>
         </div>
@@ -170,37 +170,37 @@ export default function SalesPage() {
           <table className="w-full text-left">
             <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
               <tr>
-                <th className="p-3">No</th>
-                <th className="p-3">Invoice</th>
-                <th className="p-3">Tanggal</th>
-                <th className="p-3">Produk</th>
-                <th className="p-3">Harga</th>
-                <th className="p-3">Payment</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">User ID</th>
+                <th className="px-4 py-3 text-sm">No</th>
+                <th className="px-4 py-3 text-sm">Invoice</th>
+                <th className="px-4 py-3 text-sm">Tanggal</th>
+                <th className="px-4 py-3 text-sm">Produk</th>
+                <th className="px-4 py-3 text-sm">Harga</th>
+                <th className="px-4 py-3 text-sm">Payment</th>
+                <th className="px-4 py-3 text-sm">Status</th>
+                <th className="px-4 py-3 text-sm">User ID</th>
               </tr>
             </thead>
 
             <tbody>
               {recent.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                  <td colSpan={8} className="px-4 py-6 text-center text-sm text-[var(--insight-muted)]">
                     Tidak ada transaksi.
                   </td>
                 </tr>
               ) : (
                 recent.map((t, index) => (
                   <tr key={t.id} className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60">
-                    <td className="p-3">{(recentPage - 1) * pageSize + index + 1}</td>
-                    <td className="p-3">{t.invoice || "-"}</td>
-                    <td className="p-3">
+                    <td className="px-4 py-2.5 text-sm">{(recentPage - 1) * pageSize + index + 1}</td>
+                    <td className="px-4 py-2.5 text-sm">{t.invoice || "-"}</td>
+                    <td className="px-4 py-2.5 text-sm">
                       {t.created_at ? new Date(t.created_at).toLocaleString("id-ID") : "-"}
                     </td>
-                    <td className="p-3">{t.products?.name || "-"}</td>
-                    <td className="p-3">Rp {Number(t.price || 0).toLocaleString("id-ID")}</td>
-                    <td className="p-3">{t.payment_method || "-"}</td>
-                    <td className="p-3">{t.status || "-"}</td>
-                    <td className="p-3">{t.user_id}</td>
+                    <td className="px-4 py-2.5 text-sm">{t.products?.name || "-"}</td>
+                    <td className="px-4 py-2.5 text-sm">Rp {Number(t.price || 0).toLocaleString("id-ID")}</td>
+                    <td className="px-4 py-2.5 text-sm">{t.payment_method || "-"}</td>
+                    <td className="px-4 py-2.5 text-sm">{t.status || "-"}</td>
+                    <td className="px-4 py-2.5 text-sm">{t.user_id}</td>
                   </tr>
                 ))
               )}

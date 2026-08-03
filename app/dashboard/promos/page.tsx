@@ -223,13 +223,16 @@ export default function PromosPage() {
   const hasStockWarning = Number(allocatedQty) > maxBundles
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {notice && <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />}
 
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold tracking-tight">Promo Campaigns & Bundling</h1>
-          <p className="text-[var(--insight-muted)]">
+      <div className="flex items-center justify-between gap-3 border-b-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] p-3 px-4 shadow-[5px_5px_0_var(--insight-shadow)]">
+        <div className="flex flex-col gap-1">
+          <span className="inline-block w-fit border-2 border-[var(--insight-border)] bg-violet-100 px-2.5 py-0.5 text-xs font-bold leading-none text-violet-800">
+            MARKETING
+          </span>
+          <h1 className="mt-1 text-2xl font-bold leading-none text-[var(--insight-text)]">Promo Campaigns & Bundling</h1>
+          <p className="text-sm leading-none text-[var(--insight-muted)]">
             Kelola bundling paket pembelian, diskon harga, dan alokasi isolasi serta pemulihan stok otomatis.
           </p>
         </div>
@@ -237,20 +240,15 @@ export default function PromosPage() {
           onClick={() => setShowAddModal(true)}
           disabled={isViewer}
           title={isViewer ? viewerOnlyTitle : undefined}
-          className="insight-button bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="insight-button bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-4 w-4" />
           Buat Promo Baru
         </button>
       </div>
 
       {/* Promos Table */}
-      <div className="insight-card p-5">
-        <h2 className="text-xl font-bold border-b-2 border-[var(--insight-border)] pb-2 mb-4 flex items-center gap-2">
-          <Percent className="h-5 w-5 text-blue-500" />
-          Promo Campaigns Aktif & Riwayat
-        </h2>
-
+      <div className="insight-card overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-10 space-y-2 text-[var(--insight-muted)]">
             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
@@ -262,16 +260,16 @@ export default function PromosPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="insight-table w-full text-left">
-              <thead>
+            <table className="w-full text-left">
+              <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
                 <tr>
-                  <th>Nama Promo</th>
-                  <th>Produk Satuan / Bundling</th>
-                  <th>Harga Promo</th>
-                  <th className="text-center">Sisa Stok / Alokasi</th>
-                  <th>Masa Berlaku</th>
-                  <th className="text-center">Status</th>
-                  <th className="text-center">Aksi</th>
+                  <th className="px-4 py-3 text-sm">Nama Promo</th>
+                  <th className="px-4 py-3 text-sm">Produk Satuan / Bundling</th>
+                  <th className="px-4 py-3 text-sm">Harga Promo</th>
+                  <th className="px-4 py-3 text-sm text-center">Sisa Stok / Alokasi</th>
+                  <th className="px-4 py-3 text-sm">Masa Berlaku</th>
+                  <th className="px-4 py-3 text-sm text-center">Status</th>
+                  <th className="px-4 py-3 text-sm text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -281,7 +279,7 @@ export default function PromosPage() {
 
                   return (
                     <tr key={p.id} className={!isActive ? "opacity-70 bg-slate-50/50 dark:bg-slate-900/10" : ""}>
-                      <td className="font-semibold text-base">
+                      <td className="px-4 py-2.5 text-sm font-semibold">
                         {p.name}
                         {p.description && (
                           <div className="text-xs font-normal text-[var(--insight-muted)] max-w-xs truncate">
@@ -289,7 +287,7 @@ export default function PromosPage() {
                           </div>
                         )}
                       </td>
-                      <td>
+                      <td className="px-4 py-2.5 text-sm">
                         {p.promo_items && p.promo_items.length > 0 ? (
                           <div className="space-y-1.5 my-1">
                             {p.promo_items.map((item, idx) => (
@@ -308,15 +306,15 @@ export default function PromosPage() {
                           "-"
                         )}
                       </td>
-                      <td className="font-semibold text-green-600">{formatPrice(p.price)}</td>
-                      <td className="text-center">
+                      <td className="px-4 py-2.5 text-sm font-semibold text-green-600">{formatPrice(p.price)}</td>
+                      <td className="px-4 py-2.5 text-sm text-center">
                         <span className="font-bold text-blue-600">{p.current_stock}</span>
                         <span className="text-[var(--insight-muted)]"> / {p.allocated_qty}</span>
                         {p.current_stock === 0 && isActive && (
                           <span className="block text-[10px] text-red-500 font-bold">Stok Habis ❌</span>
                         )}
                       </td>
-                      <td>
+                      <td className="px-4 py-2.5 text-sm">
                         <div className="flex items-center gap-1 text-xs">
                           <Calendar className="h-3 w-3 text-[var(--insight-muted)]" />
                           <span>
@@ -331,24 +329,24 @@ export default function PromosPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="text-center">
+                      <td className="px-4 py-2.5 text-sm text-center">
                         {isActive ? (
-                          <span className="inline-flex items-center rounded-md bg-green-50 dark:bg-green-950/20 px-2 py-1 text-xs font-bold text-green-700 dark:text-green-400 border border-green-600/30">
+                          <span className="inline-flex items-center rounded-md bg-green-50 dark:bg-green-950/20 px-2 py-0.5 text-xs font-bold text-green-700 dark:text-green-400 border border-green-600/30">
                             Aktif
                           </span>
                         ) : (
-                          <span className="inline-flex items-center rounded-md bg-red-50 dark:bg-red-950/20 px-2 py-1 text-xs font-bold text-red-700 dark:text-red-400 border border-red-600/30">
+                          <span className="inline-flex items-center rounded-md bg-red-50 dark:bg-red-950/20 px-2 py-0.5 text-xs font-bold text-red-700 dark:text-red-400 border border-red-600/30">
                             {isExpired ? "Kedaluwarsa" : "Dibatalkan"}
                           </span>
                         )}
                       </td>
-                      <td className="text-center">
+                      <td className="px-4 py-2.5 text-sm text-center">
                         {isActive ? (
                           <button
                             onClick={() => handleCancelPromo(p.id, p.name)}
                             disabled={isViewer}
                             title={isViewer ? viewerOnlyTitle : "Batalkan & Kembalikan Sisa Stok"}
-                            className="insight-button bg-red-600 hover:bg-red-700 text-white p-1.5 flex items-center justify-center mx-auto text-xs gap-1 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="insight-button bg-red-600 hover:bg-red-700 text-white p-1 flex items-center justify-center mx-auto text-xs gap-1 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                             Batalkan
@@ -373,7 +371,7 @@ export default function PromosPage() {
             onSubmit={handleCreatePromo}
             className="insight-card bg-[var(--insight-panel)] p-6 max-w-4xl w-full border-2 border-[var(--insight-border)] shadow-[4px_4px_0_var(--insight-shadow)] space-y-4 max-h-[90vh] overflow-y-auto"
           >
-            <h3 className="text-xl font-bold border-b-2 border-[var(--insight-border)] pb-2 flex items-center gap-1.5">
+            <h3 className="text-lg font-bold border-b-2 border-[var(--insight-border)] pb-2 flex items-center gap-1.5">
               <Boxes className="h-5 w-5 text-blue-500" />
               Buat Promo / Paket Bundling Baru
             </h3>
@@ -594,14 +592,14 @@ export default function PromosPage() {
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="insight-button bg-slate-300 hover:bg-slate-400 text-black px-4 py-2 text-sm"
+                className="insight-button bg-slate-300 hover:bg-slate-400 text-black px-3.5 py-1.5 text-sm"
               >
                 Batal
               </button>
               <button
                 type="submit"
                 disabled={creating || (activeItems.length > 0 && hasStockWarning)}
-                className="insight-button bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 text-sm flex items-center gap-1 disabled:cursor-not-allowed disabled:opacity-50"
+                className="insight-button bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 text-sm flex items-center gap-1 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {creating && <Loader2 className="h-4 w-4 animate-spin" />}
                 {creating ? "Membuat..." : "Simpan Promo"}

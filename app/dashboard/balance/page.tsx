@@ -80,8 +80,8 @@ export default function BalancePage() {
   const showSuccess = (message: string) => setNotice({ type: "success", message })
   const getErrorMessage = (error: unknown) => (error instanceof Error ? error.message : "Unknown error")
   const viewerDisabledClass = " disabled:cursor-not-allowed disabled:opacity-50"
-  const balanceControlClass = "box-border h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-0 text-xl leading-none text-[var(--insight-text)] shadow-[4px_4px_0_var(--insight-shadow)] outline-none"
-  const balanceSubmitClass = "inline-flex box-border h-11 items-center justify-center border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 py-0 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40"
+  const balanceControlClass = "box-border h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-0 text-sm leading-none text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] outline-none"
+  const balanceSubmitClass = "inline-flex box-border h-9 items-center justify-center border-2 border-[var(--insight-border)] bg-violet-700 px-3.5 py-0 text-sm leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40"
 
   const loadBalanceData = useCallback(async () => {
     setLoading(true)
@@ -188,13 +188,13 @@ export default function BalancePage() {
   }
 
   return (
-    <div className="space-y-6 text-[var(--insight-text)]">
-      <div className="insight-card p-4">
-        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-violet-100 px-3 py-1 text-lg leading-none text-violet-800">
+    <div className="space-y-4 text-[var(--insight-text)]">
+      <div className="insight-card p-3 px-4">
+        <span className="inline-block border-2 border-[var(--insight-border)] bg-violet-100 px-2.5 py-0.5 text-xs font-bold leading-none text-violet-800">
           BUSINESS MANAGEMENT
         </span>
-        <h1 className="mt-3 text-[34px] leading-none">Wallet Balance</h1>
-        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+        <h1 className="mt-2 text-2xl font-bold leading-none">Wallet Balance</h1>
+        <p className="mt-1 text-sm leading-none text-[var(--insight-muted)]">
           Kelola saldo user, adjustment owner, dan mutasi balance terbaru.
         </p>
       </div>
@@ -202,37 +202,37 @@ export default function BalancePage() {
       <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />
 
       {error ? (
-        <div className="insight-card border-red-500 bg-red-50 p-4 text-xl text-red-700">
+        <div className="insight-card border-red-500 bg-red-50 p-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
-      <div className="grid gap-5 md:grid-cols-3">
-        <div className="insight-card p-4">
-          <div className="text-xl text-[var(--insight-muted)]">Total User Balance</div>
-          <div className="mt-2 text-[34px] leading-none">{rupiah(totalBalance)}</div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="insight-card p-3.5">
+          <div className="text-sm text-[var(--insight-muted)]">Total User Balance</div>
+          <div className="mt-1.5 text-2xl font-bold leading-none">{rupiah(totalBalance)}</div>
         </div>
-        <div className="insight-card p-4">
-          <div className="text-xl text-[var(--insight-muted)]">Users</div>
-          <div className="mt-2 text-[34px] leading-none">{usersTotal}</div>
+        <div className="insight-card p-3.5">
+          <div className="text-sm text-[var(--insight-muted)]">Users</div>
+          <div className="mt-1.5 text-2xl font-bold leading-none">{usersTotal}</div>
         </div>
-        <div className="insight-card p-4">
-          <div className="text-xl text-[var(--insight-muted)]">Balance Logs</div>
-          <div className="mt-2 text-[34px] leading-none">{logsTotal}</div>
+        <div className="insight-card p-3.5">
+          <div className="text-sm text-[var(--insight-muted)]">Balance Logs</div>
+          <div className="mt-1.5 text-2xl font-bold leading-none">{logsTotal}</div>
         </div>
       </div>
 
-      <div className="insight-card p-4">
+      <div className="insight-card p-3.5">
         <div className="flex flex-col gap-1">
-          <h2 className="text-[30px] leading-none">Balance Adjustment</h2>
-          <p className="text-lg text-[var(--insight-muted)]">
+          <h2 className="text-lg font-bold leading-none">Balance Adjustment</h2>
+          <p className="text-sm text-[var(--insight-muted)]">
             Aksi ini khusus owner. Pilih user dari tabel atau masukkan Telegram ID manual.
           </p>
         </div>
 
-        <div className="mt-4 grid gap-3 lg:grid-cols-[180px_1fr_1fr_1.5fr_auto] lg:items-end">
+        <div className="mt-3 grid gap-3 lg:grid-cols-[180px_1fr_1fr_1.5fr_auto] lg:items-end">
           <label className="block">
-            <span className="text-lg text-[var(--insight-muted)]">Action</span>
+            <span className="text-xs text-[var(--insight-muted)]">Action</span>
             <div className="mt-1">
               <ToolbarSelect
                 value={action}
@@ -249,7 +249,7 @@ export default function BalancePage() {
           </label>
 
           <label className="block">
-            <span className="text-lg text-[var(--insight-muted)]">Telegram ID</span>
+            <span className="text-xs text-[var(--insight-muted)]">Telegram ID</span>
             <input
               value={telegramId}
               onChange={(e) => {
@@ -262,7 +262,7 @@ export default function BalancePage() {
           </label>
 
           <label className="block">
-            <span className="text-lg text-[var(--insight-muted)]">Nominal</span>
+            <span className="text-xs text-[var(--insight-muted)]">Nominal</span>
             <input
               type="number"
               min="0"
@@ -275,7 +275,7 @@ export default function BalancePage() {
           </label>
 
           <label className="block">
-            <span className="text-lg text-[var(--insight-muted)]">Note</span>
+            <span className="text-xs text-[var(--insight-muted)]">Note</span>
             <input
               value={note}
               onChange={(e) => setNote(e.target.value)}
@@ -296,32 +296,32 @@ export default function BalancePage() {
         </div>
 
         {selectedUser ? (
-          <div className="mt-3 text-lg text-[var(--insight-muted)]">
+          <div className="mt-2 text-xs text-[var(--insight-muted)]">
             Target: @{selectedUser.username || "-"} / {selectedUser.telegram_id || "-"} / saldo {rupiah(selectedUser.balance)}
           </div>
         ) : null}
       </div>
 
       <div className="insight-card overflow-hidden">
-        <div className="border-b-[3px] border-[var(--insight-border)] p-4">
-          <h2 className="text-[30px] leading-none">User Balance</h2>
+        <div className="border-b-2 border-[var(--insight-border)] p-3 px-4 bg-[var(--insight-panel)]">
+          <h2 className="text-lg font-bold leading-none">User Balance</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
               <tr>
-                <th className="p-3">User</th>
-                <th className="p-3">Telegram ID</th>
-                <th className="p-3">Role</th>
-                <th className="p-3">Balance</th>
-                <th className="p-3">Status</th>
-                <th className="p-3 text-right">Action</th>
+                <th className="px-4 py-3 text-sm">User</th>
+                <th className="px-4 py-3 text-sm">Telegram ID</th>
+                <th className="px-4 py-3 text-sm">Role</th>
+                <th className="px-4 py-3 text-sm">Balance</th>
+                <th className="px-4 py-3 text-sm">Status</th>
+                <th className="px-4 py-3 text-sm text-right">Action</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                  <td colSpan={6} className="px-4 py-6 text-center text-sm text-[var(--insight-muted)]">
                     Loading balance...
                   </td>
                 </tr>
@@ -329,12 +329,12 @@ export default function BalancePage() {
 
               {!loading && users.map((user) => (
                 <tr key={user.id} className="hover:bg-blue-50 dark:hover:bg-slate-800/60">
-                  <td className="p-3">@{user.username || "-"}</td>
-                  <td className="p-3">{user.telegram_id || "-"}</td>
-                  <td className="p-3">{user.role}</td>
-                  <td className="p-3">{rupiah(user.balance)}</td>
-                  <td className="p-3">{user.is_active ? "Active" : "Inactive"}</td>
-                  <td className="p-3">
+                  <td className="px-4 py-2.5 text-sm">@{user.username || "-"}</td>
+                  <td className="px-4 py-2.5 text-sm">{user.telegram_id || "-"}</td>
+                  <td className="px-4 py-2.5 text-sm">{user.role}</td>
+                  <td className="px-4 py-2.5 text-sm">{rupiah(user.balance)}</td>
+                  <td className="px-4 py-2.5 text-sm">{user.is_active ? "Active" : "Inactive"}</td>
+                  <td className="px-4 py-2.5 text-sm">
                     <div className="flex justify-end gap-2">
                       <button
                         type="button"
@@ -344,7 +344,7 @@ export default function BalancePage() {
                         }}
                         disabled={isViewer}
                         title={isViewer ? viewerOnlyTitle : undefined}
-                        className={"border-[3px] border-[var(--insight-border)] bg-emerald-700 px-3 py-1.5 text-lg leading-none text-white" + viewerDisabledClass}
+                        className={"border-2 border-[var(--insight-border)] bg-emerald-700 px-2.5 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] hover:-translate-y-0.5 transition" + viewerDisabledClass}
                       >
                         Add
                       </button>
@@ -356,7 +356,7 @@ export default function BalancePage() {
                         }}
                         disabled={isViewer}
                         title={isViewer ? viewerOnlyTitle : undefined}
-                        className={"border-[3px] border-[var(--insight-border)] bg-amber-600 px-3 py-1.5 text-lg leading-none text-white" + viewerDisabledClass}
+                        className={"border-2 border-[var(--insight-border)] bg-amber-600 px-2.5 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] hover:-translate-y-0.5 transition" + viewerDisabledClass}
                       >
                         Deduct
                       </button>
@@ -368,7 +368,7 @@ export default function BalancePage() {
                         }}
                         disabled={isViewer}
                         title={isViewer ? viewerOnlyTitle : undefined}
-                        className={"border-[3px] border-[var(--insight-border)] bg-slate-700 px-3 py-1.5 text-lg leading-none text-white" + viewerDisabledClass}
+                        className={"border-2 border-[var(--insight-border)] bg-slate-700 px-2.5 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] hover:-translate-y-0.5 transition" + viewerDisabledClass}
                       >
                         Reset
                       </button>
@@ -379,7 +379,7 @@ export default function BalancePage() {
 
               {!loading && users.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                  <td colSpan={6} className="px-4 py-6 text-center text-sm text-[var(--insight-muted)]">
                     Belum ada data user.
                   </td>
                 </tr>
@@ -396,33 +396,33 @@ export default function BalancePage() {
       </div>
 
       <div className="insight-card overflow-hidden">
-        <div className="border-b-[3px] border-[var(--insight-border)] p-4">
-          <h2 className="text-[30px] leading-none">Latest Balance Logs</h2>
+        <div className="border-b-2 border-[var(--insight-border)] p-3 px-4 bg-[var(--insight-panel)]">
+          <h2 className="text-lg font-bold leading-none">Latest Balance Logs</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
               <tr>
-                <th className="p-3">Date</th>
-                <th className="p-3">User</th>
-                <th className="p-3">Type</th>
-                <th className="p-3">Amount</th>
-                <th className="p-3">Note</th>
+                <th className="px-4 py-3 text-sm">Date</th>
+                <th className="px-4 py-3 text-sm">User</th>
+                <th className="px-4 py-3 text-sm">Type</th>
+                <th className="px-4 py-3 text-sm">Amount</th>
+                <th className="px-4 py-3 text-sm">Note</th>
               </tr>
             </thead>
             <tbody>
               {logs.map((log) => (
                 <tr key={log.id} className="hover:bg-blue-50 dark:hover:bg-slate-800/60">
-                  <td className="p-3">{formatDate(log.created_at)}</td>
-                  <td className="p-3">@{log.users?.username || log.users?.telegram_id || "-"}</td>
-                  <td className="p-3">{log.type}</td>
-                  <td className="p-3">{rupiah(log.amount)}</td>
-                  <td className="p-3">{log.note || "-"}</td>
+                  <td className="px-4 py-2.5 text-sm">{formatDate(log.created_at)}</td>
+                  <td className="px-4 py-2.5 text-sm">@{log.users?.username || log.users?.telegram_id || "-"}</td>
+                  <td className="px-4 py-2.5 text-sm">{log.type}</td>
+                  <td className="px-4 py-2.5 text-sm">{rupiah(log.amount)}</td>
+                  <td className="px-4 py-2.5 text-sm">{log.note || "-"}</td>
                 </tr>
               ))}
               {!loading && logs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                  <td colSpan={5} className="px-4 py-6 text-center text-sm text-[var(--insight-muted)]">
                     Belum ada mutasi saldo.
                   </td>
                 </tr>

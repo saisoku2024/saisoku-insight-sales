@@ -223,24 +223,27 @@ ${footer}`
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {notice && <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />}
 
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Telegram Broadcast</h1>
-        <p className="text-[var(--insight-muted)]">
+      <div className="insight-card p-3 px-4">
+        <span className="inline-block border-2 border-[var(--insight-border)] bg-blue-100 px-2.5 py-0.5 text-xs font-bold leading-none text-blue-800">
+          COMMUNICATION
+        </span>
+        <h1 className="mt-2 text-2xl font-bold leading-none">Telegram Broadcast</h1>
+        <p className="mt-1 text-sm leading-none text-[var(--insight-muted)]">
           Kirim pesan pengumuman massal ke seluruh pengguna bot Telegram aktif.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Editor Form */}
-        <div className="insight-card p-5 space-y-4">
-          <h2 className="text-xl font-bold border-b-2 border-[var(--insight-border)] pb-2">Editor Template</h2>
+        <div className="insight-card p-3.5 space-y-4">
+          <h2 className="text-lg font-bold border-b-2 border-[var(--insight-border)] pb-2">Editor Template</h2>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Salam Pembuka (Greeting)</label>
+              <label className="block text-xs font-semibold mb-1 text-[var(--insight-text)]">Salam Pembuka (Greeting)</label>
               <input
                 type="text"
                 className="insight-input w-full"
@@ -250,20 +253,20 @@ ${footer}`
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Restok & Informasi Utama (Custom)</label>
+              <label className="block text-xs font-semibold mb-1 text-[var(--insight-text)]">Restok & Informasi Utama (Custom)</label>
               <textarea
                 rows={7}
-                className="insight-input w-full font-mono text-sm"
+                className="insight-input w-full font-mono text-xs"
                 value={customText}
                 onChange={(e) => setCustomText(e.target.value)}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Promo Aktif (Custom)</label>
+              <label className="block text-xs font-semibold mb-1 text-[var(--insight-text)]">Promo Aktif (Custom)</label>
               <textarea
                 rows={3}
-                className="insight-input w-full font-mono text-sm"
+                className="insight-input w-full font-mono text-xs"
                 value={promoText}
                 onChange={(e) => setPromoText(e.target.value)}
               />
@@ -271,19 +274,19 @@ ${footer}`
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Bot Username</label>
+                <label className="block text-xs font-semibold mb-1 text-[var(--insight-text)]">Bot Username</label>
                 <input
                   type="text"
-                  className="insight-input w-full text-sm"
+                  className="insight-input w-full text-xs"
                   value={botUser}
                   onChange={(e) => setBotUser(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Admin WA Link</label>
+                <label className="block text-xs font-semibold mb-1 text-[var(--insight-text)]">Admin WA Link</label>
                 <input
                   type="text"
-                  className="insight-input w-full text-sm"
+                  className="insight-input w-full text-xs"
                   value={adminWa}
                   onChange={(e) => setAdminWa(e.target.value)}
                 />
@@ -291,7 +294,7 @@ ${footer}`
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-1 text-[var(--insight-text)]">Penutup</label>
+              <label className="block text-xs font-semibold mb-1 text-[var(--insight-text)]">Penutup</label>
               <input
                 type="text"
                 className="insight-input w-full"
@@ -301,46 +304,46 @@ ${footer}`
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3 pt-2">
+          <div className="flex flex-wrap gap-2 pt-2">
             <button
               onClick={handleCopyWhatsapp}
-              className="insight-button bg-green-600 hover:bg-green-700 text-white flex items-center gap-1.5 px-3 py-2 text-sm"
+              className="insight-button bg-green-600 hover:bg-green-700 text-white flex items-center gap-1.5 px-2.5 py-1.5 text-xs"
             >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               {copied ? "Tersalin!" : "Copy untuk WA"}
             </button>
 
             <button
               onClick={handleCopyTelegram}
-              className="insight-button bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 px-3 py-2 text-sm"
+              className="insight-button bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 px-2.5 py-1.5 text-xs"
             >
-              {copiedTelegram ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copiedTelegram ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               {copiedTelegram ? "Tersalin!" : "Copy HTML Telegram"}
             </button>
 
-             <button
-               onClick={() => setShowConfirm(true)}
-               disabled={sending || isViewer}
-               title={isViewer ? viewerOnlyTitle : undefined}
-               className="insight-button bg-red-600 hover:bg-red-700 text-white flex items-center gap-1.5 px-4 py-2 ml-auto text-sm disabled:cursor-not-allowed disabled:opacity-50"
-             >
-               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-               {sending ? "Mengirim..." : "Kirim Telegram"}
-             </button>
+            <button
+              onClick={() => setShowConfirm(true)}
+              disabled={sending || isViewer}
+              title={isViewer ? viewerOnlyTitle : undefined}
+              className="insight-button bg-red-600 hover:bg-red-700 text-white flex items-center gap-1.5 px-3 py-1.5 ml-auto text-xs disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+              {sending ? "Mengirim..." : "Kirim Telegram"}
+            </button>
           </div>
         </div>
 
         {/* Live Preview */}
-        <div className="insight-card p-5 flex flex-col h-full min-h-[500px]">
-          <h2 className="text-xl font-bold border-b-2 border-[var(--insight-border)] pb-2 flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-blue-500" />
+        <div className="insight-card p-3.5 flex flex-col h-full min-h-[500px]">
+          <h2 className="text-lg font-bold border-b-2 border-[var(--insight-border)] pb-2 flex items-center gap-2">
+            <MessageSquare className="h-4 w-4 text-blue-500" />
             Live Chat Preview (Telegram Style)
           </h2>
 
-          <div className="flex-1 bg-[#0e1621] p-4 rounded-md border-2 border-[var(--insight-border)] mt-4 font-sans text-white text-sm overflow-y-auto space-y-4 max-h-[550px]">
+          <div className="flex-1 bg-[#0e1621] p-3 rounded-md border-2 border-[var(--insight-border)] mt-4 font-sans text-white text-xs overflow-y-auto space-y-4 max-h-[550px]">
             {/* Telegram Message Box */}
-            <div className="bg-[#182533] p-3 rounded-lg max-w-[85%] border border-slate-700/50 shadow-md">
-              <div className="font-semibold text-sky-400 mb-1 text-xs">Saisoku Bot Sales</div>
+            <div className="bg-[#182533] p-2.5 rounded-lg max-w-[85%] border border-slate-700/50 shadow-md">
+              <div className="font-semibold text-sky-400 mb-1 text-[10px]">Saisoku Bot Sales</div>
               <div
                 className="whitespace-pre-wrap leading-relaxed break-words"
                 dangerouslySetInnerHTML={{
@@ -355,31 +358,31 @@ ${footer}`
                     .replace(/&lt;a\s+href="([^"]+)"&gt;(.*?)&lt;\/a&gt;/g, '<a href="$1" target="_blank" class="text-sky-400 hover:underline">$2</a>'),
                 }}
               />
-              <div className="text-right text-[10px] text-slate-400 mt-1.5">10:00 AM</div>
+              <div className="text-right text-[9px] text-slate-400 mt-1">10:00 AM</div>
             </div>
           </div>
 
           {result && (
-            <div className="insight-card bg-slate-800 text-white border-2 border-[var(--insight-border)] p-4 mt-4 space-y-2">
-              <h3 className="font-bold border-b border-slate-700 pb-1 flex items-center gap-1.5">
+            <div className="insight-card bg-slate-800 text-white border-2 border-[var(--insight-border)] p-3 mt-4 space-y-2">
+              <h3 className="text-sm font-bold border-b border-slate-700 pb-1 flex items-center gap-1.5">
                 📢 Hasil Laporan Broadcast
               </h3>
-              <div className="grid grid-cols-3 gap-2 text-center text-sm font-semibold">
+              <div className="grid grid-cols-3 gap-2 text-center text-xs font-semibold">
                 <div className="bg-slate-700 p-2 rounded">
-                  <div className="text-slate-400 text-xs">Total Target</div>
-                  <div className="text-lg">{result.total}</div>
+                  <div className="text-slate-400 text-[10px]">Total Target</div>
+                  <div className="text-base">{result.total}</div>
                 </div>
                 <div className="bg-green-950 p-2 rounded border border-green-800">
-                  <div className="text-green-400 text-xs">Berhasil</div>
-                  <div className="text-lg text-green-300">{result.success}</div>
+                  <div className="text-green-400 text-[10px]">Berhasil</div>
+                  <div className="text-base text-green-300">{result.success}</div>
                 </div>
                 <div className="bg-red-950 p-2 rounded border border-red-800">
-                  <div className="text-red-400 text-xs">Gagal</div>
-                  <div className="text-lg text-red-300">{result.failed}</div>
+                  <div className="text-red-400 text-[10px]">Gagal</div>
+                  <div className="text-base text-red-300">{result.failed}</div>
                 </div>
               </div>
               {result.error && (
-                <div className="text-red-400 text-xs mt-1 bg-red-950/30 p-2 rounded border border-red-900/50">
+                <div className="text-red-400 text-[10px] mt-1 bg-red-950/30 p-2 rounded border border-red-900/50">
                   Detail Error: {result.error}
                 </div>
               )}
@@ -391,21 +394,21 @@ ${footer}`
       {/* Confirmation Modal */}
       {showConfirm && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-          <div className="insight-card bg-[var(--insight-panel)] p-6 max-w-md w-full border-2 border-[var(--insight-border)] shadow-[4px_4px_0_var(--insight-shadow)] space-y-4">
-            <h3 className="text-xl font-bold text-red-600">Konfirmasi Kirim Broadcast?</h3>
-            <p className="text-sm text-[var(--insight-muted)]">
+          <div className="insight-card bg-[var(--insight-panel)] p-5 max-w-md w-full border-2 border-[var(--insight-border)] shadow-[4px_4px_0_var(--insight-shadow)] space-y-4">
+            <h3 className="text-lg font-bold text-red-600">Konfirmasi Kirim Broadcast?</h3>
+            <p className="text-xs text-[var(--insight-muted)]">
               Apakah Anda yakin ingin mengirim pesan broadcast ini ke seluruh user Telegram terdaftar? Tindakan ini tidak dapat dibatalkan.
             </p>
             <div className="flex justify-end gap-3 pt-2">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="insight-button bg-slate-300 hover:bg-slate-400 text-black px-4 py-2 text-sm"
+                className="insight-button bg-slate-300 hover:bg-slate-400 text-black px-3.5 py-1.5 text-sm"
               >
                 Batal
               </button>
               <button
                 onClick={handleSendBroadcast}
-                className="insight-button bg-red-600 hover:bg-red-700 text-white px-4 py-2 text-sm"
+                className="insight-button bg-red-600 hover:bg-red-700 text-white px-3.5 py-1.5 text-sm"
               >
                 Ya, Kirim Sekarang
               </button>

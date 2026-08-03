@@ -229,12 +229,12 @@ export default function VouchersPage() {
 
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
-      <div className="insight-card p-4">
-        <span className="inline-block border-[3px] border-[var(--insight-border)] bg-violet-100 px-3 py-1 text-lg leading-none text-violet-800">
+      <div className="insight-card p-3 px-4">
+        <span className="inline-block border-2 border-[var(--insight-border)] bg-violet-100 px-2.5 py-0.5 text-xs font-bold leading-none text-violet-800">
           BUSINESS
         </span>
-        <h1 className="mt-3 text-[34px] leading-none">Voucher Management</h1>
-        <p className="mt-1 text-xl leading-none text-[var(--insight-muted)]">
+        <h1 className="mt-2 text-2xl font-bold leading-none">Voucher Management</h1>
+        <p className="mt-1 text-sm leading-none text-[var(--insight-muted)]">
           Kelola voucher deposit bonus untuk role reguler, reseller, atau keduanya.
         </p>
       </div>
@@ -242,35 +242,35 @@ export default function VouchersPage() {
       <ActionNotice notice={notice} onDismiss={() => setNotice(null)} />
 
       {error ? (
-        <div className="insight-card border-red-500 bg-red-50 p-4 text-xl text-red-700">
+        <div className="insight-card border-red-500 bg-red-50 p-3 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
-      <div className="grid gap-5 md:grid-cols-3">
-        <div className="insight-card p-4">
-          <div className="text-xl text-[var(--insight-muted)]">Vouchers</div>
-          <div className="mt-2 text-[34px] leading-none">{totalRows}</div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="insight-card p-3.5">
+          <div className="text-sm text-[var(--insight-muted)]">Vouchers</div>
+          <div className="mt-1.5 text-2xl font-bold leading-none">{totalRows}</div>
         </div>
-        <div className="insight-card p-4">
-          <div className="text-xl text-[var(--insight-muted)]">Active</div>
-          <div className="mt-2 text-[34px] leading-none">{activeTotal}</div>
+        <div className="insight-card p-3.5">
+          <div className="text-sm text-[var(--insight-muted)]">Active</div>
+          <div className="mt-1.5 text-2xl font-bold leading-none">{activeTotal}</div>
         </div>
-        <div className="insight-card p-4">
-          <div className="text-xl text-[var(--insight-muted)]">Claims</div>
-          <div className="mt-2 text-[34px] leading-none">{claimCount}</div>
+        <div className="insight-card p-3.5">
+          <div className="text-sm text-[var(--insight-muted)]">Claims</div>
+          <div className="mt-1.5 text-2xl font-bold leading-none">{claimCount}</div>
         </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
-        <div className="insight-card p-4">
+        <div className="insight-card p-3.5">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-2xl leading-none">{editingVoucher ? "Edit Voucher" : "Add Voucher"}</h2>
+            <h2 className="text-lg font-bold leading-none">{editingVoucher ? "Edit Voucher" : "Add Voucher"}</h2>
             {editingVoucher ? (
               <button
                 type="button"
                 onClick={resetForm}
-                className="border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3 py-1.5 text-lg leading-none"
+                className="border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2.5 py-1 text-xs leading-none"
               >
                 Cancel
               </button>
@@ -279,43 +279,43 @@ export default function VouchersPage() {
 
           <div className="mt-4 space-y-3">
             <label className="block">
-              <span className="text-lg text-[var(--insight-muted)]">Kode Voucher</span>
+              <span className="text-xs text-[var(--insight-muted)]">Kode Voucher</span>
               <input
                 value={form.code}
                 onChange={(e) => setForm((current) => ({ ...current, code: e.target.value.toUpperCase() }))}
-                className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+                className="mt-1 h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm outline-none"
                 placeholder="WELCOME10"
               />
             </label>
 
             <label className="block">
-              <span className="text-lg text-[var(--insight-muted)]">Nominal Deposit Bonus</span>
+              <span className="text-xs text-[var(--insight-muted)]">Nominal Deposit Bonus</span>
               <input
                 type="number"
                 min="0"
                 value={form.reward_amount}
                 onChange={(e) => setForm((current) => ({ ...current, reward_amount: e.target.value }))}
-                className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+                className="mt-1 h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm outline-none"
               />
             </label>
 
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
-                <span className="text-lg text-[var(--insight-muted)]">Kuota</span>
+                <span className="text-xs text-[var(--insight-muted)]">Kuota</span>
                 <input
                   type="number"
                   min="1"
                   value={form.quota}
                   onChange={(e) => setForm((current) => ({ ...current, quota: e.target.value }))}
-                  className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+                  className="mt-1 h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm outline-none"
                 />
               </label>
               <label className="block">
-                <span className="text-lg text-[var(--insight-muted)]">Target Role</span>
+                <span className="text-xs text-[var(--insight-muted)]">Target Role</span>
                 <select
                   value={form.target_role}
                   onChange={(e) => setForm((current) => ({ ...current, target_role: e.target.value as TargetRole }))}
-                  className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+                  className="mt-1 h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm outline-none"
                 >
                   <option value="both">Both</option>
                   <option value="reguler">Reguler</option>
@@ -325,16 +325,16 @@ export default function VouchersPage() {
             </div>
 
             <label className="block">
-              <span className="text-lg text-[var(--insight-muted)]">Expired</span>
+              <span className="text-xs text-[var(--insight-muted)]">Expired</span>
               <input
                 type="date"
                 value={form.expired_at}
                 onChange={(e) => setForm((current) => ({ ...current, expired_at: e.target.value }))}
-                className="mt-1 h-11 w-full border-[3px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-lg outline-none"
+                className="mt-1 h-9 w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 text-sm outline-none"
               />
             </label>
 
-            <label className="inline-flex items-center gap-3 text-lg">
+            <label className="inline-flex items-center gap-3 text-sm">
               <input
                 type="checkbox"
                 checked={form.is_active}
@@ -349,7 +349,7 @@ export default function VouchersPage() {
               onClick={() => void saveVoucher()}
               disabled={saving || isViewer}
               title={isViewer ? viewerOnlyTitle : undefined}
-              className={"w-full border-[3px] border-[var(--insight-border)] bg-violet-700 px-4 py-2 text-xl leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40" + viewerDisabledClass}
+              className={"w-full border-2 border-[var(--insight-border)] bg-violet-700 px-4 py-1.5 text-sm leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] hover:bg-violet-600 disabled:opacity-40" + viewerDisabledClass}
             >
               {saving ? "Saving..." : editingVoucher ? "Update Voucher" : "Add Voucher"}
             </button>
@@ -361,22 +361,22 @@ export default function VouchersPage() {
             <table className="w-full text-left">
               <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
                 <tr>
-                  <th className="p-3">Code</th>
-                  <th className="p-3">Type</th>
-                  <th className="p-3">Value</th>
-                  <th className="p-3">Role</th>
-                  <th className="p-3">Quota</th>
-                  <th className="p-3">Used</th>
-                  <th className="p-3">Remaining</th>
-                  <th className="p-3">Expired</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3 text-right">Action</th>
+                  <th className="px-4 py-3 text-sm">Code</th>
+                  <th className="px-4 py-3 text-sm">Type</th>
+                  <th className="px-4 py-3 text-sm">Value</th>
+                  <th className="px-4 py-3 text-sm">Role</th>
+                  <th className="px-4 py-3 text-sm">Quota</th>
+                  <th className="px-4 py-3 text-sm">Used</th>
+                  <th className="px-4 py-3 text-sm">Remaining</th>
+                  <th className="px-4 py-3 text-sm">Expired</th>
+                  <th className="px-4 py-3 text-sm">Status</th>
+                  <th className="px-4 py-3 text-sm text-right">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                    <td colSpan={10} className="px-4 py-6 text-center text-sm text-[var(--insight-muted)]">
                       Loading voucher...
                     </td>
                   </tr>
@@ -384,24 +384,24 @@ export default function VouchersPage() {
 
                 {!loading && vouchers.map((voucher) => (
                   <tr key={voucher.id} className="hover:bg-blue-50 dark:hover:bg-slate-800/60">
-                    <td className="p-3 font-bold">{voucher.code}</td>
-                    <td className="p-3">Deposit Bonus</td>
-                    <td className="p-3">{rupiah(voucher.reward_amount)}</td>
-                    <td className="p-3">{roleLabel(voucher.target_role)}</td>
-                    <td className="p-3">{voucher.quota}</td>
-                    <td className="p-3">{voucher.used_count}</td>
-                    <td className="p-3">{Math.max(0, voucher.quota - voucher.used_count)}</td>
-                    <td className="p-3">{formatDate(voucher.expired_at)}</td>
-                    <td className="p-3">
+                    <td className="px-4 py-2.5 text-sm font-bold">{voucher.code}</td>
+                    <td className="px-4 py-2.5 text-sm">Deposit Bonus</td>
+                    <td className="px-4 py-2.5 text-sm">{rupiah(voucher.reward_amount)}</td>
+                    <td className="px-4 py-2.5 text-sm">{roleLabel(voucher.target_role)}</td>
+                    <td className="px-4 py-2.5 text-sm">{voucher.quota}</td>
+                    <td className="px-4 py-2.5 text-sm">{voucher.used_count}</td>
+                    <td className="px-4 py-2.5 text-sm">{Math.max(0, voucher.quota - voucher.used_count)}</td>
+                    <td className="px-4 py-2.5 text-sm">{formatDate(voucher.expired_at)}</td>
+                    <td className="px-4 py-2.5 text-sm">
                       <span
-                        className={`inline-block border-[2px] border-[var(--insight-border)] px-2 py-0.5 text-base leading-none ${
+                        className={`inline-block border-2 border-[var(--insight-border)] px-2 py-0.5 text-xs font-bold leading-none ${
                           voucher.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
                         }`}
                       >
                         {voucher.is_active ? "Active" : "Disabled"}
                       </span>
                     </td>
-                    <td className="p-3">
+                    <td className="px-4 py-2.5 text-sm">
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
@@ -411,7 +411,7 @@ export default function VouchersPage() {
                           }}
                           disabled={isViewer}
                           title={isViewer ? viewerOnlyTitle : undefined}
-                          className={"border-[3px] border-[var(--insight-border)] bg-[var(--insight-card)] px-3 py-1.5 text-lg leading-none" + viewerDisabledClass}
+                          className={"border-2 border-[var(--insight-border)] bg-[var(--insight-card)] px-2.5 py-1 text-xs leading-none" + viewerDisabledClass}
                         >
                           Edit
                         </button>
@@ -420,7 +420,7 @@ export default function VouchersPage() {
                           onClick={() => void toggleVoucher(voucher)}
                           disabled={isViewer}
                           title={isViewer ? viewerOnlyTitle : undefined}
-                          className={`border-[3px] border-[var(--insight-border)] px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] ${
+                          className={`border-2 border-[var(--insight-border)] px-2.5 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] ${
                             voucher.is_active ? "bg-slate-700 hover:bg-slate-600" : "bg-emerald-700 hover:bg-emerald-600"
                           }${viewerDisabledClass}`}
                         >
@@ -431,7 +431,7 @@ export default function VouchersPage() {
                           onClick={() => void deleteVoucher(voucher)}
                           disabled={isViewer}
                           title={isViewer ? viewerOnlyTitle : undefined}
-                          className={"border-[3px] border-[var(--insight-border)] bg-red-700 px-3 py-1.5 text-lg leading-none text-white shadow-[3px_3px_0_var(--insight-shadow)] hover:bg-red-600" + viewerDisabledClass}
+                          className={"border-2 border-[var(--insight-border)] bg-red-700 px-2.5 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] hover:bg-red-600" + viewerDisabledClass}
                         >
                           Del
                         </button>
@@ -442,7 +442,7 @@ export default function VouchersPage() {
 
                 {!loading && vouchers.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-xl text-[var(--insight-muted)]">
+                    <td colSpan={10} className="px-4 py-6 text-center text-sm text-[var(--insight-muted)]">
                       Belum ada voucher.
                     </td>
                   </tr>
