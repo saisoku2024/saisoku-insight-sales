@@ -31,106 +31,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Koneksi database admin gagal" }, { status: 500 })
     }
 
-    // 1. Fetch ticket details
-    const { data: ticket, error: ticketErr } = await adminSupabase
-      .from("tickets")
-      .select("*, users(telegram_id)")
-      .eq("id", ticketId)
-      .single()
+    // Call atomic replacement RPC
+    const { data: rpcResult, error: rpcErr } = await adminSupabase.rpc(
+      "replace_warranty_account_atomic",
+      {
+        p_ticket_id: ticketId,
+        p_admin_email: auth.adminEmail,
+      }
+    )
 
-    if (ticketErr || !ticket) {
-      return NextResponse.json({ error: "Tiket tidak ditemukan" }, { status: 404 })
+    if (rpcErr) {
+      return NextResponse.json({ error: rpcErr.message }, { status: 500 })
     }
 
-    const trxId = ticket.transaction_id
-    if (!trxId) {
-      return NextResponse.json({ error: "Tiket ini tidak terasosiasi dengan transaksi order" }, { status: 400 })
-    }
-
-    // 2. Fetch transaction details
-    const { data: trx, error: trxErr } = await adminSupabase
-      .from("transactions")
-      .select("*, products(name, product_code)")
-      .eq("id", trxId)
-      .single()
-
-    if (trxErr || !trx) {
-      return NextResponse.json({ error: "Transaksi order tidak ditemukan" }, { status: 404 })
-    }
-
-    const productId = trx.product_id
-
-    // 3. Find available replacement account from stock
-    const { data: availableAcc, error: accErr } = await adminSupabase
-      .from("product_accounts")
-      .select("*")
-      .eq("product_id", productId)
-      .eq("status", "available")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle()
-
-    if (accErr || !availableAcc) {
+    if (!rpcResult || rpcResult.success === false) {
       return NextResponse.json(
-        { error: "Stok pengganti habis! Silakan restock produk ini terlebih dahulu." },
+        { error: rpcResult?.error || "Gagal memproses transaksi penggantian akun" },
         { status: 400 }
       )
     }
 
-    // 4. Mark replacement account as sold
-    await adminSupabase
-      .from("product_accounts")
-      .update({ status: "sold", sold_at: new Date().toISOString() })
-      .eq("id", availableAcc.id)
+    const replacement = rpcResult.replacement || {}
+    const telegramId = rpcResult.telegram_id
+    const claimCount = rpcResult.claim_count || 1
 
-    // 5. Update sold_accounts
-    const { data: sa } = await adminSupabase
-      .from("sold_accounts")
-      .select("*")
-      .eq("transaction_id", trxId)
+    // Fetch display code and product name for Telegram notification
+    const { data: ticket } = await adminSupabase
+      .from("tickets")
+      .select("*, transactions(*, products(name, product_code))")
+      .eq("id", ticketId)
       .maybeSingle()
 
-    const newClaimCount = (sa?.warranty_claim_count || 0) + 1
-    const newSnapshot = {
-      email: availableAcc.email,
-      password: availableAcc.password,
-      pin: availableAcc.pin,
-      profile: availableAcc.profile,
-    }
-
-    if (sa) {
-      await adminSupabase
-        .from("sold_accounts")
-        .update({
-          account_id: availableAcc.id,
-          account_snapshot: newSnapshot,
-          warranty_claim_count: newClaimCount,
-          warranty_last_claim_at: new Date().toISOString(),
-        })
-        .eq("id", sa.id)
-    }
-
-    // 6. Update ticket status to resolved
-    await adminSupabase
-      .from("tickets")
-      .update({
-        status: "resolved",
-        resolved_at: new Date().toISOString(),
-        feedback: `Akun pengganti dikirim otomatis oleh ${auth.adminEmail}`,
-      })
-      .eq("id", ticketId)
-
-    // 7. Insert admin reply entry into ticket_replies
-    await adminSupabase.from("ticket_replies").insert({
-      ticket_id: Number(ticketId),
-      sender_type: "admin",
-      message: `✅ Akun pengganti garansi telah dikirimkan ke Telegram pembeli (Email: ${availableAcc.email}).`,
-    })
-
-    // 8. Send Telegram message to buyer
-    const telegramId = ticket.users?.telegram_id || ticket.telegram_id
-    const displayCode = trx.trx_code || `SSID-${trxId.slice(0, 8).toUpperCase()}`
-    const prodName = trx.products?.name || "Produk"
+    const trx = ticket?.transactions
+    const displayCode = trx?.trx_code || (trx?.id ? `SSID-${trx.id.slice(0, 8).toUpperCase()}` : `TICKET-${ticketId}`)
+    const prodName = trx?.products?.name || "Produk"
 
     const buyerText = `🔄 <b>PENGGANTIAN AKUN GARANSI BERHASIL</b>
 
@@ -138,12 +72,12 @@ export async function POST(req: NextRequest) {
 └ Produk : <b>${escapeHtml(prodName)}</b>
 
 <b>[ Data Akun Pengganti ]</b>
-└ Email : <code>${escapeHtml(availableAcc.email || "-")}</code>
-└ Password : <code>${escapeHtml(availableAcc.password || "-")}</code>
-└ Profile : <b>${escapeHtml(availableAcc.profile || "-")}</b>
-└ PIN : <code>${escapeHtml(availableAcc.pin || "-")}</code>
+└ Email : <code>${escapeHtml(replacement.email || "-")}</code>
+└ Password : <code>${escapeHtml(replacement.password || "-")}</code>
+└ Profile : <b>${escapeHtml(replacement.profile || "-")}</b>
+└ PIN : <code>${escapeHtml(replacement.pin || "-")}</code>
 
-📌 <i>Klaim garansi ke-${newClaimCount} Anda telah selesai diproses oleh Admin via Web Dashboard.</i>`
+📌 <i>Klaim garansi ke-${claimCount} Anda telah selesai diproses oleh Admin via Web Dashboard.</i>`
 
     if (telegramId) {
       await sendTelegramMessage(Number(telegramId), buyerText)
@@ -155,16 +89,16 @@ export async function POST(req: NextRequest) {
         action: "replace_account",
         entity: "tickets",
         entityId: ticketId,
-        before: ticket,
-        after: { ...ticket, status: "resolved", replacement_account_id: availableAcc.id },
-        metadata: { telegramId, claimCount: newClaimCount },
+        before: { ticketId },
+        after: { ticketId, status: "resolved", replacement },
+        metadata: { telegramId, claimCount },
       }
     )
 
     return NextResponse.json({
       ok: true,
       message: "Akun pengganti dari stok berhasil dikirim ke Telegram pembeli!",
-      account: newSnapshot,
+      account: replacement,
     })
   } catch (error) {
     return jsonRouteError(
