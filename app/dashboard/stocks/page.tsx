@@ -93,7 +93,6 @@ export default function StocksPage() {
   const [filterBrand, setFilterBrand] = useState("");
   const [filterProductCode, setFilterProductCode] = useState("");
   const [stockView, setStockView] = useState<"active" | "deleted" | "all">("active");
-  const [viewLayout, setViewLayout] = useState<"grid" | "table">("grid");
 
   // Add stock form
   const [email, setEmail] = useState("");
@@ -564,17 +563,6 @@ export default function StocksPage() {
             ariaLabel="Filter stock status"
           />
 
-          <ToolbarSelect
-            value={viewLayout}
-            options={[
-              { value: "grid", label: "Grid (2 Kolom 2-2-2)" },
-              { value: "table", label: "Tabel Lurus" },
-            ]}
-            onChange={(nextLayout) => setViewLayout(nextLayout as "grid" | "table")}
-            minWidth={180}
-            ariaLabel="Pilih layout tampilan"
-          />
-
           <button
             onClick={() => {
               if (isViewer) return;
@@ -643,106 +631,79 @@ export default function StocksPage() {
         )}
       </div>
 
-      {/* STOCK DISPLAY: GRID (2-2-2) OR TABLE */}
-      {viewLayout === "grid" ? (
-        <div className="space-y-4">
-          <div className="insight-card flex flex-wrap items-center justify-between gap-3 p-3 px-4">
-            <label className="flex items-center gap-2.5 text-sm font-bold text-[var(--insight-text)] cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={allVisibleSelected}
-                disabled={isViewer || selectableStocks.length === 0}
-                onChange={toggleSelectVisible}
-                className="h-5 w-5 accent-[var(--insight-blue)] disabled:opacity-40"
-                title={isViewer ? viewerOnlyTitle : "Pilih semua stock di halaman ini"}
-              />
-              <span>Pilih Semua Stock di Halaman Ini ({selectableStocks.length})</span>
-            </label>
-            <div className="text-xs font-semibold text-[var(--insight-muted)]">
-              Tampilan 2-2-2 Inline Grid • 10 Produk / Page
-            </div>
-          </div>
+      {/* TABLE */}
+      <div className="insight-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
+              <tr>
+                <th className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    disabled={isViewer || selectableStocks.length === 0}
+                    onChange={toggleSelectVisible}
+                    className="h-5 w-5 accent-[var(--insight-blue)] disabled:opacity-40"
+                    title={isViewer ? viewerOnlyTitle : "Select visible stock"}
+                  />
+                </th>
+                <th className="px-4 py-3 text-sm">Product</th>
+                <th className="px-4 py-3 text-sm">Brand</th>
+                <th className="px-4 py-3 text-sm">Email</th>
+                <th className="px-4 py-3 text-sm">Profile</th>
+                <th className="px-4 py-3 text-sm">PIN</th>
+                <th className="px-4 py-3 text-sm">Status</th>
+                <th className="px-4 py-3 text-sm">Action</th>
+              </tr>
+            </thead>
 
-          {stocks.length === 0 ? (
-            <div className="insight-card p-8 text-center text-xl text-[var(--insight-muted)]">
-              Tidak ada data persediaan akun saat ini.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <tbody>
               {stocks.map((s) => (
-                <div
+                <tr
                   key={s.id}
-                  className={`insight-card relative flex flex-col justify-between p-4 transition hover:border-[var(--insight-blue)] ${
-                    selectedStockIds.includes(s.id)
-                      ? "ring-2 ring-[var(--insight-blue)] bg-blue-50/40 dark:bg-slate-800/40"
-                      : ""
-                  }`}
+                  className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60"
                 >
-                  {/* Header: Checkbox + Product Name & Code + Status */}
-                  <div className="flex items-start justify-between gap-3 border-b-2 border-[var(--insight-border)] pb-3">
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedStockIds.includes(s.id)}
-                        disabled={isViewer || s.status === "deleted"}
-                        onChange={() => toggleSelectStock(s.id)}
-                        className="mt-0.5 h-5 w-5 accent-[var(--insight-blue)] disabled:opacity-40"
-                        title={s.status === "deleted" ? "Deleted stock tidak bisa dipilih" : isViewer ? viewerOnlyTitle : "Select stock"}
-                      />
-                      <div>
-                        <h3 className="font-bold text-base leading-tight text-[var(--insight-text)]">
-                          {getProductName(s.products)}
-                        </h3>
-                        <div className="text-xs font-mono text-[var(--insight-muted)] mt-0.5">
-                          {getProductCode(s.products) || "-"}
-                        </div>
-                      </div>
-                    </div>
+                  <td className="px-4 py-2.5">
+                    <input
+                      type="checkbox"
+                      checked={selectedStockIds.includes(s.id)}
+                      disabled={isViewer || s.status === "deleted"}
+                      onChange={() => toggleSelectStock(s.id)}
+                      className="h-5 w-5 accent-[var(--insight-blue)] disabled:opacity-40"
+                      title={s.status === "deleted" ? "Deleted stock tidak bisa dipilih" : isViewer ? viewerOnlyTitle : "Select stock"}
+                    />
+                  </td>
+                  <td className="px-4 py-2.5 text-sm font-medium">
+                    <div>{getProductName(s.products)}</div>
+                    <div className="text-xs text-[var(--insight-muted)]">{getProductCode(s.products) || "-"}</div>
+                  </td>
+                  <td className="px-4 py-2.5 text-sm">{getProductCode(s.products)?.split(/[-_\s/]+/)[0]?.toUpperCase() || "-"}</td>
+                  <td className="px-4 py-2.5 font-mono text-sm">
+                    {isViewer
+                      ? (s.email && s.email.includes("@")
+                        ? s.email.split("@")[0].slice(0, 2) + "***@" + s.email.split("@")[1]
+                        : "***")
+                      : s.email}
+                  </td>
+                  <td className="px-4 py-2.5 text-sm">{isViewer ? "***" : (s.profile || "—")}</td>
+                  <td className="px-4 py-2.5 font-mono text-sm">{isViewer ? "***" : (s.pin || "—")}</td>
+                  <td className="px-4 py-2.5">
                     <span
-                      className={`inline-block border-2 border-[var(--insight-border)] px-2 py-0.5 text-xs font-bold leading-none ${statusClass(s.status)}`}
+                      className={`inline-block border-2 border-[var(--insight-border)] px-2 py-0.5 text-xs font-bold leading-none ${
+                        statusClass(s.status)
+                      }`}
                     >
                       {s.status}
                     </span>
-                  </div>
-
-                  {/* Body Details */}
-                  <div className="my-3 grid grid-cols-2 gap-2 text-sm">
-                    <div className="col-span-2 rounded border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] p-2">
-                      <div className="text-xs font-bold text-[var(--insight-muted)]">Email / User:</div>
-                      <div className="font-mono text-sm font-semibold truncate text-[var(--insight-text)] mt-0.5">
-                        {isViewer
-                          ? (s.email && s.email.includes("@")
-                            ? s.email.split("@")[0].slice(0, 2) + "***@" + s.email.split("@")[1]
-                            : "***")
-                          : s.email}
-                      </div>
-                    </div>
-                    <div className="rounded border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] p-2">
-                      <div className="text-xs font-bold text-[var(--insight-muted)]">Profile:</div>
-                      <div className="font-medium text-sm text-[var(--insight-text)] mt-0.5">
-                        {isViewer ? "***" : (s.profile || "—")}
-                      </div>
-                    </div>
-                    <div className="rounded border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] p-2">
-                      <div className="text-xs font-bold text-[var(--insight-muted)]">PIN:</div>
-                      <div className="font-mono text-sm font-medium text-[var(--insight-text)] mt-0.5">
-                        {isViewer ? "***" : (s.pin || "—")}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Footer Actions */}
-                  <div className="flex items-center justify-between border-t-2 border-[var(--insight-border)] pt-3">
-                    <div className="text-xs text-[var(--insight-muted)]">
-                      Brand: <span className="font-bold text-[var(--insight-text)]">{getProductCode(s.products)?.split(/[-_\s/]+/)[0]?.toUpperCase() || "-"}</span>
-                    </div>
+                  </td>
+                  <td className="px-4 py-2.5">
                     <div className="flex gap-2">
                       {s.status === "deleted" ? (
                         <button
                           onClick={() => void restoreStock(s)}
                           disabled={isViewer}
                           title={isViewer ? viewerOnlyTitle : undefined}
-                          className={"border-2 border-[var(--insight-border)] bg-emerald-600 px-3 py-1 text-xs font-bold leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                          className={"border-2 border-[var(--insight-border)] bg-emerald-600 px-2 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
                         >
                           Restore
                         </button>
@@ -755,7 +716,7 @@ export default function StocksPage() {
                             }}
                             disabled={isViewer}
                             title={isViewer ? viewerOnlyTitle : undefined}
-                            className={"border-2 border-[var(--insight-border)] bg-[var(--insight-blue)] px-3 py-1 text-xs font-bold leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                            className={"border-2 border-[var(--insight-border)] bg-[var(--insight-blue)] px-2 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
                           >
                             Edit
                           </button>
@@ -766,143 +727,31 @@ export default function StocksPage() {
                             }}
                             disabled={isViewer}
                             title={isViewer ? viewerOnlyTitle : undefined}
-                            className={"border-2 border-[var(--insight-border)] bg-red-600 px-3 py-1 text-xs font-bold leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
+                            className={"border-2 border-[var(--insight-border)] bg-red-600 px-2 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
                           >
                             Delete
                           </button>
                         </>
                       )}
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : (
-        /* TABLE VIEW (Traditional) */
-        <div className="insight-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-[var(--insight-panel)] text-[var(--insight-muted)]">
-                <tr>
-                  <th className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={allVisibleSelected}
-                      disabled={isViewer || selectableStocks.length === 0}
-                      onChange={toggleSelectVisible}
-                      className="h-5 w-5 accent-[var(--insight-blue)] disabled:opacity-40"
-                      title={isViewer ? viewerOnlyTitle : "Select visible stock"}
-                    />
-                  </th>
-                  <th className="px-4 py-3 text-sm">Product</th>
-                  <th className="px-4 py-3 text-sm">Brand</th>
-                  <th className="px-4 py-3 text-sm">Email</th>
-                  <th className="px-4 py-3 text-sm">Profile</th>
-                  <th className="px-4 py-3 text-sm">PIN</th>
-                  <th className="px-4 py-3 text-sm">Status</th>
-                  <th className="px-4 py-3 text-sm">Action</th>
+                  </td>
                 </tr>
-              </thead>
+              ))}
 
-              <tbody>
-                {stocks.map((s) => (
-                  <tr
-                    key={s.id}
-                    className="transition hover:bg-blue-50 dark:hover:bg-slate-800/60"
+              {stocks.length === 0 && (
+                <tr>
+                  <td
+                    className="p-8 text-center text-xl text-[var(--insight-muted)]"
+                    colSpan={8}
                   >
-                    <td className="px-4 py-2.5">
-                      <input
-                        type="checkbox"
-                        checked={selectedStockIds.includes(s.id)}
-                        disabled={isViewer || s.status === "deleted"}
-                        onChange={() => toggleSelectStock(s.id)}
-                        className="h-5 w-5 accent-[var(--insight-blue)] disabled:opacity-40"
-                        title={s.status === "deleted" ? "Deleted stock tidak bisa dipilih" : isViewer ? viewerOnlyTitle : "Select stock"}
-                      />
-                    </td>
-                    <td className="px-4 py-2.5 text-sm font-medium">
-                      <div>{getProductName(s.products)}</div>
-                      <div className="text-xs text-[var(--insight-muted)]">{getProductCode(s.products) || "-"}</div>
-                    </td>
-                    <td className="px-4 py-2.5 text-sm">{getProductCode(s.products)?.split(/[-_\s/]+/)[0]?.toUpperCase() || "-"}</td>
-                    <td className="px-4 py-2.5 font-mono text-sm">
-                      {isViewer
-                        ? (s.email && s.email.includes("@")
-                          ? s.email.split("@")[0].slice(0, 2) + "***@" + s.email.split("@")[1]
-                          : "***")
-                        : s.email}
-                    </td>
-                    <td className="px-4 py-2.5 text-sm">{isViewer ? "***" : (s.profile || "—")}</td>
-                    <td className="px-4 py-2.5 font-mono text-sm">{isViewer ? "***" : (s.pin || "—")}</td>
-                    <td className="px-4 py-2.5">
-                      <span
-                        className={`inline-block border-2 border-[var(--insight-border)] px-2 py-0.5 text-xs font-bold leading-none ${
-                          statusClass(s.status)
-                        }`}
-                      >
-                        {s.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex gap-2">
-                        {s.status === "deleted" ? (
-                          <button
-                            onClick={() => void restoreStock(s)}
-                            disabled={isViewer}
-                            title={isViewer ? viewerOnlyTitle : undefined}
-                            className={"border-2 border-[var(--insight-border)] bg-emerald-600 px-2 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
-                          >
-                            Restore
-                          </button>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => {
-                                if (isViewer) return;
-                                setEditStockData(s);
-                              }}
-                              disabled={isViewer}
-                              title={isViewer ? viewerOnlyTitle : undefined}
-                              className={"border-2 border-[var(--insight-border)] bg-[var(--insight-blue)] px-2 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => {
-                                if (isViewer) return;
-                                setDeleteCandidate(s);
-                              }}
-                              disabled={isViewer}
-                              title={isViewer ? viewerOnlyTitle : undefined}
-                              className={"border-2 border-[var(--insight-border)] bg-red-600 px-2 py-1 text-xs leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]" + viewerDisabledClass}
-                            >
-                              Delete
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-
-                {stocks.length === 0 && (
-                  <tr>
-                    <td
-                      className="p-8 text-center text-xl text-[var(--insight-muted)]"
-                      colSpan={8}
-                    >
-                      Tidak ada data persediaan akun saat ini.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    Tidak ada data persediaan akun saat ini.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
-
+      </div>
 
       {/* PAGINATION */}
       <div className="flex items-center gap-3">
