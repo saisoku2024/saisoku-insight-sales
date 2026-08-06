@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
 import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context";
 import { supabase } from "@/lib/supabase/client";
+
+
 
 type Ticket = {
   id: number;
@@ -331,42 +334,40 @@ export default function TicketsPage() {
   return (
     <div className="space-y-6 text-[var(--insight-text)]">
       {/* HEADER */}
-      <div className="insight-card p-3 px-4 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div>
-          <span className="inline-block border-2 border-[var(--insight-border)] bg-indigo-100 px-2.5 py-0.5 text-xs font-bold leading-none text-indigo-800">
-            TICKET MANAGEMENT
-          </span>
-          <h1 className="mt-2 text-2xl font-bold leading-none text-[var(--insight-text)]">Support Tickets</h1>
-          <p className="mt-1 text-sm leading-none text-[var(--insight-muted)]">
-            Kelola laporan kendala dan pertanyaan pelanggan dari Telegram
-          </p>
-        </div>
-        <div>
-          <button
-            onClick={() => {
-              void loadTickets();
-              if (selectedTicket) {
-                void loadReplies(selectedTicket.id);
-              }
-            }}
-            className="border-2 border-[var(--insight-border)] bg-indigo-600 px-3 py-1.5 text-sm font-bold leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)] hover:bg-indigo-500 transition-all flex items-center gap-2"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+      <div className="insight-card p-4 space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <span className="inline-block border-2 border-[var(--insight-border)] bg-indigo-100 px-2.5 py-0.5 text-xs font-bold leading-none text-indigo-800">
+              TICKET MANAGEMENT
+            </span>
+            <h1 className="mt-2 text-2xl font-bold leading-none text-[var(--insight-text)]">Support Tickets (Aktif)</h1>
+            <p className="mt-1 text-sm leading-none text-[var(--insight-muted)]">
+              Kelola laporan kendala dan pertanyaan aktif dari pelanggan Telegram
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="border-2 border-[var(--insight-border)] bg-indigo-600 px-3 py-1.5 text-sm font-bold leading-none text-white shadow-[2px_2px_0_var(--insight-shadow)]">
+              🎫 Tiket Aktif
+            </span>
+            <Link
+              href="/dashboard/tickets/history"
+              className="border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-1.5 text-sm font-bold leading-none text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] hover:-translate-y-0.5 transition-transform"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={3}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M21 8v-5h-.58"
-              />
-            </svg>
-            Refresh
-          </button>
+              📜 History (Resolved)
+            </Link>
+            <button
+              onClick={() => {
+                void loadTickets();
+                if (selectedTicket) {
+                  void loadReplies(selectedTicket.id);
+                }
+              }}
+              className="border-2 border-[var(--insight-border)] bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900 px-3 py-1.5 text-sm font-bold leading-none shadow-[2px_2px_0_var(--insight-shadow)] hover:-translate-y-0.5 transition-all flex items-center gap-1.5 ml-2"
+            >
+              🔄 Refresh
+            </button>
+          </div>
         </div>
       </div>
 

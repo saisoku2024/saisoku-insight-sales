@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAISOKU Insight Panel — Phase 1 Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Geist+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #e8ecf5; --grid: #d4dbea; --card: #f5f5f5; --panel: #ffffff;
+      --text: #111827; --muted: #475569; --border: #111827; --shadow: #111827;
+      --blue: #2563eb; --cyan: #06b6d4;
+      --grad1: rgba(124,58,237,0.16); --grad2: rgba(6,182,212,0.14);
+    }
+    html.dark {
+      --bg: #0f172a; --grid: #1e293b; --card: #1e293b; --panel: #0f172a;
+      --text: #f8fafc; --muted: #cbd5e1; --border: #94a3b8; --shadow: #000000;
+      --grad1: rgba(139,92,246,0.30); --grad2: rgba(34,211,238,0.22);
+    }
+
+    body {
+      background:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+        radial-gradient(circle at 15% 10%, var(--grad1), transparent 45%),
+        radial-gradient(circle at 85% 90%, var(--grad2), transparent 45%),
+        var(--bg);
+      background-size: 24px 24px;
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
+    }
+
+    /* CONTROL BAR */
+    .control-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: #1e1e2e; color: #cdd6f4;
+      padding: 10px 20px;
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      font-family: 'Geist Mono', monospace; font-size: 13px;
+      border-bottom: 2px solid #45475a;
+    }
+    .ctrl-logo { font-weight: 700; color: #cba6f7; font-size: 14px; letter-spacing: 0.1em; }
+    .ctrl-badge { background: #313244; border: 1px solid #45475a; padding: 3px 10px; border-radius: 4px; color: #a6e3a1; font-size: 11px; }
+    .ctrl-sep { color: #45475a; }
+    .ctrl-btn {
+      background: #313244; border: 1px solid #45475a; color: #cdd6f4;
+      padding: 5px 14px; cursor: pointer; font-family: inherit; font-size: 12px;
+      border-radius: 4px; transition: background 0.2s;
+    }
+    .ctrl-btn:hover { background: #45475a; }
+    .ctrl-btn.on { background: #cba6f7; color: #1e1e2e; }
+    .ctrl-hint { margin-left: auto; font-size: 11px; color: #6c7086; }
+
+    /* LAYOUT */
+    .wrapper { max-width: 1280px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; gap: 36px; }
+
+    .sec-title {
+      font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 700;
+      letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted);
+      margin-bottom: 10px; display: flex; align-items: center; gap: 10px;
+    }
+    .sec-title::after { content: ''; flex: 1; height: 1px; background: var(--border); opacity: 0.2; }
+    .sec-note {
+      font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--muted);
+      margin-bottom: 12px; padding: 6px 12px;
+      border-left: 3px solid var(--blue); background: rgba(37,99,235,0.05);
+    }
+
+    .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:680px) { .cmp { grid-template-columns: 1fr; } }
+
+    .lbl {
+      font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 3px 8px; margin-bottom: 8px; display: inline-block;
+    }
+    .lbl.b { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+    .lbl.a { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    html.dark .lbl.b { background: #450a0a; color: #fca5a5; border-color: #7f1d1d; }
+    html.dark .lbl.a { background: #052e16; color: #86efac; border-color: #166534; }
+
+    /* INSIGHT PRIMITIVES */
+    .ic     { border: 4px solid var(--border); background: var(--card); }
+    .ic-sm  { border: 3px solid var(--border); background: var(--card); }
+    .shadow-lg-old  { box-shadow: 8px 8px 0 var(--shadow); }
+    .shadow-lg      { box-shadow: 6px 6px 0 var(--shadow); }
+    .shadow-md      { box-shadow: 4px 4px 0 var(--shadow); }
+    .shadow-sm      { box-shadow: 2px 2px 0 var(--shadow); }
+
+    /* HEADER */
+    .hdr { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 60px; padding: 0 16px; border-bottom: 3px solid var(--border); background: var(--card); }
+    .hdr-l { display: flex; align-items: center; gap: 10px; }
+    .hdr-r { display: flex; align-items: center; gap: 8px; }
+    .icon-btn { width: 36px; height: 36px; border: 3px solid var(--border); background: var(--panel); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    .icon-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+    /* OLD brand placeholder */
+    .brand-id { width: 36px; height: 36px; border: 3px solid var(--border); background: var(--cyan); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 3px 3px 0 var(--shadow); font-family: 'VT323',monospace; font-size: 18px; }
+
+    /* NEW brand mark */
+    .brandmark { display: flex; align-items: center; gap: 8px; }
+    .brand-icon { width: 36px; height: 36px; border: 3px solid var(--border); background: var(--cyan); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 3px 3px 0 var(--shadow); }
+    .brand-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .brand-wordmark { display: flex; flex-direction: column; gap: 1px; }
+    .brand-name { font-family: 'Geist Mono', monospace; font-size: 14px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1; color: var(--text); }
+    .brand-sub  { font-family: 'Geist Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; line-height: 1; color: var(--muted); }
+
+    .page-title-old { font-family: 'VT323',monospace; font-size: 28px; line-height: 1; color: var(--text); }
+    .page-title-new { font-family: 'Geist Mono',monospace; font-size: 15px; font-weight: 600; line-height: 1.2; color: var(--text); }
+    .page-desc-new  { font-family: 'Geist Mono',monospace; font-size: 11px; line-height: 1.2; color: var(--muted); }
+
+    .date-chip { display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px; border: 3px solid var(--border); background: var(--panel); }
+    .date-chip svg { width: 14px; height: 14px; stroke: var(--blue); fill: none; stroke-width: 2; }
+    .theme-chip { display: flex; align-items: center; justify-content: center; height: 34px; width: 42px; border: 3px solid var(--border); background: var(--panel); box-shadow: 4px 4px 0 var(--shadow); cursor: pointer; }
+    .theme-chip svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .status-chip { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 10px; border: 3px solid var(--border); background: var(--panel); box-shadow: 3px 3px 0 var(--shadow); }
+    .user-avatar { width: 16px; height: 16px; border: 2px solid var(--border); background: var(--blue); position: relative; flex-shrink: 0; }
+    .user-avatar::after { content:''; position:absolute; bottom:-4px; right:-4px; width:8px; height:8px; border-radius:50%; background:#10b981; border:2px solid white; }
+    html.dark .user-avatar::after { border-color: #1e293b; }
+
+    /* STAT CARDS */
+    .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+    .sc-before { border: 3px solid var(--border); background: var(--card); padding: 14px; box-shadow: 5px 5px 0 var(--shadow); min-height: 80px; display: flex; flex-direction: column; justify-content: center; }
+    .sc-after  { border: 3px solid var(--border); background: var(--card); padding: 14px; box-shadow: 4px 4px 0 var(--shadow); min-height: 80px; display: flex; flex-direction: column; justify-content: center; transition: transform 0.15s; cursor: default; }
+    .sc-after:hover { transform: translateY(-2px); }
+    .sc-lbl-b { font-family: 'VT323',monospace; font-size: 18px; color: var(--muted); line-height: 1; }
+    .sc-val-b { font-family: 'VT323',monospace; font-size: 28px; font-weight: bold; line-height: 1.1; margin-top: 4px; }
+    .sc-lbl-a { font-family: 'Geist Mono',monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); line-height: 1; }
+    .sc-val-a { font-family: 'Geist Mono',monospace; font-size: 22px; font-weight: 700; line-height: 1.1; margin-top: 6px; }
+
+    /* SIDEBAR */
+    .sidebar { width: 220px; border-right: 3px solid var(--border); background: var(--card); padding: 12px; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .sb-item { display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 10px; border: 3px solid var(--border); background: var(--panel); box-shadow: 2px 2px 0 var(--shadow); cursor: pointer; transition: transform 0.15s, background 0.15s; }
+    .sb-item:hover { transform: translateY(-1px); background: #dbeafe; }
+    html.dark .sb-item:hover { background: #334155; }
+    .sb-item.act { border-color: #1d4ed8; background: var(--blue); color: white; }
+    .sb-icon { width: 22px; height: 22px; border: 2px solid var(--border); background: var(--card); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .sb-icon svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
+    .sb-item.act .sb-icon { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); }
+    .sb-lbl-b { font-family: 'VT323',monospace; font-size: 20px; line-height: 1; }
+    .sb-lbl-a { font-family: 'Geist Mono',monospace; font-size: 13px; font-weight: 500; }
+
+    /* CHART PANEL */
+    .panel { border: 3px solid var(--border); background: var(--card); }
+    .ph { padding: 12px 14px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+    .pt-b { font-family: 'VT323',monospace; font-size: 22px; line-height: 1; }
+    .pt-a { font-family: 'Geist Mono',monospace; font-size: 14px; font-weight: 700; }
+    .ps  { font-family: 'Geist Mono',monospace; font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .pbadge { font-family: 'Geist Mono',monospace; font-size: 10px; font-weight: 700; padding: 2px 8px; border: 2px solid var(--border); background: #ede9fe; color: #5b21b6; }
+    html.dark .pbadge { background: #2e1065; color: #c4b5fd; }
+    .pb { padding: 10px 14px 14px; }
+    .chart-box { height: 180px; position: relative; }
+
+    /* FULL SHELL */
+    .shell { border: 3px solid var(--border); background: var(--card); overflow: hidden; box-shadow: 6px 6px 0 var(--shadow); }
+    .shell-body { display: flex; min-height: 400px; }
+    .main-area { flex: 1; padding: 16px; background: var(--card); overflow: hidden; min-width: 0; }
+
+    .divider { width: 1px; height: 28px; background: var(--border); opacity: 0.3; }
+    .full-label { font-family:'Geist Mono',monospace; font-size:11px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; background:#7c3aed; color:white; padding:4px 10px; margin-bottom:10px; display:inline-block; }
+
+    /* SHADOW DEMO */
+    .shadow-demo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .sd-label { font-family:'Geist Mono',monospace; font-size:10px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .sd-item { border: 3px solid var(--border); background: var(--panel); padding: 14px; font-family:'Geist Mono',monospace; font-size:13px; }
+  </style>
+</head>
+<body>
+
+<!-- CONTROL BAR -->
+<div class="control-bar">
+  <span class="ctrl-logo">⬡ SAISOKU INSIGHT</span>
+  <span class="ctrl-badge">PHASE 1 MOCKUP</span>
+  <span class="ctrl-sep">|</span>
+  <button class="ctrl-btn" id="darkBtn" onclick="toggleDark()">🌙 Dark Mode</button>
+  <span class="ctrl-hint">Scroll ke bawah untuk lihat full preview ↓</span>
+</div>
+
+<div class="wrapper">
+
+  <!-- 1. FONT -->
+  <div>
+    <div class="sec-title">① Font — VT323 → Geist Mono</div>
+    <div class="sec-note">Perubahan paling berdampak. Base font-size juga turun dari 20px → 15px untuk tampilan lebih padat &amp; profesional.</div>
+    <div class="cmp">
+      <div>
+        <span class="lbl b">BEFORE — VT323 (pixel/retro)</span>
+        <div class="ic shadow-lg-old" style="padding:20px;">
+          <div style="font-family:'VT323',monospace;font-size:20px;color:var(--text);">
+            <div style="font-size:28px;margin-bottom:6px;">Dashboard Overview</div>
+            <div style="color:var(--muted);font-size:20px;">Sales analytics summary hari ini</div>
+            <div style="margin-top:14px;">
+              <div>GMV Hari Ini</div>
+              <div style="font-size:26px;color:#2563eb;">Rp 4.250.000</div>
+            </div>
+            <div style="margin-top:10px;">
+              <span style="border:3px solid var(--border);padding:2px 12px;background:var(--panel);box-shadow:4px 4px 0 var(--shadow);display:inline-block;">SIMPAN DATA</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <span class="lbl a">AFTER — Geist Mono (techy + readable)</span>
+        <div class="ic shadow-lg" style="padding:20px;">
+          <div style="font-family:'Geist Mono',monospace;font-size:15px;color:var(--text);">
+            <div style="font-size:18px;font-weight:700;margin-bottom:4px;">Dashboard Overview</div>
+            <div style="color:var(--muted);font-size:12px;letter-spacing:0.03em;">Sales analytics summary hari ini</div>
+            <div style="margin-top:14px;">
+              <div style="font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);">GMV Hari Ini</div>
+              <div style="font-size:22px;font-weight:700;color:#2563eb;">Rp 4.250.000</div>
+            </div>
+            <div style="margin-top:12px;">
+              <span style="border:3px solid var(--border);padding:5px 12px;background:var(--panel);box-shadow:4px 4px 0 var(--shadow);display:inline-block;font-weight:600;font-size:13px;">SIMPAN DATA</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. HEADER -->
+  <div>
+    <div class="sec-title">② Header Bar — BrandMark + Hierarchy Fix</div>
+    <div class="sec-note">Placeholder "ID" diganti BrandMark "INSIGHT by SAISOKU". Title halaman turun dari 28px → 15px semibold.</div>
+    <div class="cmp">
+      <div>
+        <span class="lbl b">BEFORE</span>
+        <div class="hdr shadow-lg-old">
+          <div class="hdr-l">
+            <div class="icon-btn"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+            <div class="brand-id">ID</div>
+            <div class="page-title-old">Dashboard</div>
+          </div>
+          <div class="hdr-r">
+            <div class="date-chip" style="font-family:'VT323',monospace;font-size:18px;box-shadow:3px 3px 0 var(--shadow);">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+              Minggu, 3 Agu 2026
+            </div>
+            <div class="theme-chip" style="font-family:'VT323',monospace;font-size:22px;">☀</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <span class="lbl a">AFTER</span>
+        <div class="hdr shadow-lg">
+          <div class="hdr-l">
+            <div class="icon-btn"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+            <div class="brandmark">
+              <div class="brand-icon"><svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg></div>
+              <div class="brand-wordmark">
+                <span class="brand-name">INSIGHT</span>
+                <span class="brand-sub">by SAISOKU</span>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div>
+              <div class="page-title-new">Dashboard</div>
+              <div class="page-desc-new">Analytics overview</div>
+            </div>
+          </div>
+          <div class="hdr-r">
+            <div class="date-chip" style="font-family:'Geist Mono',monospace;font-size:12px;box-shadow:3px 3px 0 var(--shadow);">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+              Minggu, 3 Agu 2026
+            </div>
+            <div class="theme-chip">
+              <svg viewBox="0 0 24 24" style="stroke:#f59e0b;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+            </div>
+            <div class="status-chip" style="font-family:'Geist Mono',monospace;font-size:12px;">
+              <div class="user-avatar"></div>
+              <div style="line-height:1;"><div style="font-weight:600;">Admin</div><div style="font-size:10px;color:#10b981;">Online</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. STAT CARDS -->
+  <div>
+    <div class="sec-title">③ Stat Cards — Font + Shadow Fix</div>
+    <div class="sec-note">Shadow: 5px → 4px. Label lebih compact dengan uppercase + letter-spacing. Hover effect tetap ada.</div>
+    <div class="cmp">
+      <div>
+        <span class="lbl b">BEFORE</span>
+        <div class="stat-grid">
+          <div class="sc-before"><div class="sc-lbl-b">GMV Hari Ini</div><div class="sc-val-b" style="color:#2563eb;">Rp 4.250.000</div></div>
+          <div class="sc-before"><div class="sc-lbl-b">Profit Bulan</div><div class="sc-val-b" style="color:#9333ea;">Rp 12.000.000</div></div>
+          <div class="sc-before"><div class="sc-lbl-b">Transaction</div><div class="sc-val-b">1.247</div></div>
+        </div>
+      </div>
+      <div>
+        <span class="lbl a">AFTER</span>
+        <div class="stat-grid">
+          <div class="sc-after"><div class="sc-lbl-a">GMV Hari Ini</div><div class="sc-val-a" style="color:#2563eb;">Rp 4.250.000</div></div>
+          <div class="sc-after"><div class="sc-lbl-a">Profit Bulan</div><div class="sc-val-a" style="color:#9333ea;">Rp 12.000.000</div></div>
+          <div class="sc-after"><div class="sc-lbl-a">Transaction</div><div class="sc-val-a">1.247</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. CHART DARK MODE -->
+  <div>
+    <div class="sec-title">④ Chart Dark Mode — Color Awareness</div>
+    <div class="sec-note">🌙 Toggle dark mode untuk lihat perbedaannya. Di BEFORE, grid lines hilang di dark. Di AFTER, warna menyesuaikan tema.</div>
+    <div class="cmp">
+      <div>
+        <span class="lbl b">BEFORE — grid invisible di dark mode</span>
+        <div class="panel shadow-lg-old">
+          <div class="ph"><div><div class="pt-b">Monthly Sales</div><div class="ps">Transaksi per bulan</div></div><div class="pbadge">Year</div></div>
+          <div class="pb"><div class="chart-box"><canvas id="cBefore"></canvas></div></div>
+        </div>
+      </div>
+      <div>
+        <span class="lbl a">AFTER — grid tetap visible di semua tema</span>
+        <div class="panel shadow-lg">
+          <div class="ph"><div><div class="pt-a">Monthly Sales</div><div class="ps">Transaksi per bulan</div></div><div class="pbadge">Year</div></div>
+          <div class="pb"><div class="chart-box"><canvas id="cAfter"></canvas></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. SHADOW SYSTEM -->
+  <div>
+    <div class="sec-title">⑤ Box-Shadow — 3 Level System</div>
+    <div class="sec-note">Dari 5 nilai berbeda (2/3/4/5/8px) → 3 level konsisten: sm=2px, md=4px, lg=6px.</div>
+    <div class="shadow-demo-grid">
+      <div>
+        <div class="sd-label">sm — 2px · Inputs / Badges</div>
+        <div class="sd-item shadow-sm">Input / Badge Element</div>
+      </div>
+      <div>
+        <div class="sd-label">md — 4px · Buttons / Chips</div>
+        <div class="sd-item shadow-md">Button / Chip Element</div>
+      </div>
+      <div>
+        <div class="sd-label">lg — 6px · Cards / Panels</div>
+        <div class="ic sd-item shadow-lg" style="border-width:4px;padding:14px;">Card / Panel Element</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULL DASHBOARD PREVIEW -->
+  <div>
+    <div class="sec-title">🖥 Full Dashboard Preview</div>
+    <span class="full-label">AFTER — FINAL RESULT</span>
+    <div class="shell">
+      <div class="hdr" style="box-shadow:none;">
+        <div class="hdr-l">
+          <div class="icon-btn"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></div>
+          <div class="brandmark">
+            <div class="brand-icon"><svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg></div>
+            <div class="brand-wordmark"><span class="brand-name">INSIGHT</span><span class="brand-sub">by SAISOKU</span></div>
+          </div>
+          <div class="divider"></div>
+          <div><div class="page-title-new">Dashboard</div><div class="page-desc-new">Analytics overview</div></div>
+        </div>
+        <div class="hdr-r">
+          <div class="date-chip" style="font-family:'Geist Mono',monospace;font-size:12px;box-shadow:3px 3px 0 var(--shadow);">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+            Minggu, 3 Agustus 2026
+          </div>
+          <div class="theme-chip" onclick="toggleDark()">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+          </div>
+          <div class="status-chip" style="font-family:'Geist Mono',monospace;font-size:12px;">
+            <div class="user-avatar"></div>
+            <div style="line-height:1;"><div style="font-weight:600;">Admin</div><div style="font-size:10px;color:#10b981;">Online</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="shell-body">
+        <div class="sidebar">
+          <div class="sb-item act"><div class="sb-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div><span class="sb-lbl-a">Dashboard</span></div>
+          <div class="sb-item"><div class="sb-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><span class="sb-lbl-a">Transactions</span></div>
+          <div class="sb-item"><div class="sb-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><span class="sb-lbl-a">Users</span></div>
+          <div class="sb-item"><div class="sb-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div><span class="sb-lbl-a">Products</span></div>
+          <div class="sb-item"><div class="sb-icon"><svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg></div><span class="sb-lbl-a">Sales</span></div>
+          <div class="sb-item"><div class="sb-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="6" height="18"/><rect x="9" y="8" width="6" height="13"/><rect x="16" y="13" width="6" height="8"/></svg></div><span class="sb-lbl-a">Reports</span></div>
+          <div style="flex:1;"></div>
+          <div style="border-top:2px solid var(--border);padding-top:8px;">
+            <div class="sb-item" style="justify-content:center;gap:6px;">
+              <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              <span class="sb-lbl-a">Logout</span>
+            </div>
+          </div>
+        </div>
+        <div class="main-area">
+          <div style="margin-bottom:14px;">
+            <div style="font-family:'Geist Mono',monospace;font-size:18px;font-weight:700;color:var(--text);">Overview</div>
+            <div style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted);">Dashboard analytics summary</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
+            <div class="sc-after"><div class="sc-lbl-a">GMV Hari Ini</div><div class="sc-val-a" style="color:#2563eb;font-size:18px;">Rp 4.250.000</div></div>
+            <div class="sc-after"><div class="sc-lbl-a">Profit Bulan</div><div class="sc-val-a" style="color:#9333ea;font-size:18px;">Rp 12.000.000</div></div>
+            <div class="sc-after"><div class="sc-lbl-a">Transaction</div><div class="sc-val-a" style="font-size:18px;">1.247</div></div>
+          </div>
+          <div class="panel shadow-lg" style="border-width:3px;">
+            <div class="ph"><div><div class="pt-a">Monthly Sales</div><div class="ps">Transaksi paid per bulan</div></div><div class="pbadge">Year</div></div>
+            <div class="pb"><div style="height:150px;position:relative;"><canvas id="cFull"></canvas></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  const vals   = [12,19,8,27,14,31,22,18,25,11,17,9]
+  let dark = false
+  let cB, cA, cF
+
+  function opts(fixed) {
+    const tc = fixed ? '#6b7280' : (dark ? '#94a3b8' : '#6b7280')
+    const gc = fixed ? 'rgba(0,0,0,0.06)' : (dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)')
+    return {
+      responsive: true, maintainAspectRatio: false,
+      animation: { duration: 300 },
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tc, maxRotation: 0, font: { family: 'Geist Mono', size: 10 } } },
+        y: { beginAtZero: true, grid: { color: gc }, ticks: { color: tc, precision: 0, font: { family: 'Geist Mono', size: 10 } } }
+      }
+    }
+  }
+
+  function mk(id, color, fixed) {
+    return new Chart(document.getElementById(id), {
+      type: 'bar',
+      data: { labels: months, datasets: [{ data: vals, backgroundColor: color, borderRadius: 4 }] },
+      options: opts(fixed)
+    })
+  }
+
+  function updateCharts() {
+    const o = opts(false)
+    ;[cA, cF].forEach(c => {
+      c.options.scales.x.ticks.color = o.scales.x.ticks.color
+      c.options.scales.y.ticks.color = o.scales.y.ticks.color
+      c.options.scales.y.grid.color  = o.scales.y.grid.color
+      c.update()
+    })
+  }
+
+  function toggleDark() {
+    dark = !dark
+    document.documentElement.classList.toggle('dark', dark)
+    const btn = document.getElementById('darkBtn')
+    btn.textContent = dark ? '☀️ Light Mode' : '🌙 Dark Mode'
+    btn.classList.toggle('on', dark)
+    updateCharts()
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    cB = mk('cBefore', 'rgba(34,197,94,0.85)',  true)
+    cA = mk('cAfter',  'rgba(34,197,94,0.85)',  false)
+    cF = mk('cFull',   'rgba(59,130,246,0.85)', false)
+  })
+</script>
+</body>
+</html>

@@ -162,13 +162,22 @@ export const dashboardNavigation: DashboardNavEntry[] = [
     ],
   },
   {
-    type: "item",
-    item: {
-      title: "Tickets",
-      href: "/dashboard/tickets",
-      icon: Ticket,
-      description: "Ticket Management",
-    },
+    type: "group",
+    label: "Ticket Support",
+    items: [
+      {
+        title: "Active Tickets",
+        href: "/dashboard/tickets",
+        icon: Ticket,
+        description: "Kelola tiket aktif yang butuh penanganan",
+      },
+      {
+        title: "History / Rekap",
+        href: "/dashboard/tickets/history",
+        icon: FileText,
+        description: "Rekap tiket selesai (resolved) 10 per page",
+      },
+    ],
   },
   {
     type: "item",
