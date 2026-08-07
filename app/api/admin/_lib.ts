@@ -207,7 +207,25 @@ function normalizeDrainUrl(value: string) {
 }
 
 export function getErrorMessage(error: unknown, fallback = "Terjadi kesalahan") {
-  return error instanceof Error ? error.message : fallback
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+  if (error && typeof error === "object") {
+    const errObj = error as Record<string, unknown>
+    if (typeof errObj.message === "string" && errObj.message.trim()) {
+      return errObj.message
+    }
+    if (typeof errObj.details === "string" && errObj.details.trim()) {
+      return errObj.details
+    }
+    if (typeof errObj.error_description === "string" && errObj.error_description.trim()) {
+      return errObj.error_description
+    }
+  }
+  if (typeof error === "string" && error.trim()) {
+    return error
+  }
+  return fallback
 }
 
 export async function writeAdminAuditLog(actor: AuditActor, input: AdminAuditLogInput) {

@@ -39,19 +39,23 @@ export default function UsersPage() {
   }, [page]);
 
   async function deleteUser(id: string) {
-    if (!confirm("Delete user?")) return;
+    if (!confirm("Apakah Anda yakin ingin menghapus user ini?")) return;
 
     try {
-      await adminWrite<User>("/api/admin/users", {
-        method: "PATCH",
-        body: { id, action: "soft_delete" },
+      const res = await adminWrite<{ ok?: boolean; softDeleted?: boolean; message?: string }>("/api/admin/users", {
+        method: "DELETE",
+        body: { id },
       });
+      if (res?.softDeleted) {
+        showSuccess(res.message || "User yang memiliki riwayat transaksi telah dinonaktifkan.");
+      } else {
+        showSuccess("User berhasil dihapus.");
+      }
     } catch (error) {
       showError(`Gagal delete user: ${getErrorMessage(error)}`);
       return;
     }
 
-    showSuccess("User berhasil dinonaktifkan.");
     void loadUsers();
   }
 

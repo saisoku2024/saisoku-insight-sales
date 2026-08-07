@@ -19,9 +19,9 @@ export async function getUsersRepository(
 }
 
 export async function deleteUserRepository(id: string) {
-  return await adminWrite<User>("/api/admin/users", {
-    method: "PATCH",
-    body: { id, action: "soft_delete" },
+  return await adminWrite<{ ok?: boolean; softDeleted?: boolean; message?: string }>("/api/admin/users", {
+    method: "DELETE",
+    body: { id },
   })
 }
 
