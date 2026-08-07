@@ -21,6 +21,7 @@ import {
   Wallet,
   Send,
   Percent,
+  Brain,
 } from "lucide-react"
 
 export type DashboardNavItem = {
@@ -176,6 +177,18 @@ export const dashboardNavigation: DashboardNavEntry[] = [
         href: "/dashboard/tickets/history",
         icon: FileText,
         description: "Rekap tiket selesai (resolved) 10 per page",
+      },
+    ],
+  },
+  {
+    type: "group",
+    label: "AI System",
+    items: [
+      {
+        title: "Knowledge Base",
+        href: "/dashboard/ai/knowledge-base",
+        icon: Brain,
+        description: "Rekap & monitoring data training AI (Pagination 10/page)",
       },
     ],
   },
