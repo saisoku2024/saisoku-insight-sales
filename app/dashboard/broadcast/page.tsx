@@ -78,11 +78,14 @@ export default function BroadcastPage() {
         return
       }
 
-      // 2. Count paid transactions for popularity score among in-stock products
+      // 2. Count paid transactions in the last 30 days for popularity score among in-stock products
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
       const { data: trx, error: trxErr } = await supabase
         .from("transactions")
         .select("product_id")
         .eq("status", "paid")
+        .gte("created_at", thirtyDaysAgo)
         .in("product_id", inStockProductIds)
 
       if (trxErr) throw trxErr
@@ -93,6 +96,21 @@ export default function BroadcastPage() {
           salesCounts[r.product_id] = (salesCounts[r.product_id] || 0) + 1
         }
       })
+
+      // If transactions in last 30 days are sparse, also check all-time sales as fallback
+      if (Object.keys(salesCounts).length < inStockProductIds.length) {
+        const { data: allTrx } = await supabase
+          .from("transactions")
+          .select("product_id")
+          .eq("status", "paid")
+          .in("product_id", inStockProductIds)
+
+        ;(allTrx || []).forEach((r: { product_id: string }) => {
+          if (r.product_id && !salesCounts[r.product_id]) {
+            salesCounts[r.product_id] = (salesCounts[r.product_id] || 0) + 0.1
+          }
+        })
+      }
 
       // 3. Sort in-stock products by sales count (descending), then by stock count (descending)
       const sortedIds = [...inStockProductIds]
