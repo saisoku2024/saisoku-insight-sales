@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Send, Copy, Check, MessageSquare, Loader2 } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import { Send, Copy, Check, MessageSquare, Loader2, RefreshCw } from "lucide-react"
 
 import { adminWrite } from "@/services/admin/admin-api-client"
 import { supabase } from "@/lib/supabase/client"
@@ -46,91 +46,110 @@ export default function BroadcastPage() {
   const showSuccess = (message: string) => setNotice({ type: "success", message })
   const showError = (message: string) => setNotice({ type: "error", message })
 
-  useEffect(() => {
-    async function loadPopular() {
-      try {
-        const { data: trx, error: trxErr } = await supabase
-          .from("transactions")
-          .select("product_id")
-          .eq("status", "paid")
+  const loadPopularProducts = useCallback(async () => {
+    try {
+      setLoadingPopular(true)
 
-        if (trxErr) throw trxErr
-        if (!trx || trx.length === 0) {
-          setPopularProducts([])
-          setLoadingPopular(false)
-          return
-        }
+      // 1. Fetch available stocks grouped by product_id
+      const { data: stocks, error: stockErr } = await supabase
+        .from("product_accounts")
+        .select("product_id")
+        .eq("status", "available")
 
-        const counts: Record<string, number> = {}
-        trx.forEach((r: { product_id: string }) => {
-          if (r.product_id) counts[r.product_id] = (counts[r.product_id] || 0) + 1
-        })
+      if (stockErr) throw stockErr
 
-        const sortedIds = Object.entries(counts)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 5)
-          .map(([id]) => id)
-
-        if (sortedIds.length === 0) {
-          setPopularProducts([])
-          setLoadingPopular(false)
-          return
-        }
-
-        const { data: prods, error: prodErr } = await supabase
-          .from("products")
-          .select("id, name")
-          .in("id", sortedIds)
-
-        if (prodErr) throw prodErr
-
-        const { data: stocks, error: stockErr } = await supabase
-          .from("product_accounts")
-          .select("product_id")
-          .eq("status", "available")
-          .in("product_id", sortedIds)
-
-        if (stockErr) throw stockErr
-
-        const stockCounts: Record<string, number> = {};
-        (stocks || []).forEach((row: { product_id: string }) => {
-          if (row.product_id) stockCounts[row.product_id] = (stockCounts[row.product_id] || 0) + 1
-        })
-
-        const result = sortedIds.map((id) => {
-          const p = (prods || []).find((x) => x.id === id)
-          return {
-            id,
-            name: p?.name || "Produk",
-            stock: stockCounts[id] || 0,
-          }
-        })
-
-        setPopularProducts(result)
-      } catch (err) {
-        console.error("Gagal memuat produk populer:", err)
-      } finally {
-        setLoadingPopular(false)
+      if (!stocks || stocks.length === 0) {
+        setPopularProducts([])
+        return
       }
+
+      const stockCounts: Record<string, number> = {}
+      stocks.forEach((row: { product_id: string }) => {
+        if (row.product_id) {
+          stockCounts[row.product_id] = (stockCounts[row.product_id] || 0) + 1
+        }
+      })
+
+      // Only include product IDs that have available stock > 0
+      const inStockProductIds = Object.keys(stockCounts).filter((id) => stockCounts[id] > 0)
+
+      if (inStockProductIds.length === 0) {
+        setPopularProducts([])
+        return
+      }
+
+      // 2. Count paid transactions for popularity score among in-stock products
+      const { data: trx, error: trxErr } = await supabase
+        .from("transactions")
+        .select("product_id")
+        .eq("status", "paid")
+        .in("product_id", inStockProductIds)
+
+      if (trxErr) throw trxErr
+
+      const salesCounts: Record<string, number> = {}
+      ;(trx || []).forEach((r: { product_id: string }) => {
+        if (r.product_id) {
+          salesCounts[r.product_id] = (salesCounts[r.product_id] || 0) + 1
+        }
+      })
+
+      // 3. Sort in-stock products by sales count (descending), then by stock count (descending)
+      const sortedIds = [...inStockProductIds]
+        .sort((a, b) => {
+          const salesA = salesCounts[a] || 0
+          const salesB = salesCounts[b] || 0
+          if (salesB !== salesA) return salesB - salesA
+          return (stockCounts[b] || 0) - (stockCounts[a] || 0)
+        })
+        .slice(0, 5)
+
+      // 4. Fetch details (names) for top 5 in-stock products
+      const { data: prods, error: prodErr } = await supabase
+        .from("products")
+        .select("id, name")
+        .in("id", sortedIds)
+
+      if (prodErr) throw prodErr
+
+      const prodMap: Record<string, string> = {}
+      ;(prods || []).forEach((p: { id: string; name: string }) => {
+        prodMap[p.id] = p.name
+      })
+
+      const result = sortedIds.map((id) => ({
+        id,
+        name: prodMap[id] || "Produk",
+        stock: stockCounts[id] || 0,
+      }))
+
+      setPopularProducts(result)
+    } catch (err) {
+      console.error("Gagal memuat produk populer:", err)
+    } finally {
+      setLoadingPopular(false)
     }
-    void loadPopular()
   }, [])
+
+  useEffect(() => {
+    void loadPopularProducts()
+  }, [loadPopularProducts])
 
   const getPopularProductsText = (isHtml: boolean) => {
     if (loadingPopular) {
       return isHtml ? "<i>Loading produk populer...</i>" : "Loading produk populer..."
     }
     if (popularProducts.length === 0) {
-      return isHtml ? "<i>Belum ada produk populer.</i>" : "Belum ada produk populer."
+      return isHtml ? "<i>Belum ada produk populer (stok ready).</i>" : "Belum ada produk populer (stok ready)."
     }
 
     return popularProducts
       .map((p, idx) => {
-        const stockText = p.stock > 0 ? `Stok: ${p.stock}` : (isHtml ? "<b>Habis ❌</b>" : "Habis ❌")
+        const stockText = `Stok: ${p.stock}`
         return `${idx + 1}. ${p.name} — ${stockText}`
       })
       .join("\n")
-  };
+  }
 
   const compileTelegramHtml = () => {
     const popularText = getPopularProductsText(true)
@@ -335,10 +354,21 @@ ${footer}`
 
         {/* Live Preview */}
         <div className="insight-card p-3.5 flex flex-col h-full min-h-[500px]">
-          <h2 className="text-lg font-bold border-b-2 border-[var(--insight-border)] pb-2 flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-blue-500" />
-            Live Chat Preview (Telegram Style)
-          </h2>
+          <div className="border-b-2 border-[var(--insight-border)] pb-2 flex items-center justify-between">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-blue-500" />
+              Live Chat Preview (Telegram Style)
+            </h2>
+            <button
+              onClick={() => void loadPopularProducts()}
+              disabled={loadingPopular}
+              title="Refresh Produk Populer & Stok"
+              className="insight-button bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-xs px-2 py-1 flex items-center gap-1"
+            >
+              <RefreshCw className={`h-3 w-3 ${loadingPopular ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">Refresh Stok</span>
+            </button>
+          </div>
 
           <div className="flex-1 bg-[#0e1621] p-3 rounded-md border-2 border-[var(--insight-border)] mt-4 font-sans text-white text-xs overflow-y-auto space-y-4 max-h-[550px]">
             {/* Telegram Message Box */}
