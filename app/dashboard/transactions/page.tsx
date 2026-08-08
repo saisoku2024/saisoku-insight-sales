@@ -67,6 +67,7 @@ export default function TransactionsPage() {
         product_accounts(email,password,pin,profile,sold_at),
         sold_accounts(account_snapshot)
       `)
+      .neq("status", "cancelled")
       .order("created_at", { ascending: false });
 
     if (withPagination) {
