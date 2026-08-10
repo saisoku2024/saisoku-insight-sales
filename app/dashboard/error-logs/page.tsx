@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState } from "react"
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context"
 import { supabase } from "@/lib/supabase/client"
+import { maskEmail } from "@/lib/utils"
+
 
 type ErrorLog = {
   id: string
@@ -236,8 +238,8 @@ export default function ErrorLogsPage() {
                   </td>
                   <td className="p-3">{log.source}</td>
                   <td className="max-w-xs truncate p-3" title={log.route || ""}>{shortText(log.route)}</td>
-                  <td className="max-w-xs truncate p-3" title={log.actor || ""}>{shortText(log.actor, 32)}</td>
-                  <td className="max-w-md truncate p-3" title={log.message}>{shortText(log.message, 80)}</td>
+                  <td className="max-w-xs truncate p-3" title={maskEmail(log.actor)}>{shortText(maskEmail(log.actor), 32)}</td>
+                  <td className="max-w-md truncate p-3" title={maskEmail(log.message)}>{shortText(maskEmail(log.message), 80)}</td>
                 </tr>
               ))}
 

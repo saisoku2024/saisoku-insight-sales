@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react"
 
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { supabase } from "@/lib/supabase/client"
+import { maskEmail } from "@/lib/utils"
+
 
 type AccessLog = {
   id: string
@@ -182,7 +184,7 @@ export default function AccessLogsPage() {
                       {log.event_type}
                     </span>
                   </td>
-                  <td className="p-3">{shortText(log.admin_email)}</td>
+                  <td className="p-3" title={maskEmail(log.admin_email)}>{shortText(maskEmail(log.admin_email))}</td>
                   <td className="p-3">
                     <span className={`inline-block border-[2px] border-[var(--insight-border)] px-2 py-0.5 text-base leading-none ${roleClass(log.admin_role)}`}>
                       {log.admin_role || "-"}

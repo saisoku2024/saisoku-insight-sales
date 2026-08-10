@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { ChevronDown, LogOut } from "lucide-react"
 
@@ -72,21 +72,16 @@ export function SidebarNav({
     return activeEntry?.type === "group" ? activeEntry.label : null
   }, [groups, pathname])
 
-  // Single open accordion state (undefined = follow active route, string = manual override, null = all collapsed)
-  const [userSelectedGroup, setUserSelectedGroup] = useState<string | null | undefined>(undefined)
+  // Single open accordion state (manual override keyed by pathname)
+  const [userSelection, setUserSelection] = useState<{ pathname: string; label: string | null } | null>(null)
 
-  // Reset manual override on route change so only the active route's group is open and all others auto-hide
-  useEffect(() => {
-    setUserSelectedGroup(undefined)
-  }, [pathname])
-
-  const currentOpenGroup = userSelectedGroup !== undefined ? userSelectedGroup : activeGroupLabel
+  const currentOpenGroup =
+    userSelection?.pathname === pathname ? userSelection.label : activeGroupLabel
 
   const toggleGroup = (label: string) => {
-    setUserSelectedGroup((current) => {
-      const active = current !== undefined ? current : activeGroupLabel
-      return active === label ? null : label
-    })
+    const current = userSelection?.pathname === pathname ? userSelection.label : activeGroupLabel
+    const next = current === label ? null : label
+    setUserSelection({ pathname, label: next })
   }
 
   const isGroupOpen = (label: string) => {

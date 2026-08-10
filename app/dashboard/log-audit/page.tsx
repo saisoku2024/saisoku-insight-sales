@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react"
 
 import { PaginationControls } from "@/components/dashboard/pagination-controls"
 import { supabase } from "@/lib/supabase/client"
+import { maskEmail } from "@/lib/utils"
+
 
 type AuditLog = {
   id: string
@@ -92,7 +94,7 @@ export default function LogAuditPage() {
 
   const successCount = logs.filter((log) => log.status === "success").length
   const failedCount = logs.filter((log) => log.status === "failed").length
-  const latestActor = logs[0]?.admin_email || "-"
+  const latestActor = maskEmail(logs[0]?.admin_email)
 
   return (
     <div className="space-y-4 text-[var(--insight-text)]">
@@ -155,28 +157,34 @@ export default function LogAuditPage() {
                 </tr>
               ) : null}
 
-              {!loading && logs.map((log) => (
-                <tr key={log.id} className="hover:bg-blue-50 dark:hover:bg-slate-800/60">
-                  <td className="p-3">{formatDate(log.created_at)}</td>
-                  <td className="p-3">{shortText(log.admin_email)}</td>
-                  <td className="p-3">
-                    <span className={`inline-block border-[2px] border-[var(--insight-border)] px-2 py-0.5 text-base leading-none ${roleClass(log.admin_role)}`}>
-                      {log.admin_role || "-"}
-                    </span>
-                  </td>
-                  <td className="p-3">{log.action}</td>
-                  <td className="p-3">{log.entity}</td>
-                  <td className="p-3">{shortText(log.entity_id)}</td>
-                  <td className="p-3">
-                    <span className={`inline-block border-[2px] border-[var(--insight-border)] px-2 py-0.5 text-base leading-none ${statusClass(log.status)}`}>
-                      {log.status}
-                    </span>
-                  </td>
-                  <td className="max-w-xs truncate p-3" title={log.error || ""}>
-                    {log.error || "-"}
-                  </td>
-                </tr>
-              ))}
+              {!loading && logs.map((log) => {
+                const maskedAdminEmail = maskEmail(log.admin_email)
+                const maskedEntityId = maskEmail(log.entity_id)
+                const maskedError = maskEmail(log.error)
+
+                return (
+                  <tr key={log.id} className="hover:bg-blue-50 dark:hover:bg-slate-800/60">
+                    <td className="p-3">{formatDate(log.created_at)}</td>
+                    <td className="p-3" title={maskedAdminEmail}>{shortText(maskedAdminEmail)}</td>
+                    <td className="p-3">
+                      <span className={`inline-block border-[2px] border-[var(--insight-border)] px-2 py-0.5 text-base leading-none ${roleClass(log.admin_role)}`}>
+                        {log.admin_role || "-"}
+                      </span>
+                    </td>
+                    <td className="p-3">{log.action}</td>
+                    <td className="p-3">{log.entity}</td>
+                    <td className="p-3" title={maskedEntityId}>{shortText(maskedEntityId)}</td>
+                    <td className="p-3">
+                      <span className={`inline-block border-[2px] border-[var(--insight-border)] px-2 py-0.5 text-base leading-none ${statusClass(log.status)}`}>
+                        {log.status}
+                      </span>
+                    </td>
+                    <td className="max-w-xs truncate p-3" title={maskedError}>
+                      {shortText(maskedError, 50)}
+                    </td>
+                  </tr>
+                )
+              })}
 
               {!loading && logs.length === 0 ? (
                 <tr>
