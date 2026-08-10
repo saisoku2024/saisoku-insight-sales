@@ -137,6 +137,70 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const body = (await req.json()) as Record<string, unknown>
+
+    if (Array.isArray(body.items)) {
+      const items = body.items as Array<Record<string, unknown>>
+      if (items.length > 500) {
+        return jsonError("Bulk update maksimal 500 row per request.")
+      }
+
+      let updatedCount = 0
+      let notFoundCount = 0
+
+      for (const item of items) {
+        const email = readLimitedString(item.email, "Email/no HP", 256)
+        if (!email) continue
+
+        const productId = readLimitedNullableString(item.product_id, "Product ID", 80)
+        const password = readLimitedNullableString(item.password, "Password", 256)
+        const profile = readLimitedNullableString(item.profile, "Profile", 120)
+        const pin = readLimitedNullableString(item.pin, "PIN", 64)
+        const nextStatus = readLimitedNullableString(item.status, "Status", 32)
+
+        const payload: Record<string, unknown> = {
+          email,
+          password,
+          profile,
+          pin,
+          ...(nextStatus && allowedStockStatuses.has(nextStatus) ? { status: nextStatus } : {}),
+        }
+
+        let query = adminSupabase!.from("product_accounts").update(payload).eq("email", email)
+        if (productId) {
+          query = query.eq("product_id", productId)
+        }
+
+        const { data: updatedRows, error } = await query.select()
+
+        if (error) {
+          return jsonRouteError(req, auth, "PATCH /api/admin/stocks bulk update", error, "Gagal bulk update stock", 500)
+        }
+
+        if (updatedRows && updatedRows.length > 0) {
+          updatedCount += updatedRows.length
+        } else {
+          notFoundCount++
+        }
+      }
+
+      await writeAdminAuditLog(auth, {
+        action: "bulk_update",
+        entity: "product_accounts",
+        entityId: null,
+        after: { updatedCount, notFoundCount },
+        metadata: { count: items.length, updatedCount, notFoundCount },
+      })
+
+      return NextResponse.json({
+        data: {
+          success: true,
+          count: items.length,
+          updatedCount,
+          notFoundCount,
+        }
+      })
+    }
+
     const id = readString(body.id)
     if (!id) return jsonError("Stock ID wajib diisi.")
 

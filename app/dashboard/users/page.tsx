@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActionNotice, type ActionNoticeState } from "@/components/dashboard/action-notice";
 import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context";
 import { supabase } from "@/lib/supabase/client";
+import { maskEmail } from "@/lib/utils";
 import { adminWrite } from "@/services/admin/admin-api-client";
 import type { User } from "@/types";
 
@@ -247,7 +248,7 @@ export default function UsersPage() {
               <div className="text-[var(--insight-muted)]">Username</div>
               <div>{selectedUser.username}</div>
               <div className="text-[var(--insight-muted)]">Email</div>
-              <div>{selectedUser.email || "-"}</div>
+              <div>{maskEmail(selectedUser.email)}</div>
               <div className="text-[var(--insight-muted)]">Name</div>
               <div>{selectedUser.name || "-"}</div>
               <div className="text-[var(--insight-muted)]">WhatsApp</div>

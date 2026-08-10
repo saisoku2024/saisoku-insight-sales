@@ -6,6 +6,7 @@ import { ToolbarSelect } from "@/components/dashboard/toolbar-select";
 import { SearchableFilter } from "@/components/dashboard/searchable-filter";
 import { useIsViewer, viewerOnlyTitle } from "@/components/dashboard/panel-access-context";
 import { supabase } from "@/lib/supabase/client";
+import { maskEmail } from "@/lib/utils";
 import { adminWrite } from "@/services/admin/admin-api-client";
 import type { Product, Stock } from "@/types";
 
@@ -109,6 +110,7 @@ export default function StocksPage() {
 
   // CSV upload
   const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [uploadMode, setUploadMode] = useState<"insert" | "update">("insert");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -331,7 +333,9 @@ export default function StocksPage() {
     );
     const targetProductId = targetProd?.id || "";
 
-    if (!targetProductId) return setUploadError("Pilih Product Code / Product Name yang spesifik dulu sebelum upload file.");
+    if (uploadMode === "insert" && !targetProductId) {
+      return setUploadError("Pilih Product Code / Product Name yang spesifik dulu sebelum upload file.");
+    }
     if (!csvFile) return setUploadError("Pilih file CSV/TXT dulu.");
 
     setUploading(true);
@@ -348,7 +352,7 @@ export default function StocksPage() {
       }
 
       const payload = rows.map((r) => ({
-        product_id: targetProductId,
+        product_id: targetProductId || undefined,
         email: (r.email || "").trim(),
         password: (r.password || "").trim() || null,
         profile: (r.profile || "").trim() || null,
@@ -357,11 +361,25 @@ export default function StocksPage() {
       }));
 
       const batchSize = 200;
+      let totalUpdated = 0;
+      let totalNotFound = 0;
+
       for (let i = 0; i < payload.length; i += batchSize) {
         const batch = payload.slice(i, i + batchSize);
-        await adminWrite<Stock[]>("/api/admin/stocks", {
-          body: { items: batch },
-        });
+
+        if (uploadMode === "update") {
+          const res = await adminWrite<{ updatedCount: number; notFoundCount: number }>("/api/admin/stocks", {
+            method: "PATCH",
+            body: { items: batch },
+          });
+          totalUpdated += res?.updatedCount || 0;
+          totalNotFound += res?.notFoundCount || 0;
+        } else {
+          await adminWrite<Stock[]>("/api/admin/stocks", {
+            method: "POST",
+            body: { items: batch },
+          });
+        }
         setUploadProgress(Math.round(((i + batch.length) / payload.length) * 100));
       }
 
@@ -369,7 +387,12 @@ export default function StocksPage() {
       setUploading(false);
       setUploadProgress(100);
       void fetchStocks();
-      showSuccess("Bulk upload sukses.");
+
+      if (uploadMode === "update") {
+        showSuccess(`Bulk update sukses: ${totalUpdated} akun berhasil di-update${totalNotFound > 0 ? `, ${totalNotFound} email tidak ditemukan` : ""}.`);
+      } else {
+        showSuccess("Bulk upload stok baru sukses.");
+      }
     } catch (e: unknown) {
       setUploadError(e instanceof Error ? e.message : "Upload gagal");
       setUploading(false);
@@ -589,11 +612,21 @@ export default function StocksPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={uploadMode}
+            onChange={(e) => setUploadMode(e.target.value as "insert" | "update")}
+            disabled={isViewer || uploading}
+            className={`${controlClass} h-9 min-w-[200px] text-sm font-semibold`}
+          >
+            <option value="insert">Mode: Tambah Stok Baru</option>
+            <option value="update">Mode: Update Stok Existing (Mass Edit)</option>
+          </select>
+
           <label
             className={`${actionClass} min-w-[130px] bg-[var(--insight-panel)] text-[var(--insight-text)] ${isViewer ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
             title={isViewer ? viewerOnlyTitle : undefined}
           >
-            Pilih CSV/TXT
+            {csvFile ? `File: ${csvFile.name.slice(0, 15)}...` : "Pilih CSV/TXT"}
             <input
               type="file"
               accept=".csv,.txt,text/csv,text/plain"
@@ -604,12 +637,18 @@ export default function StocksPage() {
           </label>
 
           <button
-            disabled={isViewer || (!filterBrand && !filterProductCode) || !csvFile || uploading}
+            disabled={isViewer || (uploadMode === "insert" && !filterBrand && !filterProductCode) || !csvFile || uploading}
             onClick={() => void bulkUploadCsv()}
-            className={`${actionClass} min-w-[130px] bg-[var(--insight-blue)] text-white disabled:cursor-not-allowed disabled:opacity-40`}
-            title={isViewer ? viewerOnlyTitle : !filterBrand && !filterProductCode ? "Pilih produk dulu" : ""}
+            className={`${actionClass} min-w-[140px] ${uploadMode === "update" ? "bg-amber-600" : "bg-[var(--insight-blue)]"} text-white disabled:cursor-not-allowed disabled:opacity-40`}
+            title={
+              isViewer
+                ? viewerOnlyTitle
+                : uploadMode === "insert" && !filterBrand && !filterProductCode
+                ? "Pilih produk dulu untuk Mode Tambah Stok Baru"
+                : ""
+            }
           >
-            {uploading ? `Uploading ${uploadProgress}%` : "Bulk Upload"}
+            {uploading ? `Uploading ${uploadProgress}%` : uploadMode === "update" ? "Bulk Update" : "Bulk Upload"}
           </button>
 
           <div className="flex h-11 items-center xl:ml-auto text-lg text-[var(--insight-muted)]">
@@ -619,11 +658,18 @@ export default function StocksPage() {
           </div>
         </div>
 
-        <div className="text-lg text-[var(--insight-muted)]">
-          Format CSV/TXT:{" "}
-          <code className="border-[2px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-2 py-0.5 text-red-500">
-            email;password;profile;pin
-          </code>
+        <div className="space-y-1 text-sm text-[var(--insight-muted)]">
+          <div>
+            Format CSV/TXT:{" "}
+            <code className="border-[2px] border-[var(--insight-border)] bg-[var(--insight-panel)] px-2 py-0.5 font-mono text-red-500">
+              email;password;profile;pin
+            </code>
+          </div>
+          {uploadMode === "update" && (
+            <p className="font-medium text-amber-700 dark:text-amber-300">
+              * Mode Update akan memperbarui password, profile, dan PIN pada akun yang cocok berdasarkan email (berlaku untuk semua status: available, sold, reserved, expired, dll).
+            </p>
+          )}
         </div>
 
         {uploadError && (
@@ -678,12 +724,8 @@ export default function StocksPage() {
                     <div className="text-xs text-[var(--insight-muted)]">{getProductCode(s.products) || "-"}</div>
                   </td>
                   <td className="px-4 py-2.5 text-sm">{getProductCode(s.products)?.split(/[-_\s/]+/)[0]?.toUpperCase() || "-"}</td>
-                  <td className="px-4 py-2.5 font-mono text-sm">
-                    {isViewer
-                      ? (s.email && s.email.includes("@")
-                        ? s.email.split("@")[0].slice(0, 2) + "***@" + s.email.split("@")[1]
-                        : "***")
-                      : s.email}
+                  <td className="px-4 py-2.5 font-mono text-sm" title={maskEmail(s.email)}>
+                    {maskEmail(s.email)}
                   </td>
                   <td className="px-4 py-2.5 text-sm">{isViewer ? "***" : (s.profile || "—")}</td>
                   <td className="px-4 py-2.5 font-mono text-sm">{isViewer ? "***" : (s.pin || "—")}</td>

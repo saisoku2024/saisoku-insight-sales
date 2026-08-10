@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useIsViewer } from "@/components/dashboard/panel-access-context";
+import { maskEmail } from "@/lib/utils";
 import type { Transaction } from "@/types";
+
 
 type ProductAccount = {
   email: string | null;
@@ -369,13 +371,9 @@ export default function TransactionsPage() {
                       <td className="px-4 py-2.5 text-sm">{(page - 1) * limit + i + 1}</td>
                       <td className="px-4 py-2.5 text-sm">{t.invoice || "-"}</td>
                       <td className="px-4 py-2.5 text-sm">{t.products?.name || "-"}</td>
-                      <td className="px-4 py-2.5 text-sm">
-                         {isViewer
-                           ? (pa?.email && pa.email.includes("@")
-                             ? pa.email.split("@")[0].slice(0, 2) + "***@" + pa.email.split("@")[1]
-                             : "***")
-                           : (pa?.email || "-")}
-                       </td>
+                      <td className="px-4 py-2.5 text-sm" title={maskEmail(pa?.email)}>
+                        {maskEmail(pa?.email)}
+                      </td>
                        <td className="px-4 py-2.5 text-sm">{isViewer ? "***" : (pa?.password || "-")}</td>
                        <td className="px-4 py-2.5 text-sm">{isViewer ? "***" : (pa?.pin || "-")}</td>
                        <td className="px-4 py-2.5 text-sm">Rp {Number(t.price || 0).toLocaleString("id-ID")}</td>
