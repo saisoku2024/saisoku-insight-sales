@@ -155,7 +155,7 @@ export default function LogBalancePage() {
                 <th className="px-4 py-3 text-sm">User</th>
                 <th className="px-4 py-3 text-sm">Type</th>
                 <th className="px-4 py-3 text-sm">Mutation</th>
-                <th className="px-4 py-3 text-sm">Balance</th>
+                <th className="px-4 py-3 text-sm">User Current Balance</th>
                 <th className="px-4 py-3 text-sm">Description</th>
               </tr>
             </thead>
