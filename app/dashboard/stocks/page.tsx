@@ -344,7 +344,7 @@ export default function StocksPage() {
     if (!broadcastCandidate) return;
     setIsBroadcasting(true);
     try {
-      const res = await adminWrite<{ data?: { success?: number; failed?: number } }>("/api/admin/broadcast", {
+      const res = await adminWrite<{ data?: { success?: number; failed?: number }; success?: number; failed?: number }>("/api/admin/broadcast", {
         body: {
           text: broadcastCandidate.templateText,
           reply_markup: {
@@ -359,7 +359,7 @@ export default function StocksPage() {
       });
 
       setBroadcastCandidate(null);
-      const successNum = res?.data?.success ?? 0;
+      const successNum = res?.success ?? res?.data?.success ?? 0;
       showSuccess(`Broadcast restock berhasil terkirim ke ${successNum} user Telegram.`);
     } catch (err) {
       showError(`Gagal kirim broadcast: ${getErrorMessage(err)}`);
