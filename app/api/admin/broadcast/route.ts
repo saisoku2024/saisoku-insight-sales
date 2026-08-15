@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
   if (!auth.ok) return auth.response
 
   try {
-    const { text } = await req.json()
+    const { text, reply_markup } = await req.json()
     if (!text) {
       return jsonError("Pesan broadcast wajib diisi.")
     }
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${serviceRole}`,
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text, reply_markup }),
     })
 
     if (!res.ok) {

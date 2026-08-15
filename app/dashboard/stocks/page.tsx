@@ -85,6 +85,34 @@ function statusClass(status: Stock["status"]) {
   return "bg-red-100 text-red-700";
 }
 
+type BroadcastCandidate = {
+  product: Product;
+  addedCount: number;
+  templateText: string;
+};
+
+function buildRestockTemplate(product: Product, addedCount: number) {
+  const normalPrice = product.price_normal || 0;
+  const discount = product.reseller_discount || 0;
+  const resellerPrice = Math.max(0, normalPrice - discount);
+  const priceText =
+    discount > 0
+      ? `Rp ${normalPrice.toLocaleString("id-ID")} / Reseller Rp ${resellerPrice.toLocaleString("id-ID")}`
+      : `Rp ${normalPrice.toLocaleString("id-ID")}`;
+
+  return `📢 <b>RESTOCK NOTIFICATION</b> 📢
+━━━━━━━━━━━━━━━━━━━
+✨ Stok untuk produk berikut sudah tersedia kembali!
+
+📦 <b>Produk:</b> ${product.name}
+💰 <b>Harga:</b> ${priceText}
+⚡ <b>Status:</b> Ready Stock (+${addedCount} Akun)
+⏳ <b>Durasi:</b> ${product.duration_days || 30} Hari
+
+🔥 <i>Yuk jajan!</i>
+━━━━━━━━━━━━━━━━━━━`;
+}
+
 export default function StocksPage() {
   const isViewer = useIsViewer();
   const [products, setProducts] = useState<Product[]>([]);
@@ -107,6 +135,10 @@ export default function StocksPage() {
   const [deleteCandidate, setDeleteCandidate] = useState<Stock | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [selectedStockIds, setSelectedStockIds] = useState<string[]>([]);
+
+  // Restock Broadcast Candidate
+  const [broadcastCandidate, setBroadcastCandidate] = useState<BroadcastCandidate | null>(null);
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
 
   // CSV upload
   const [csvFile, setCsvFile] = useState<File | null>(null);
@@ -233,6 +265,8 @@ export default function StocksPage() {
       return;
     }
 
+    const targetProd = products.find((p) => p.id === productId);
+
     setEmail("");
     setPassword("");
     setProfile("");
@@ -242,6 +276,42 @@ export default function StocksPage() {
     showSuccess("Stock berhasil ditambahkan.");
 
     void fetchStocks();
+
+    if (targetProd) {
+      setBroadcastCandidate({
+        product: targetProd,
+        addedCount: 1,
+        templateText: buildRestockTemplate(targetProd, 1),
+      });
+    }
+  }
+
+  async function sendRestockBroadcast() {
+    if (!broadcastCandidate) return;
+    setIsBroadcasting(true);
+    try {
+      const res = await adminWrite<{ data?: { success?: number; failed?: number } }>("/api/admin/broadcast", {
+        body: {
+          text: broadcastCandidate.templateText,
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: "🛍️ Beli Sekarang", callback_data: `pick_product_${broadcastCandidate.product.id}` },
+                { text: "📋 List Produk", callback_data: "list_produk" },
+              ],
+            ],
+          },
+        },
+      });
+
+      setBroadcastCandidate(null);
+      const successNum = res?.data?.success ?? 0;
+      showSuccess(`Broadcast restock berhasil terkirim ke ${successNum} user Telegram.`);
+    } catch (err) {
+      showError(`Gagal kirim broadcast: ${getErrorMessage(err)}`);
+    } finally {
+      setIsBroadcasting(false);
+    }
   }
 
   async function updateStock() {
@@ -392,6 +462,13 @@ export default function StocksPage() {
         showSuccess(`Bulk update sukses: ${totalUpdated} akun berhasil di-update${totalNotFound > 0 ? `, ${totalNotFound} email tidak ditemukan` : ""}.`);
       } else {
         showSuccess("Bulk upload stok baru sukses.");
+        if (targetProd && payload.length > 0) {
+          setBroadcastCandidate({
+            product: targetProd,
+            addedCount: payload.length,
+            templateText: buildRestockTemplate(targetProd, payload.length),
+          });
+        }
       }
     } catch (e: unknown) {
       setUploadError(e instanceof Error ? e.message : "Upload gagal");
@@ -996,6 +1073,83 @@ export default function StocksPage() {
                 className={"border-[3px] border-[var(--insight-border)] bg-[var(--insight-blue)] px-4 py-2 text-lg leading-none text-white shadow-[4px_4px_0_var(--insight-shadow)]" + viewerDisabledClass}
               >
                 Update Stock
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL KONFIRMASI BROADCAST RESTOCK */}
+      {broadcastCandidate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="insight-card w-full max-w-lg space-y-4 p-6 shadow-[6px_6px_0_var(--insight-shadow)]">
+            <div className="flex items-center justify-between border-b-2 border-[var(--insight-border)] pb-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-block border-2 border-[var(--insight-border)] bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800 uppercase tracking-wide">
+                  📢 Auto Broadcast
+                </span>
+                <h2 className="text-xl font-bold text-[var(--insight-text)]">Konfirmasi Blasting Telegram</h2>
+              </div>
+              <button
+                onClick={() => setBroadcastCandidate(null)}
+                className="text-lg font-bold text-[var(--insight-muted)] hover:text-[var(--insight-text)]"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-sm text-[var(--insight-text)]">
+              Upload stok <b>{broadcastCandidate.product.name}</b> (+{broadcastCandidate.addedCount} akun) berhasil! Apakah Anda ingin mengirim notifikasi restock ke seluruh user Telegram aktif?
+            </p>
+
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-[var(--insight-muted)] uppercase tracking-wider">
+                Preview Template Pesan (Bisa diedit jika perlu):
+              </label>
+              <textarea
+                rows={9}
+                className="w-full border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] p-2.5 font-mono text-xs text-[var(--insight-text)] shadow-[2px_2px_0_var(--insight-shadow)] outline-none"
+                value={broadcastCandidate.templateText}
+                onChange={(e) =>
+                  setBroadcastCandidate({
+                    ...broadcastCandidate,
+                    templateText: e.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div className="border-2 border-dashed border-[var(--insight-border)] bg-[var(--insight-bg)] p-3">
+              <span className="block text-xs font-semibold text-[var(--insight-muted)] uppercase tracking-wider mb-2">
+                Tombol Inline yang Disertakan:
+              </span>
+              <div className="flex gap-2">
+                <div className="flex-1 border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-1.5 text-center text-xs font-bold text-[var(--insight-text)] shadow-[1px_1px_0_var(--insight-shadow)]">
+                  🛍️ Beli Sekarang
+                </div>
+                <div className="flex-1 border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] px-3 py-1.5 text-center text-xs font-bold text-[var(--insight-text)] shadow-[1px_1px_0_var(--insight-shadow)]">
+                  📋 List Produk
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setBroadcastCandidate(null)}
+                disabled={isBroadcasting}
+                className="insight-button px-4 py-2 text-sm"
+              >
+                ✕ Lewati
+              </button>
+              <button
+                type="button"
+                onClick={() => void sendRestockBroadcast()}
+                disabled={isBroadcasting || isViewer}
+                title={isViewer ? viewerOnlyTitle : undefined}
+                className="border-2 border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-[3px_3px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
+              >
+                {isBroadcasting ? "⏳ Mengirim..." : "🚀 Kirim Broadcast Sekarang"}
               </button>
             </div>
           </div>
