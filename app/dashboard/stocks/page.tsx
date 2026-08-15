@@ -92,20 +92,11 @@ type BroadcastCandidate = {
 };
 
 function buildRestockTemplate(product: Product, addedCount: number) {
-  const normalPrice = product.price_normal || 0;
-  const discount = product.reseller_discount || 0;
-  const resellerPrice = Math.max(0, normalPrice - discount);
-  const priceText =
-    discount > 0
-      ? `Rp ${normalPrice.toLocaleString("id-ID")} / Reseller Rp ${resellerPrice.toLocaleString("id-ID")}`
-      : `Rp ${normalPrice.toLocaleString("id-ID")}`;
-
   return `📢 <b>RESTOCK NOTIFICATION</b> 📢
 ━━━━━━━━━━━━━━━━━━━
 ✨ Stok untuk produk berikut sudah tersedia kembali!
 
 📦 <b>Produk:</b> ${product.name}
-💰 <b>Harga:</b> ${priceText}
 ⚡ <b>Status:</b> Ready Stock (+${addedCount} Akun)
 ⏳ <b>Durasi:</b> ${product.duration_days || 30} Hari
 
