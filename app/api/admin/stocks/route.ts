@@ -201,6 +201,55 @@ export async function PATCH(req: NextRequest) {
       })
     }
 
+    if (Array.isArray(body.ids)) {
+      const ids = body.ids.map((val) => readString(val)).filter(Boolean) as string[]
+      if (!ids.length) return jsonError("Stock IDs wajib diisi.")
+      if (ids.length > 500) return jsonError("Bulk update maksimal 500 stock per request.")
+
+      const nextStatus = readLimitedString(body.status, "Status", 32)
+      if (!nextStatus || !allowedStockStatuses.has(nextStatus)) {
+        return jsonError("Status stock tidak valid.")
+      }
+
+      const updatePayload: Record<string, unknown> = {
+        status: nextStatus,
+      }
+      if (nextStatus === "available") {
+        updatePayload.sold_at = null
+        updatePayload.sold_to = null
+      }
+
+      const { data: before } = await adminSupabase!.from("product_accounts").select("*").in("id", ids)
+
+      const { data, error } = await adminSupabase!
+        .from("product_accounts")
+        .update(updatePayload)
+        .in("id", ids)
+        .select()
+
+      if (error) {
+        return jsonRouteError(req, auth, "PATCH /api/admin/stocks bulk status update", error, "Gagal update status stock", 500)
+      }
+
+      await writeAdminAuditLog(auth, {
+        action: nextStatus === "available" ? "bulk_restore" : "bulk_status_update",
+        entity: "product_accounts",
+        entityId: null,
+        before,
+        after: data,
+        metadata: { count: ids.length, ids, status: nextStatus },
+      })
+
+      return NextResponse.json({
+        data: {
+          success: true,
+          count: ids.length,
+          updatedCount: data?.length || 0,
+          items: data,
+        },
+      })
+    }
+
     const id = readString(body.id)
     if (!id) return jsonError("Stock ID wajib diisi.")
 
@@ -211,15 +260,20 @@ export async function PATCH(req: NextRequest) {
       return jsonError("Status stock tidak valid.")
     }
 
-    const payload = {
-      email: readLimitedString(body.email, "Email/no HP", 256),
-      password: readLimitedNullableString(body.password, "Password", 256),
-      profile: readLimitedNullableString(body.profile, "Profile", 120),
-      pin: readLimitedNullableString(body.pin, "PIN", 64),
+    const payload: Record<string, unknown> = {
+      ...(body.email !== undefined ? { email: readLimitedString(body.email, "Email/no HP", 256) } : {}),
+      ...(body.password !== undefined ? { password: readLimitedNullableString(body.password, "Password", 256) } : {}),
+      ...(body.profile !== undefined ? { profile: readLimitedNullableString(body.profile, "Profile", 120) } : {}),
+      ...(body.pin !== undefined ? { pin: readLimitedNullableString(body.pin, "PIN", 64) } : {}),
       ...(nextStatus ? { status: nextStatus } : {}),
     }
 
-    if (!payload.email) return jsonError("Email/no HP wajib diisi.")
+    if (nextStatus === "available") {
+      payload.sold_at = null
+      payload.sold_to = null
+    }
+
+    if (body.email !== undefined && !payload.email) return jsonError("Email/no HP wajib diisi.")
 
     const { data, error } = await adminSupabase!
       .from("product_accounts")
@@ -231,7 +285,7 @@ export async function PATCH(req: NextRequest) {
     if (error) return jsonRouteError(req, auth, "PATCH /api/admin/stocks update", error, "Gagal update stock", 500)
 
     await writeAdminAuditLog(auth, {
-      action: "update",
+      action: nextStatus === "available" && before?.status !== "available" ? "restore" : "update",
       entity: "product_accounts",
       entityId: id,
       before,
