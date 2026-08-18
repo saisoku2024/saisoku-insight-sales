@@ -50,6 +50,13 @@ type TxRow = {
   } | null
 }
 
+type TodayProductSale = {
+  key: string
+  name: string
+  count: number
+  nominal: number
+}
+
 // --- UTILS ---
 function currencyIDR(v: number) {
   return `Rp ${Number(v || 0).toLocaleString("id-ID")}`
@@ -144,6 +151,25 @@ function ChartSkeleton() {
   )
 }
 
+function TodaySalesSkeleton() {
+  return (
+    <div className="space-y-3 pt-1">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="flex items-center justify-between gap-3 border-b border-[var(--insight-border)]/10 pb-2 last:border-0 last:pb-0">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function ChartEmptyState({ message = "Belum ada data transaksi" }: { message?: string }) {
   return (
     <div className="flex h-52 w-full flex-col items-center justify-center border-2 border-dashed border-[var(--insight-border)] bg-[var(--insight-panel)]/40 p-4 text-center">
@@ -185,7 +211,7 @@ export default function DashboardPage() {
     bannedUsers: 0,
   })
 
-  const [todayChart, setTodayChart] = useState<ChartData<"bar"> | null>(null)
+  const [todaySalesList, setTodaySalesList] = useState<TodayProductSale[]>([])
   const [monthlySalesChart, setMonthlySalesChart] = useState<ChartData<"bar"> | null>(null)
 
   const months = useMemo(
@@ -276,7 +302,7 @@ export default function DashboardPage() {
     const currentMonth = now.getMonth()
 
     let gmvToday = 0, gmvMonth = 0, profitToday = 0, profitMonth = 0, profitYear = 0
-    const todayProductCounts: Record<string, number> = {}
+    const todayProductsMap: Record<string, TodayProductSale> = {}
     const monthlySales = new Array(12).fill(0) as number[]
 
     const paidTransactions = txs.filter((t) => t.status === "paid")
@@ -293,12 +319,23 @@ export default function DashboardPage() {
 
       const txYear = txDate.getFullYear()
       const txMonth = txDate.getMonth()
-      const productCode = t.products?.product_code?.trim() || t.products?.name?.trim() || "Unknown"
+      const productName = t.products?.name?.trim() || t.products?.product_code?.trim() || "Unknown"
+      const productCode = t.products?.product_code?.trim() || productName
 
       if (txDate.toDateString() === todayStr) {
         gmvToday += price
         profitToday += profit
-        todayProductCounts[productCode] = (todayProductCounts[productCode] || 0) + 1
+        
+        if (!todayProductsMap[productCode]) {
+          todayProductsMap[productCode] = {
+            key: productCode,
+            name: productName,
+            count: 0,
+            nominal: 0,
+          }
+        }
+        todayProductsMap[productCode].count += 1
+        todayProductsMap[productCode].nominal += price
       }
 
       if (txYear === currentYear && txMonth === currentMonth) {
@@ -312,15 +349,18 @@ export default function DashboardPage() {
       }
     }
 
-    setTodayChart({
-      labels: Object.keys(todayProductCounts),
+    const productList = Object.values(todayProductsMap).sort((a, b) => b.count - a.count || b.nominal - a.nominal)
+    setTodaySalesList(productList)
+
+    setMonthlySalesChart({
+      labels: months,
       datasets: [
         {
-          label: "Today Sales",
-          data: Object.values(todayProductCounts),
+          label: "Monthly Sales",
+          data: monthlySales,
           borderRadius: 8,
-          backgroundColor: "rgba(59,130,246,0.85)",
-          hoverBackgroundColor: "rgba(59,130,246,1)",
+          backgroundColor: "rgba(34,197,94,0.85)",
+          hoverBackgroundColor: "rgba(34,197,94,1)",
         },
       ],
     })
@@ -522,14 +562,38 @@ export default function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel
           title="Today Sales"
-          subtitle="Jumlah transaksi paid hari ini per produk"
-          right={<span className="border-2 border-[var(--insight-border)] bg-violet-100 px-2 py-0.5 text-xs font-bold leading-none text-violet-800">Today</span>}
+          subtitle="Daftar transaksi paid hari ini per produk"
+          right={<span className="border-2 border-[var(--insight-border)] bg-violet-100 px-2 py-0.5 text-xs font-bold leading-none text-violet-800 dark:bg-violet-950/60 dark:text-violet-300">Today</span>}
           className="h-[280px]"
         >
           {loading ? (
-            <ChartSkeleton />
-          ) : todayChart && (todayChart.labels?.length ?? 0) > 0 ? (
-            <Bar data={todayChart} options={chartOptionsCount} />
+            <TodaySalesSkeleton />
+          ) : todaySalesList.length > 0 ? (
+            <div className="h-[210px] overflow-y-auto space-y-2 pr-1 text-xs sm:text-sm">
+              {todaySalesList.map((item, idx) => (
+                <div
+                  key={item.key}
+                  className="flex items-center justify-between gap-3 border-b border-[var(--insight-border)]/20 pb-2 last:border-0 last:pb-0"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-5 shrink-0 font-bold text-[var(--insight-muted)]">
+                      {idx + 1}.
+                    </span>
+                    <span className="truncate font-semibold text-[var(--insight-text)]" title={item.name}>
+                      {item.name}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3 shrink-0 text-right">
+                    <span className="border border-[var(--insight-border)] bg-[var(--insight-panel)] px-2 py-0.5 text-[11px] sm:text-xs font-semibold text-[var(--insight-muted)]">
+                      {item.count} trx
+                    </span>
+                    <span className="font-bold text-[var(--insight-text)]">
+                      {currencyIDR(item.nominal)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
             <ChartEmptyState message="Belum ada transaksi terdeteksi hari ini" />
           )}
