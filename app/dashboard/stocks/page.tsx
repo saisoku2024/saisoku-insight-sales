@@ -128,6 +128,13 @@ export default function StocksPage() {
   const [deleteCandidate, setDeleteCandidate] = useState<Stock | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [selectedStockIds, setSelectedStockIds] = useState<string[]>([]);
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
+  const [bulkRestoreReasonMode, setBulkRestoreReasonMode] = useState<"regular" | "cancel_trx">("regular");
+
+  // Single Restore Modal Candidate
+  const [singleRestoreCandidate, setSingleRestoreCandidate] = useState<Stock | null>(null);
+  const [singleRestoreReasonMode, setSingleRestoreReasonMode] = useState<"regular" | "cancel_trx">("regular");
+  const [singleRestoreSubmitting, setSingleRestoreSubmitting] = useState(false);
 
   // Restore Modal State (Dedicated by Product Code / Garansi)
   const [showRestoreModal, setShowRestoreModal] = useState(false);
@@ -140,6 +147,7 @@ export default function StocksPage() {
   const [restoreModalSelectedIds, setRestoreModalSelectedIds] = useState<string[]>([]);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [restoreSubmitting, setRestoreSubmitting] = useState(false);
+  const [restoreReasonMode, setRestoreReasonMode] = useState<"regular" | "cancel_trx">("regular");
 
   // Restock Broadcast Candidate
   const [broadcastCandidate, setBroadcastCandidate] = useState<BroadcastCandidate | null>(null);
@@ -428,10 +436,11 @@ export default function StocksPage() {
   }
 
   // Restore single stock item to available
-  async function restoreStock(stock: Stock) {
+  async function restoreStock(stock: Stock, mode: "regular" | "cancel_trx" = "regular") {
     if (isViewer) return;
+    setSingleRestoreSubmitting(true);
     try {
-      await adminWrite<Stock>("/api/admin/stocks", {
+      const res = await adminWrite<{ data?: { cancelledTxsCount?: number } }>("/api/admin/stocks", {
         method: "PATCH",
         body: {
           id: stock.id,
@@ -440,35 +449,51 @@ export default function StocksPage() {
           profile: stock.profile,
           pin: stock.pin,
           status: "available",
+          restore_mode: mode,
         },
       });
+
+      const cancelledCount = res?.data?.cancelledTxsCount || 0;
+      if (mode === "cancel_trx" && cancelledCount > 0) {
+        showSuccess(`Stock ${stock.email} direstore ke available & ${cancelledCount} transaksi dibatalkan (GMV terkoreksi).`);
+      } else {
+        showSuccess(`Stock ${stock.email} berhasil direstore ke available.`);
+      }
+      setSingleRestoreCandidate(null);
+      void fetchStocks();
+      if (showRestoreModal && restoreProductId) {
+        void fetchRestoreStocksForProduct(restoreProductId);
+      }
     } catch (error) {
       showError(`Gagal restore stock: ${getErrorMessage(error)}`);
-      return;
-    }
-
-    showSuccess(`Stock ${stock.email} berhasil direstore ke available.`);
-    void fetchStocks();
-    if (showRestoreModal && restoreProductId) {
-      void fetchRestoreStocksForProduct(restoreProductId);
+    } finally {
+      setSingleRestoreSubmitting(false);
     }
   }
 
   // Bulk restore selected stock IDs to available
-  async function bulkRestoreStock(targetIds?: string[]) {
+  async function bulkRestoreStock(targetIds?: string[], mode: "regular" | "cancel_trx" = "regular") {
     if (isViewer) return;
     const idsToRestore = targetIds || selectedStockIds;
     if (!idsToRestore.length) return;
 
     try {
-      await adminWrite("/api/admin/stocks", {
+      const res = await adminWrite<{ data?: { cancelledTxsCount?: number } }>("/api/admin/stocks", {
         method: "PATCH",
         body: {
           ids: idsToRestore,
           status: "available",
+          restore_mode: mode,
         },
       });
-      showSuccess(`${idsToRestore.length} stock berhasil direstore ke available.`);
+
+      const cancelledCount = res?.data?.cancelledTxsCount || 0;
+      if (mode === "cancel_trx" && cancelledCount > 0) {
+        showSuccess(`${idsToRestore.length} stock direstore ke available & ${cancelledCount} transaksi dibatalkan (GMV terkoreksi).`);
+      } else {
+        showSuccess(`${idsToRestore.length} stock berhasil direstore ke available.`);
+      }
+      setBulkRestoreOpen(false);
       setSelectedStockIds((current) => current.filter((id) => !idsToRestore.includes(id)));
       void fetchStocks();
       if (showRestoreModal && restoreProductId) {
@@ -484,14 +509,21 @@ export default function StocksPage() {
     if (isViewer || restoreModalSelectedIds.length === 0) return;
     setRestoreSubmitting(true);
     try {
-      await adminWrite("/api/admin/stocks", {
+      const res = await adminWrite<{ data?: { cancelledTxsCount?: number } }>("/api/admin/stocks", {
         method: "PATCH",
         body: {
           ids: restoreModalSelectedIds,
           status: "available",
+          restore_mode: restoreReasonMode,
         },
       });
-      showSuccess(`${restoreModalSelectedIds.length} akun berhasil direstore ke available.`);
+
+      const cancelledCount = res?.data?.cancelledTxsCount || 0;
+      if (restoreReasonMode === "cancel_trx" && cancelledCount > 0) {
+        showSuccess(`${restoreModalSelectedIds.length} akun berhasil direstore (${cancelledCount} transaksi dibatalkan, GMV terkoreksi).`);
+      } else {
+        showSuccess(`${restoreModalSelectedIds.length} akun berhasil direstore ke available.`);
+      }
       setRestoreModalSelectedIds([]);
       void fetchRestoreStocksForProduct(restoreProductId);
       void fetchStocks();
@@ -531,17 +563,24 @@ export default function StocksPage() {
     setRestoreSubmitting(true);
     try {
       const ids = nonAvailableMatching.map((s) => s.id);
-      await adminWrite("/api/admin/stocks", {
+      const res = await adminWrite<{ data?: { cancelledTxsCount?: number } }>("/api/admin/stocks", {
         method: "PATCH",
         body: {
           ids,
           status: "available",
+          restore_mode: restoreReasonMode,
         },
       });
+
+      const cancelledCount = res?.data?.cancelledTxsCount || 0;
+      const cancelMsg = restoreReasonMode === "cancel_trx" && cancelledCount > 0
+        ? ` (${cancelledCount} transaksi dibatalkan, GMV terkoreksi)`
+        : "";
+
       showSuccess(
         `Sukses: ${ids.length} akun cocok berhasil direstore ke available${
           matchingStocks.length > ids.length ? ` (${matchingStocks.length - ids.length} sudah available sebelumnya)` : ""
-        }.`
+        }${cancelMsg}.`
       );
       setRestorePasteText("");
       void fetchRestoreStocksForProduct(restoreProductId);
@@ -565,14 +604,21 @@ export default function StocksPage() {
     setRestoreSubmitting(true);
     try {
       const ids = targetStocks.map((s) => s.id);
-      await adminWrite("/api/admin/stocks", {
+      const res = await adminWrite<{ data?: { cancelledTxsCount?: number } }>("/api/admin/stocks", {
         method: "PATCH",
         body: {
           ids,
           status: "available",
+          restore_mode: restoreReasonMode,
         },
       });
-      showSuccess(`Sukses: ${ids.length} akun (${fromStatus}) berhasil direstore ke available.`);
+
+      const cancelledCount = res?.data?.cancelledTxsCount || 0;
+      const cancelMsg = restoreReasonMode === "cancel_trx" && cancelledCount > 0
+        ? ` (${cancelledCount} transaksi dibatalkan, GMV terkoreksi)`
+        : "";
+
+      showSuccess(`Sukses: ${ids.length} akun (${fromStatus}) berhasil direstore ke available${cancelMsg}.`);
       void fetchRestoreStocksForProduct(restoreProductId);
       void fetchStocks();
     } catch (error) {
@@ -930,7 +976,11 @@ export default function StocksPage() {
           {selectedStockIds.length > 0 && (
             <>
               <button
-                onClick={() => void bulkRestoreStock()}
+                onClick={() => {
+                  if (isViewer) return;
+                  setBulkRestoreOpen(true);
+                  setBulkRestoreReasonMode("regular");
+                }}
                 disabled={isViewer}
                 title={isViewer ? viewerOnlyTitle : "Restore akun yang dipilih ke status available"}
                 className={`${actionClass} min-w-[130px] bg-emerald-600 text-white shadow-[2px_2px_0_var(--insight-shadow)]`}
@@ -1089,7 +1139,11 @@ export default function StocksPage() {
                       {/* QUICK RESTORE BUTTON FOR ANY NON-AVAILABLE STATUS */}
                       {s.status !== "available" && (
                         <button
-                          onClick={() => void restoreStock(s)}
+                          onClick={() => {
+                            if (isViewer) return;
+                            setSingleRestoreCandidate(s);
+                            setSingleRestoreReasonMode("regular");
+                          }}
                           disabled={isViewer}
                           title={isViewer ? viewerOnlyTitle : "Restore akun ini ke status available"}
                           className={
@@ -1395,6 +1449,62 @@ export default function StocksPage() {
               </div>
             </div>
 
+            {/* Mode & Alasan Restore Selector */}
+            <div className="border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 shadow-[2px_2px_0_var(--insight-shadow)]">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[var(--insight-text)]">
+                ⚙️ Mode & Alasan Restore:
+              </label>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label
+                  onClick={() => setRestoreReasonMode("regular")}
+                  className={`flex cursor-pointer items-start gap-2.5 border-2 p-2.5 transition ${
+                    restoreReasonMode === "regular"
+                      ? "border-emerald-600 bg-emerald-50 text-emerald-950 dark:border-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-200"
+                      : "border-[var(--insight-border)] bg-[var(--insight-card)] text-[var(--insight-text)] opacity-75 hover:opacity-100"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="restore_modal_mode"
+                    value="regular"
+                    checked={restoreReasonMode === "regular"}
+                    onChange={() => setRestoreReasonMode("regular")}
+                    className="mt-0.5 accent-emerald-600"
+                  />
+                  <div>
+                    <div className="text-xs font-bold">♻️ Restore Biasa (Bekas / Masa Pakai Selesai)</div>
+                    <div className="mt-0.5 text-[11px] text-[var(--insight-muted)]">
+                      Stok kembali <b>available</b>. Transaksi lama tetap sah (<b>paid</b>), <b>GMV & Revenue TIDAK berkurang</b>.
+                    </div>
+                  </div>
+                </label>
+
+                <label
+                  onClick={() => setRestoreReasonMode("cancel_trx")}
+                  className={`flex cursor-pointer items-start gap-2.5 border-2 p-2.5 transition ${
+                    restoreReasonMode === "cancel_trx"
+                      ? "border-rose-600 bg-rose-50 text-rose-950 dark:border-rose-500 dark:bg-rose-950/40 dark:text-rose-200"
+                      : "border-[var(--insight-border)] bg-[var(--insight-card)] text-[var(--insight-text)] opacity-75 hover:opacity-100"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="restore_modal_mode"
+                    value="cancel_trx"
+                    checked={restoreReasonMode === "cancel_trx"}
+                    onChange={() => setRestoreReasonMode("cancel_trx")}
+                    className="mt-0.5 accent-rose-600"
+                  />
+                  <div>
+                    <div className="text-xs font-bold text-rose-700 dark:text-rose-400">❌ Batal Trx / Invalid Trx (Void & Refund)</div>
+                    <div className="mt-0.5 text-[11px] text-[var(--insight-muted)]">
+                      Stok kembali <b>available</b> + Transaksi terkait otomatis dibatalkan (<b>cancelled</b>). <b>GMV & Profit di laporan berkurang</b>.
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
             {/* Mode Tabs */}
             <div className="flex border-b-2 border-[var(--insight-border)]">
               <button
@@ -1525,7 +1635,7 @@ export default function StocksPage() {
                             <td className="p-2.5">
                               <button
                                 type="button"
-                                onClick={() => void restoreStock(stock)}
+                                onClick={() => void restoreStock(stock, restoreReasonMode)}
                                 disabled={restoreSubmitting || isViewer}
                                 className="border-2 border-[var(--insight-border)] bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white shadow-[1px_1px_0_var(--insight-shadow)] hover:-translate-y-0.5"
                               >
@@ -1688,6 +1798,219 @@ garansi3@gmail.com"
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL SINGLE RESTORE STOCK WITH MODE SELECTION */}
+      {singleRestoreCandidate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="insight-card w-full max-w-lg space-y-4 p-6 shadow-[8px_8px_0_var(--insight-shadow)]">
+            <div className="flex items-center justify-between border-b-2 border-[var(--insight-border)] pb-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-block border-2 border-[var(--insight-border)] bg-emerald-100 px-2.5 py-1 text-xs font-bold leading-none text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
+                  ♻️ RESTORE AKUN
+                </span>
+                <h2 className="text-lg font-bold text-[var(--insight-text)]">Pilih Jenis Restore Akun</h2>
+              </div>
+              <button
+                onClick={() => setSingleRestoreCandidate(null)}
+                className="text-lg font-bold text-[var(--insight-muted)] hover:text-[var(--insight-text)]"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-1 border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-xs">
+              <div>
+                <b>Produk:</b> {getProductName(singleRestoreCandidate.products)}
+              </div>
+              <div>
+                <b>Email:</b> {singleRestoreCandidate.email}
+              </div>
+              <div>
+                <b>Status Saat Ini:</b>{" "}
+                <span className="font-bold text-amber-700 dark:text-amber-400">{singleRestoreCandidate.status}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--insight-text)]">
+                Pilih Alasan / Dampak Ke Laporan:
+              </label>
+
+              <label
+                onClick={() => setSingleRestoreReasonMode("regular")}
+                className={`flex cursor-pointer items-start gap-2.5 border-2 p-3 transition ${
+                  singleRestoreReasonMode === "regular"
+                    ? "border-emerald-600 bg-emerald-50 text-emerald-950 dark:border-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-200"
+                    : "border-[var(--insight-border)] bg-[var(--insight-card)] text-[var(--insight-text)] opacity-75 hover:opacity-100"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="single_restore_mode"
+                  value="regular"
+                  checked={singleRestoreReasonMode === "regular"}
+                  onChange={() => setSingleRestoreReasonMode("regular")}
+                  className="mt-0.5 accent-emerald-600"
+                />
+                <div>
+                  <div className="text-xs font-bold">♻️ Restore Biasa (Habis Masa Pakai / Garansi Selesai)</div>
+                  <div className="mt-0.5 text-[11px] text-[var(--insight-muted)]">
+                    Akun kembali <b>available</b>. Transaksi lama tetap sah (<b>paid</b>), <b>GMV & Revenue TIDAK berkurang</b>.
+                  </div>
+                </div>
+              </label>
+
+              <label
+                onClick={() => setSingleRestoreReasonMode("cancel_trx")}
+                className={`flex cursor-pointer items-start gap-2.5 border-2 p-3 transition ${
+                  singleRestoreReasonMode === "cancel_trx"
+                    ? "border-rose-600 bg-rose-50 text-rose-950 dark:border-rose-500 dark:bg-rose-950/40 dark:text-rose-200"
+                    : "border-[var(--insight-border)] bg-[var(--insight-card)] text-[var(--insight-text)] opacity-75 hover:opacity-100"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="single_restore_mode"
+                  value="cancel_trx"
+                  checked={singleRestoreReasonMode === "cancel_trx"}
+                  onChange={() => setSingleRestoreReasonMode("cancel_trx")}
+                  className="mt-0.5 accent-rose-600"
+                />
+                <div>
+                  <div className="text-xs font-bold text-rose-700 dark:text-rose-400">❌ Batal Trx / Invalid Trx (Void & Refund)</div>
+                  <div className="mt-0.5 text-[11px] text-[var(--insight-muted)]">
+                    Akun kembali <b>available</b> + Transaksi terkait otomatis dibatalkan (<b>cancelled</b>). <b>GMV & Profit di laporan berkurang</b>.
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setSingleRestoreCandidate(null)}
+                disabled={singleRestoreSubmitting}
+                className="insight-button px-4 py-2 text-xs font-semibold"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => void restoreStock(singleRestoreCandidate, singleRestoreReasonMode)}
+                disabled={isViewer || singleRestoreSubmitting}
+                title={isViewer ? viewerOnlyTitle : undefined}
+                className="border-2 border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-[3px_3px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:opacity-50"
+              >
+                {singleRestoreSubmitting ? "Memproses..." : "Ya, Restore Akun"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL BULK RESTORE STOCK WITH MODE SELECTION */}
+      {bulkRestoreOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="insight-card w-full max-w-lg space-y-4 p-6 shadow-[8px_8px_0_var(--insight-shadow)]">
+            <div className="flex items-center justify-between border-b-2 border-[var(--insight-border)] pb-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-block border-2 border-[var(--insight-border)] bg-emerald-100 px-2.5 py-1 text-xs font-bold leading-none text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300">
+                  ♻️ BULK RESTORE
+                </span>
+                <h2 className="text-lg font-bold text-[var(--insight-text)]">Restore {selectedStockIds.length} Akun</h2>
+              </div>
+              <button
+                onClick={() => setBulkRestoreOpen(false)}
+                className="text-lg font-bold text-[var(--insight-muted)] hover:text-[var(--insight-text)]"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-1 border-2 border-[var(--insight-border)] bg-[var(--insight-panel)] p-3 text-xs">
+              <div>
+                <b>Total akun dipilih:</b> {selectedStockIds.length.toLocaleString("id-ID")} akun
+              </div>
+              <div className="text-[var(--insight-muted)]">
+                Semua akun yang dipilih akan dikembalikan statusnya ke <b>available</b>.
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[var(--insight-text)]">
+                Pilih Alasan / Dampak Ke Laporan:
+              </label>
+
+              <label
+                onClick={() => setBulkRestoreReasonMode("regular")}
+                className={`flex cursor-pointer items-start gap-2.5 border-2 p-3 transition ${
+                  bulkRestoreReasonMode === "regular"
+                    ? "border-emerald-600 bg-emerald-50 text-emerald-950 dark:border-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-200"
+                    : "border-[var(--insight-border)] bg-[var(--insight-card)] text-[var(--insight-text)] opacity-75 hover:opacity-100"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="bulk_restore_mode"
+                  value="regular"
+                  checked={bulkRestoreReasonMode === "regular"}
+                  onChange={() => setBulkRestoreReasonMode("regular")}
+                  className="mt-0.5 accent-emerald-600"
+                />
+                <div>
+                  <div className="text-xs font-bold">♻️ Restore Biasa (Habis Masa Pakai / Garansi Selesai)</div>
+                  <div className="mt-0.5 text-[11px] text-[var(--insight-muted)]">
+                    Akun kembali <b>available</b>. Transaksi lama tetap sah (<b>paid</b>), <b>GMV & Revenue TIDAK berkurang</b>.
+                  </div>
+                </div>
+              </label>
+
+              <label
+                onClick={() => setBulkRestoreReasonMode("cancel_trx")}
+                className={`flex cursor-pointer items-start gap-2.5 border-2 p-3 transition ${
+                  bulkRestoreReasonMode === "cancel_trx"
+                    ? "border-rose-600 bg-rose-50 text-rose-950 dark:border-rose-500 dark:bg-rose-950/40 dark:text-rose-200"
+                    : "border-[var(--insight-border)] bg-[var(--insight-card)] text-[var(--insight-text)] opacity-75 hover:opacity-100"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="bulk_restore_mode"
+                  value="cancel_trx"
+                  checked={bulkRestoreReasonMode === "cancel_trx"}
+                  onChange={() => setBulkRestoreReasonMode("cancel_trx")}
+                  className="mt-0.5 accent-rose-600"
+                />
+                <div>
+                  <div className="text-xs font-bold text-rose-700 dark:text-rose-400">❌ Batal Trx / Invalid Trx (Void & Refund)</div>
+                  <div className="mt-0.5 text-[11px] text-[var(--insight-muted)]">
+                    Akun kembali <b>available</b> + Transaksi terkait otomatis dibatalkan (<b>cancelled</b>). <b>GMV & Profit di laporan berkurang</b>.
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setBulkRestoreOpen(false)}
+                className="insight-button px-4 py-2 text-xs font-semibold"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => void bulkRestoreStock(selectedStockIds, bulkRestoreReasonMode)}
+                disabled={isViewer || selectedStockIds.length === 0}
+                title={isViewer ? viewerOnlyTitle : undefined}
+                className="border-2 border-[var(--insight-border)] bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-[3px_3px_0_var(--insight-shadow)] transition hover:-translate-y-0.5 disabled:opacity-50"
+              >
+                Ya, Restore {selectedStockIds.length} Akun
+              </button>
+            </div>
           </div>
         </div>
       )}

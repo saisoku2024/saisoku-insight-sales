@@ -201,6 +201,8 @@ export async function PATCH(req: NextRequest) {
       })
     }
 
+    const isCancelTrx = body.restore_mode === "cancel_trx" || body.cancel_trx === true
+
     if (Array.isArray(body.ids)) {
       const ids = body.ids.map((val) => readString(val)).filter(Boolean) as string[]
       if (!ids.length) return jsonError("Stock IDs wajib diisi.")
@@ -231,13 +233,39 @@ export async function PATCH(req: NextRequest) {
         return jsonRouteError(req, auth, "PATCH /api/admin/stocks bulk status update", error, "Gagal update status stock", 500)
       }
 
+      let cancelledTxsCount = 0
+      let cancelledTxs: unknown[] = []
+
+      if (nextStatus === "available" && isCancelTrx) {
+        const { data: updatedTxs, error: txError } = await adminSupabase!
+          .from("transactions")
+          .update({ status: "cancelled" })
+          .in("account_id", ids)
+          .eq("status", "paid")
+          .select("id, trx_code, invoice, price, user_id")
+
+        if (!txError && updatedTxs) {
+          cancelledTxsCount = updatedTxs.length
+          cancelledTxs = updatedTxs
+        }
+      }
+
       await writeAdminAuditLog(auth, {
-        action: nextStatus === "available" ? "bulk_restore" : "bulk_status_update",
+        action: nextStatus === "available"
+          ? (isCancelTrx ? "bulk_restore_cancel_trx" : "bulk_restore")
+          : "bulk_status_update",
         entity: "product_accounts",
         entityId: null,
         before,
         after: data,
-        metadata: { count: ids.length, ids, status: nextStatus },
+        metadata: {
+          count: ids.length,
+          ids,
+          status: nextStatus,
+          restore_mode: isCancelTrx ? "cancel_trx" : "regular",
+          cancelledTxsCount,
+          cancelledTxs,
+        },
       })
 
       return NextResponse.json({
@@ -245,6 +273,7 @@ export async function PATCH(req: NextRequest) {
           success: true,
           count: ids.length,
           updatedCount: data?.length || 0,
+          cancelledTxsCount,
           items: data,
         },
       })
@@ -284,16 +313,45 @@ export async function PATCH(req: NextRequest) {
 
     if (error) return jsonRouteError(req, auth, "PATCH /api/admin/stocks update", error, "Gagal update stock", 500)
 
+    let cancelledTxsCount = 0
+    let cancelledTxs: unknown[] = []
+
+    if (nextStatus === "available" && isCancelTrx) {
+      const { data: updatedTxs, error: txError } = await adminSupabase!
+        .from("transactions")
+        .update({ status: "cancelled" })
+        .eq("account_id", id)
+        .eq("status", "paid")
+        .select("id, trx_code, invoice, price, user_id")
+
+      if (!txError && updatedTxs) {
+        cancelledTxsCount = updatedTxs.length
+        cancelledTxs = updatedTxs
+      }
+    }
+
     await writeAdminAuditLog(auth, {
-      action: nextStatus === "available" && before?.status !== "available" ? "restore" : "update",
+      action: nextStatus === "available" && before?.status !== "available"
+        ? (isCancelTrx ? "restore_cancel_trx" : "restore")
+        : "update",
       entity: "product_accounts",
       entityId: id,
       before,
       after: data,
-      metadata: { payload },
+      metadata: {
+        payload,
+        restore_mode: isCancelTrx ? "cancel_trx" : "regular",
+        cancelledTxsCount,
+        cancelledTxs,
+      },
     })
 
-    return NextResponse.json({ data })
+    return NextResponse.json({
+      data: {
+        ...data,
+        cancelledTxsCount,
+      },
+    })
   } catch (error) {
     return jsonRouteError(req, auth, "PATCH /api/admin/stocks", error, "Gagal update stock", 400)
   }
