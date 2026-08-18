@@ -26,16 +26,18 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
+  PointElement,
+  LineElement,
+  Filler,
   Tooltip,
   Legend,
   Title,
   type TooltipItem,
   type ChartData,
 } from "chart.js"
-import { Bar } from "react-chartjs-2"
+import { Line } from "react-chartjs-2"
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Title, Tooltip, Legend)
 
 // --- TYPES ---
 type TxRow = {
@@ -212,24 +214,29 @@ export default function DashboardPage() {
   })
 
   const [todaySalesList, setTodaySalesList] = useState<TodayProductSale[]>([])
-  const [monthlySalesChart, setMonthlySalesChart] = useState<ChartData<"bar"> | null>(null)
+  const [dailySalesChart, setDailySalesChart] = useState<ChartData<"line"> | null>(null)
+  const [monthTxCount, setMonthTxCount] = useState(0)
+  const [currentMonthName, setCurrentMonthName] = useState("")
 
-  const months = useMemo(
-    () => ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-    []
-  )
-
-  // Chart Options
-  const chartOptionsCount = useMemo(
+  // Chart Options for Daily Sales Line Chart
+  const lineChartOptions = useMemo(
     () => ({
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        mode: "index" as const,
+        intersect: false,
+      },
       color: isDark ? "#94a3b8" : "#6b7280",
       plugins: {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: (ctx: TooltipItem<"bar">) => {
+            title: (items: TooltipItem<"line">[]) => {
+              if (!items.length) return ""
+              return `Tanggal ${items[0].label}`
+            },
+            label: (ctx: TooltipItem<"line">) => {
               const v = ctx.raw
               return typeof v === "number" ? `${v.toLocaleString("id-ID")} transaksi` : String(v)
             },
@@ -242,6 +249,7 @@ export default function DashboardPage() {
           ticks: {
             maxRotation: 0,
             autoSkip: true,
+            maxTicksLimit: 16,
             color: isDark ? "#94a3b8" : "#6b7280",
           },
         },
@@ -300,10 +308,17 @@ export default function DashboardPage() {
     const todayStr = now.toDateString()
     const currentYear = now.getFullYear()
     const currentMonth = now.getMonth()
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+    const monthNames = [
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ]
+    setCurrentMonthName(monthNames[currentMonth])
 
     let gmvToday = 0, gmvMonth = 0, profitToday = 0, profitMonth = 0, profitYear = 0
     const todayProductsMap: Record<string, TodayProductSale> = {}
-    const monthlySales = new Array(12).fill(0) as number[]
+    const dailySales = new Array(daysInMonth).fill(0) as number[]
+    let currentMonthTx = 0
 
     const paidTransactions = txs.filter((t) => t.status === "paid")
 
@@ -319,6 +334,7 @@ export default function DashboardPage() {
 
       const txYear = txDate.getFullYear()
       const txMonth = txDate.getMonth()
+      const txDay = txDate.getDate()
       const productName = t.products?.name?.trim() || t.products?.product_code?.trim() || "Unknown"
       const productCode = t.products?.product_code?.trim() || productName
 
@@ -341,39 +357,33 @@ export default function DashboardPage() {
       if (txYear === currentYear && txMonth === currentMonth) {
         gmvMonth += price
         profitMonth += profit
+        dailySales[txDay - 1] += 1
+        currentMonthTx += 1
       }
 
       if (txYear === currentYear) {
         profitYear += profit
-        monthlySales[txMonth] += 1
       }
     }
 
     const productList = Object.values(todayProductsMap).sort((a, b) => b.count - a.count || b.nominal - a.nominal)
     setTodaySalesList(productList)
+    setMonthTxCount(currentMonthTx)
 
-    setMonthlySalesChart({
-      labels: months,
+    setDailySalesChart({
+      labels: Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`),
       datasets: [
         {
-          label: "Monthly Sales",
-          data: monthlySales,
-          borderRadius: 8,
-          backgroundColor: "rgba(34,197,94,0.85)",
-          hoverBackgroundColor: "rgba(34,197,94,1)",
-        },
-      ],
-    })
-
-    setMonthlySalesChart({
-      labels: months,
-      datasets: [
-        {
-          label: "Monthly Sales",
-          data: monthlySales,
-          borderRadius: 8,
-          backgroundColor: "rgba(34,197,94,0.85)",
-          hoverBackgroundColor: "rgba(34,197,94,1)",
+          label: "Transaksi Harian",
+          data: dailySales,
+          borderColor: "#34A853",
+          backgroundColor: "rgba(52,168,83,0.12)",
+          borderWidth: 2,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 2.5,
+          pointHoverRadius: 5,
+          pointBackgroundColor: "#34A853",
         },
       ],
     })
@@ -404,7 +414,6 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleRefresh = async () => {
@@ -601,14 +610,18 @@ export default function DashboardPage() {
 
         <Panel
           title="Monthly Sales"
-          subtitle="Jumlah transaksi paid per bulan (Jan–Des tahun berjalan)"
-          right={<span className="border-2 border-[var(--insight-border)] bg-cyan-100 px-2 py-0.5 text-xs font-bold leading-none text-cyan-800">Year</span>}
+          subtitle={`Tren transaksi harian ${currentMonthName ? `bulan ${currentMonthName}` : "bulan ini"}`}
+          right={
+            <span className="border-2 border-[var(--insight-border)] bg-cyan-100 px-2 py-0.5 text-xs font-bold leading-none text-cyan-800 dark:bg-cyan-950/60 dark:text-cyan-300">
+              Total: {monthTxCount.toLocaleString("id-ID")} trx
+            </span>
+          }
           className="h-[280px]"
         >
           {loading ? (
             <ChartSkeleton />
-          ) : monthlySalesChart ? (
-            <Bar data={monthlySalesChart} options={chartOptionsCount} />
+          ) : dailySalesChart ? (
+            <Line data={dailySalesChart} options={lineChartOptions} />
           ) : (
             <ChartEmptyState message="Belum ada data penjualan bulanan" />
           )}
